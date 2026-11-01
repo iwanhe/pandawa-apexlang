@@ -1,0 +1,54 @@
+authorization app-users (
+    name: APP_USERS
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_demo_sec_pkg.has_any_role;
+    }
+    error {
+        errorMessage: Akses ditolak: akun Anda belum didaftarkan di aplikasi ini. Hubungi admin.
+    }
+)
+
+authorization admin-rights (
+    name: ADMIN_RIGHTS
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_demo_sec_pkg.has_role('ADMIN');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role ADMIN.
+    }
+)
+
+authorization master-data (
+    name: MASTER_DATA
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_demo_sec_pkg.has_role('WAREHOUSE');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role WAREHOUSE.
+    }
+)
+
+authorization requester (
+    name: REQUESTER
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_demo_sec_pkg.has_role('REQUESTER') or apx_demo_sec_pkg.has_role('MANAGER');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role REQUESTER/MANAGER.
+    }
+)
+
+authorization warehouse (
+    name: WAREHOUSE
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_demo_sec_pkg.has_role('WAREHOUSE');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role WAREHOUSE.
+    }
+)

@@ -1,0 +1,19 @@
+pageGroup home (
+    name: Home
+)
+
+pageGroup master-data (
+    name: Master Data
+)
+
+pageGroup transaksi (
+    name: Transaksi
+)
+
+pageGroup reports (
+    name: Reports
+)
+
+pageGroup administration (
+    name: Administration
+)

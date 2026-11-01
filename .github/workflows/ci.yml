@@ -1,0 +1,130 @@
+name: CI (generate, apex validate, database test)
+
+# Dijalankan untuk setiap app.yaml di repo: root (aplikasi Anda) dan examples/*.
+on:
+  push:
+    branches: [main, 'claude/**', 'feature/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.find.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        run: |
+          dirs=$(find . -name app.yaml -not -path './node_modules/*' -not -path './.claude/*' -not -path './plugins/*' \
+                 -printf '%h\n' | sed 's#^\./##; s#^\.$#.#' | sort | jq -R . | jq -sc .)
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "Spec: $dirs"
+
+  generate-validate:
+    needs: specs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJson(needs.specs.outputs.dirs) }}
+    env:
+      SQLCL_URL: https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+      SQLCL_BIN: /opt/sqlcl/bin/sql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pip install pyyaml
+
+      - name: Generate dari app.yaml
+        run: scripts/generate.sh "${{ matrix.dir }}/app.yaml"
+
+      - name: Hasil generate sudah di-commit?
+        run: |
+          if ! git diff --quiet -- . ':(exclude)dist' ':(exclude)**/dist'; then
+            git --no-pager diff --stat -- . ':(exclude)dist' ':(exclude)**/dist'
+            echo "::error::Output generator berbeda dengan yang di-commit. Jalankan scripts/generate.sh lalu commit."
+            exit 1
+          fi
+
+      - name: Install SQLcl
+        run: |
+          curl -fsSL -o /tmp/sqlcl.zip "$SQLCL_URL"
+          sudo unzip -q /tmp/sqlcl.zip -d /opt
+          "$SQLCL_BIN" -V
+
+      - name: apex validate
+        run: scripts/validate.sh "${{ matrix.dir }}/app.yaml"
+
+      - name: Nama artifact
+        id: name
+        run: echo "name=$(echo '${{ matrix.dir }}' | sed 's#[/.]#-#g; s#^-*##; s#^$#root#')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload zip siap import
+        uses: actions/upload-artifact@v4
+        with:
+          name: apexlang-${{ steps.name.outputs.name }}
+          path: ${{ matrix.dir }}/dist/*-apexlang.zip
+
+  database-test:
+    needs: specs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJson(needs.specs.outputs.dirs) }}
+    services:
+      oracle:
+        image: gvenzl/oracle-free:23-slim-faststart
+        env:
+          ORACLE_PASSWORD: ci_SysPassword1
+          APP_USER: apx
+          APP_USER_PASSWORD: ci_AppPassword1
+        ports:
+          - 1521:1521
+        options: >-
+          --health-cmd healthcheck.sh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      SQLCL_URL: https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+      SQLCL_BIN: /opt/sqlcl/bin/sql
+      DB_CONN: apx/ci_AppPassword1@localhost:1521/FREEPDB1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pip install pyyaml
+      - name: Install SQLcl
+        run: |
+          curl -fsSL -o /tmp/sqlcl.zip "$SQLCL_URL"
+          sudo unzip -q /tmp/sqlcl.zip -d /opt
+      - name: Install schema + test (Oracle Free)
+        run: tests/db/run.sh "${{ matrix.dir }}"
+
+  skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: .claude/skills sinkron dengan plugin?
+        run: scripts/sync-skill.sh --check
+      - name: Build zip skill (untuk claude.ai)
+        run: scripts/build-skill-zip.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pandawa-apexlang-skill
+          path: dist/pandawa-apexlang-skill.zip

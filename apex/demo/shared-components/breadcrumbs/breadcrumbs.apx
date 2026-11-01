@@ -1,0 +1,145 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry home (
+        name: Home
+        pageNumber: 100
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 100
+            }
+        }
+    )
+
+    entry approval-inbox (
+        name: Approval Inbox
+        pageNumber: 190
+        execution {
+            sequence: 20
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 190
+            }
+        }
+    )
+
+    entry departments (
+        name: Departments
+        pageNumber: 200
+        execution {
+            sequence: 30
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 200
+            }
+        }
+    )
+
+    entry items (
+        name: Items
+        pageNumber: 210
+        execution {
+            sequence: 40
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 210
+            }
+        }
+    )
+
+    entry requests (
+        name: Permintaan Barang
+        pageNumber: 300
+        execution {
+            sequence: 50
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 300
+            }
+        }
+    )
+
+    entry request-lines (
+        name: Baris Permintaan
+        pageNumber: 310
+        execution {
+            sequence: 60
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 310
+            }
+        }
+    )
+
+    entry rekap-permintaan (
+        name: Rekap Permintaan
+        pageNumber: 400
+        execution {
+            sequence: 70
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 400
+            }
+        }
+    )
+
+    entry users-roles (
+        name: Users & Roles
+        pageNumber: 500
+        execution {
+            sequence: 80
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 500
+            }
+        }
+    )
+
+    entry document-types (
+        name: Document Types & Approval
+        pageNumber: 510
+        execution {
+            sequence: 90
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 510
+            }
+        }
+    )
+
+)

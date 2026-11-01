@@ -1,0 +1,183 @@
+lov yes-no (
+    name: YES_NO
+    source {
+        location: staticValues
+    }
+
+    entry y (
+        sequence: 10
+        display: Ya
+        return: Y
+    )
+
+    entry n (
+        sequence: 20
+        display: Tidak
+        return: N
+    )
+
+)
+
+lov roles (
+    name: DEMO_ROLES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select role_code || ' - ' || role_name d, role_code r
+              from apx_demo_roles
+             order by role_code
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov departments (
+    name: APX_DEMO_DEPARTMENTS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select dept_code || ' - ' || dept_name d, department_id r
+              from apx_demo_departments
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov items (
+    name: APX_DEMO_ITEMS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select item_code || ' - ' || item_name || ' (' || uom || ')' d, item_id r
+              from apx_demo_items
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov items-category (
+    name: ITEMS_CATEGORY
+    source {
+        location: staticValues
+    }
+
+    entry atk (
+        sequence: 10
+        display: Alat Tulis Kantor
+        return: ATK
+    )
+
+    entry it (
+        sequence: 20
+        display: Perangkat IT
+        return: IT
+    )
+
+    entry consumable (
+        sequence: 30
+        display: Consumables
+        return: CONSUMABLE
+    )
+
+)
+
+lov requests (
+    name: APX_DEMO_REQUESTS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select request_no || ' - ' || purpose d, request_id r
+              from apx_demo_requests
+             where status in ('DRAFT', 'REJECTED')
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov requests-status (
+    name: REQUESTS_STATUS
+    source {
+        location: staticValues
+    }
+
+    entry draft (
+        sequence: 10
+        display: Draft
+        return: DRAFT
+    )
+
+    entry submitted (
+        sequence: 20
+        display: Submitted
+        return: SUBMITTED
+    )
+
+    entry approved (
+        sequence: 30
+        display: Approved
+        return: APPROVED
+    )
+
+    entry rejected (
+        sequence: 40
+        display: Rejected
+        return: REJECTED
+    )
+
+    entry cancelled (
+        sequence: 50
+        display: Cancelled
+        return: CANCELLED
+    )
+
+    entry fulfilled (
+        sequence: 60
+        display: Fulfilled
+        return: FULFILLED
+    )
+
+    entry closed (
+        sequence: 70
+        display: Closed
+        return: CLOSED
+    )
+
+)
+
+lov request-lines (
+    name: APX_DEMO_REQUEST_LINES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select line_id d, line_id r
+              from apx_demo_request_lines
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)

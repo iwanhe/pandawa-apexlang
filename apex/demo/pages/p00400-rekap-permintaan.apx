@@ -1,0 +1,234 @@
+page 400 (
+    name: Rekap Permintaan
+    alias: REKAP-PERMINTAAN
+    title: Rekap Permintaan
+    pageGroup: @reports
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+    help {
+        helpText: Total nilai per permintaan dan status approval.
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region rekap-permintaan (
+        name: Rekap Permintaan
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select request_no, dept_name, request_date, purpose, line_count, total_amount, status
+                  from apx_demo_request_summary_v
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: Tidak ada data.
+        }
+        actionsMenu {
+            subscription: false
+        }
+
+        column REQUEST_NO (
+            type: plainText
+            heading {
+                heading: No. Permintaan
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column DEPT_NAME (
+            type: plainText
+            heading {
+                heading: Department
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column REQUEST_DATE (
+            type: plainText
+            heading {
+                heading: Tanggal
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: date
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column PURPOSE (
+            type: plainText
+            heading {
+                heading: Keperluan
+            }
+            layout {
+                sequence: 4
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column LINE_COUNT (
+            type: plainText
+            heading {
+                heading: Jml Baris
+                alignment: end
+            }
+            layout {
+                sequence: 5
+                columnAlignment: end
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column TOTAL_AMOUNT (
+            type: plainText
+            heading {
+                heading: Total
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        savedReport 400001 (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn REQUEST_NO (
+                sequence: 1
+            )
+
+            displayColumn DEPT_NAME (
+                sequence: 2
+            )
+
+            displayColumn REQUEST_DATE (
+                sequence: 3
+            )
+
+            displayColumn PURPOSE (
+                sequence: 4
+            )
+
+            displayColumn LINE_COUNT (
+                sequence: 5
+            )
+
+            displayColumn TOTAL_AMOUNT (
+                sequence: 6
+            )
+
+            displayColumn STATUS (
+                sequence: 7
+            )
+
+            sort (
+                column: REQUEST_NO
+                sort {
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+)

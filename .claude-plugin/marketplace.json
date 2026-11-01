@@ -1,0 +1,14 @@
+{
+  "name": "pandawa",
+  "description": "Plugin Claude Code Tim PANDAWA (IT Upstream Development)",
+  "owner": {
+    "name": "Tim PANDAWA"
+  },
+  "plugins": [
+    {
+      "name": "pandawa-apexlang",
+      "source": "./plugins/pandawa-apexlang",
+      "description": "Metodologi & generator aplikasi Oracle APEX 26.2 (APEXlang): Blueprint → FRS → app.yaml → DB + aplikasi → CI apex validate & test DB → E2E Playwright"
+    }
+  ]
+}

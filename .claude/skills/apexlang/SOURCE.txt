@@ -1,0 +1,3 @@
+Source: https://github.com/oracle/skills/tree/014cdb29f12dfa6a689bbe8a80ee1c5f0bf15be1/apex/apexlang
+Vendored: folder 26.2 saja (APEX 26.2). Untuk 26.1 lihat repo sumber.
+License: UPL 1.0 (LICENSE.txt)

@@ -1,0 +1,400 @@
+page 311 (
+    name: Baris Permintaan
+    alias: REQUEST-LINE
+    title: Baris Permintaan
+    pageGroup: @transaksi
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        chained: false
+        resizable: true
+    }
+    security {
+        authorizationScheme: @requester
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        settings {
+            outputAs: text
+        }
+    )
+
+    region request-lines (
+        name: Baris Permintaan
+        type: form
+        source {
+            location: localDatabase
+            tableName: APX_DEMO_REQUEST_LINES
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    pageItem P311_LINE_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @request-lines
+            slot: regionBody
+        }
+        source {
+            formRegion: @request-lines
+            column: LINE_ID
+            dataType: number
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P311_REQUEST_ID (
+        type: selectList
+        label {
+            label: No. Permintaan
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @requests
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 15
+            region: @request-lines
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @request-lines
+            column: REQUEST_ID
+            dataType: number
+        }
+    )
+
+    pageItem P311_ITEM_ID (
+        type: selectList
+        label {
+            label: Item
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @items
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 25
+            region: @request-lines
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @request-lines
+            column: ITEM_ID
+            dataType: number
+        }
+    )
+
+    pageItem P311_QTY (
+        type: numberField
+        label {
+            label: Qty
+            alignment: right
+        }
+        settings {
+            numberAlignment: end
+            virtualKeyboard: decimal
+            minValue: 0
+        }
+        layout {
+            sequence: 35
+            region: @request-lines
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @request-lines
+            column: QTY
+            dataType: number
+        }
+    )
+
+    pageItem P311_UNIT_PRICE (
+        type: numberField
+        label {
+            label: Harga Satuan
+            alignment: right
+        }
+        settings {
+            numberAlignment: end
+            virtualKeyboard: decimal
+            minValue: 0
+        }
+        layout {
+            sequence: 45
+            region: @request-lines
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @request-lines
+            column: UNIT_PRICE
+            dataType: number
+        }
+        default {
+            type: static
+            staticValue: 0
+        }
+    )
+
+    pageItem P311_LINE_AMOUNT (
+        type: displayOnly
+        label {
+            label: Jumlah
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 55
+            region: @request-lines
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @request-lines
+            column: LINE_AMOUNT
+            dataType: number
+            queryOnly: true
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Delete
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--simple
+            ]
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P311_LINE_ID is not null
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Apply Changes
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P311_LINE_ID is not null
+        }
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 40
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P311_LINE_ID is null
+        }
+    )
+
+    dynamicAction on-click-cancel-close-dialog (
+        name: ON_CLICK_CANCEL_CLOSE_DIALOG
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancel
+        }
+
+        action native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process init-request-lines-form (
+        name: INIT_REQUEST_LINES_FORM
+        type: formInitialization
+        formRegion: @request-lines
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 900311001
+        }
+    )
+
+    process save-request-lines (
+        name: SAVE_REQUEST_LINES
+        type: formAutoRowProcessing
+        formRegion: @request-lines
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 900311002
+        }
+    )
+
+    process close-dialog (
+        name: CLOSE_DIALOG
+        type: closeDialog
+        settings {
+            showSuccessMessages: true
+        }
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: DELETE,SAVE,CREATE
+        }
+        advanced {
+            executionMappingIdentifier: 900311003
+        }
+    )
+
+)

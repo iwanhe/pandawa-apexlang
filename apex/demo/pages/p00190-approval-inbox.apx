@@ -1,0 +1,388 @@
+page 190 (
+    name: Approval Inbox
+    alias: APPROVAL-INBOX
+    title: Approval Inbox
+    pageGroup: @home
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+    help {
+        helpText: Pengaju tidak dapat menyetujui dokumennya sendiri (maker-checker).
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region approvals (
+        name: Approval Inbox
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select approval_id, doc_name, doc_no, approval_level, approver_role, amount, requested_by, requested_on,
+                       status, can_act_yn, acted_by, acted_on, note
+                  from apx_demo_approvals_v
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 191
+                items: {
+                    P191_APPROVAL_ID: \#APPROVAL_ID#\
+                }
+                clearCache: 191
+            }
+            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: Tidak ada data.
+        }
+        actionsMenu {
+            subscription: false
+        }
+
+        column APPROVAL_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column DOC_NAME (
+            type: plainText
+            heading {
+                heading: Jenis Dokumen
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column DOC_NO (
+            type: plainText
+            heading {
+                heading: No. Dokumen
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column APPROVAL_LEVEL (
+            type: plainText
+            heading {
+                heading: Level
+                alignment: end
+            }
+            layout {
+                sequence: 4
+                columnAlignment: end
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column APPROVER_ROLE (
+            type: plainText
+            heading {
+                heading: Role Approver
+            }
+            layout {
+                sequence: 5
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column AMOUNT (
+            type: plainText
+            heading {
+                heading: Nilai
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column REQUESTED_BY (
+            type: plainText
+            heading {
+                heading: Diajukan Oleh
+            }
+            layout {
+                sequence: 7
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column REQUESTED_ON (
+            type: plainText
+            heading {
+                heading: Diajukan
+            }
+            layout {
+                sequence: 8
+            }
+            source {
+                dataType: date
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 9
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column CAN_ACT_YN (
+            type: plainText
+            heading {
+                heading: Bisa Saya Proses?
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column ACTED_BY (
+            type: plainText
+            heading {
+                heading: Diproses Oleh
+            }
+            layout {
+                sequence: 11
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: K
+            }
+        )
+
+        column ACTED_ON (
+            type: plainText
+            heading {
+                heading: Diproses
+            }
+            layout {
+                sequence: 12
+            }
+            source {
+                dataType: date
+            }
+            advanced {
+                endUserAlias: L
+            }
+        )
+
+        column NOTE (
+            type: plainText
+            heading {
+                heading: Catatan
+            }
+            layout {
+                sequence: 13
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: M
+            }
+        )
+
+        savedReport 190001 (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn DOC_NAME (
+                sequence: 1
+            )
+
+            displayColumn DOC_NO (
+                sequence: 2
+            )
+
+            displayColumn APPROVAL_LEVEL (
+                sequence: 3
+            )
+
+            displayColumn APPROVER_ROLE (
+                sequence: 4
+            )
+
+            displayColumn AMOUNT (
+                sequence: 5
+            )
+
+            displayColumn REQUESTED_BY (
+                sequence: 6
+            )
+
+            displayColumn REQUESTED_ON (
+                sequence: 7
+            )
+
+            displayColumn STATUS (
+                sequence: 8
+            )
+
+            displayColumn CAN_ACT_YN (
+                sequence: 9
+            )
+
+            displayColumn ACTED_BY (
+                sequence: 10
+            )
+
+            displayColumn ACTED_ON (
+                sequence: 11
+            )
+
+            displayColumn NOTE (
+                sequence: 12
+            )
+
+            sort (
+                column: APPROVAL_ID
+                sort {
+                    sequence: 1
+                    direction: desc
+                }
+            )
+
+        )
+
+    )
+
+    dynamicAction on-dialog-closed-refresh-report (
+        name: ON_DIALOG_CLOSED_REFRESH_REPORT
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @approvals
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @approvals
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+)

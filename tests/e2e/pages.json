@@ -1,0 +1,40 @@
+{
+  "app": "DEMO",
+  "pages": [
+    {
+      "alias": "home",
+      "no": 100,
+      "title": "Home"
+    },
+    {
+      "alias": "approval-inbox",
+      "no": 190,
+      "title": "Approval Inbox"
+    },
+    {
+      "alias": "departments",
+      "no": 200,
+      "title": "Departments"
+    },
+    {
+      "alias": "items",
+      "no": 210,
+      "title": "Items"
+    },
+    {
+      "alias": "requests",
+      "no": 300,
+      "title": "Permintaan Barang"
+    },
+    {
+      "alias": "request-lines",
+      "no": 310,
+      "title": "Baris Permintaan"
+    },
+    {
+      "alias": "rekap-permintaan",
+      "no": 400,
+      "title": "Rekap Permintaan"
+    }
+  ]
+}
