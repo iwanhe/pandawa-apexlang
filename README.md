@@ -1,5 +1,7 @@
 # pandawa-apexlang
 
+[![CI](https://github.com/iwanhe/pandawa-apexlang/actions/workflows/ci.yml/badge.svg)](https://github.com/iwanhe/pandawa-apexlang/actions/workflows/ci.yml)
+
 Template dan skill **Tim PANDAWA** untuk membangun aplikasi **Oracle APEX 26.2** dengan **APEXlang**, dari Blueprint sampai E2E testing.
 
 ```
