@@ -1,0 +1,65 @@
+authorization app-users (
+    name: APP_USERS
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_any_role;
+    }
+    error {
+        errorMessage: Akses ditolak: akun Anda belum didaftarkan di aplikasi ini. Hubungi admin.
+    }
+)
+
+authorization admin-rights (
+    name: ADMIN_RIGHTS
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_role('ADMIN');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role ADMIN.
+    }
+)
+
+authorization master-data (
+    name: MASTER_DATA
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_role('FINANCE') or apx_mbms_sec_pkg.has_role('PROCUREMENT') or apx_mbms_sec_pkg.has_role('SALES');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role FINANCE/PROCUREMENT/SALES.
+    }
+)
+
+authorization printing (
+    name: PRINTING
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_role('PRINT_MGR') or apx_mbms_sec_pkg.has_role('SALES') or apx_mbms_sec_pkg.has_role('DIRECTOR');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role PRINT_MGR/SALES/DIRECTOR.
+    }
+)
+
+authorization engineering (
+    name: ENGINEERING
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_role('PROJECT_MGR') or apx_mbms_sec_pkg.has_role('ENG_MGR') or apx_mbms_sec_pkg.has_role('DIRECTOR');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role PROJECT_MGR/ENG_MGR/DIRECTOR.
+    }
+)
+
+authorization warehouse (
+    name: WAREHOUSE
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return apx_mbms_sec_pkg.has_role('WAREHOUSE');
+    }
+    error {
+        errorMessage: Akses ditolak: hanya untuk role WAREHOUSE.
+    }
+)

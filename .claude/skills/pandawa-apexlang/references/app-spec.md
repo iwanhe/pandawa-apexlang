@@ -77,7 +77,7 @@ Satu entitas menghasilkan:
 | `min` / `max` | Check constraint + batas number field |
 | `values` | Untuk `enum`: list atau `{KODE: Label}`, menghasilkan check constraint + LOV statis |
 | `ref` | Untuk `ref`: nama entitas. Menghasilkan FK + index `_Nn`, select list LOV entitas, kolom `<KOLOM>_DSP` di view |
-| `lov_sql` / `cascade` | LOV inline khusus. `cascade: KOLOM_INDUK` untuk cascading LOV (mis. WBS per proyek) |
+| `lov_sql` / `cascade` | LOV inline khusus (`select d, r ...`). Pakai `:P_KOLOM` untuk item di halaman yang sama (diganti `:P<page>_KOLOM`). `cascade: KOLOM_INDUK` untuk cascading LOV (mis. WBS per proyek) |
 | `virtual` | Ekspresi kolom virtual (mis. `qty * unit_price`). Tampil read-only |
 | `form` | `edit` (default), `display`, `hidden`, `none` |
 | `list` | Tampil di IR (default true) |

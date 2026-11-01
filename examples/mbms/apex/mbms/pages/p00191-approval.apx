@@ -1,0 +1,468 @@
+page 191 (
+    name: Approval
+    alias: APPROVAL
+    title: Approval
+    pageGroup: @home
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        chained: false
+        resizable: true
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        settings {
+            outputAs: text
+        }
+    )
+
+    region approval (
+        name: Approval
+        type: form
+        source {
+            location: localDatabase
+            tableName: APX_MBMS_APPROVALS_V
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P191_APPROVAL_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @approval
+            slot: regionBody
+        }
+        source {
+            formRegion: @approval
+            column: APPROVAL_ID
+            dataType: number
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P191_DOC_NAME (
+        type: displayOnly
+        label {
+            label: Jenis Dokumen
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 10
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: DOC_NAME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_DOC_NO (
+        type: displayOnly
+        label {
+            label: No. Dokumen
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 20
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: DOC_NO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_APPROVAL_LEVEL (
+        type: displayOnly
+        label {
+            label: Level
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 30
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: APPROVAL_LEVEL
+            dataType: number
+        }
+    )
+
+    pageItem P191_APPROVER_ROLE (
+        type: displayOnly
+        label {
+            label: Role Approver
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 40
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: APPROVER_ROLE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_AMOUNT (
+        type: displayOnly
+        label {
+            label: Nilai
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 50
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: AMOUNT
+            dataType: number
+        }
+    )
+
+    pageItem P191_REQUESTED_BY (
+        type: displayOnly
+        label {
+            label: Diajukan Oleh
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 60
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: REQUESTED_BY
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_STATUS (
+        type: displayOnly
+        label {
+            label: Status
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 70
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: STATUS
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_CAN_ACT_YN (
+        type: displayOnly
+        label {
+            label: Bisa Saya Proses
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 80
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @approval
+            column: CAN_ACT_YN
+            dataType: varchar2
+        }
+    )
+
+    pageItem P191_NOTE (
+        type: textarea
+        label {
+            label: Catatan (wajib bila Reject)
+            alignment: right
+        }
+        layout {
+            sequence: 200
+            region: @approval
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 60
+            height: 3
+        }
+        validation {
+            maxLength: 1000
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Close
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button reject (
+        buttonName: REJECT
+        label: Reject
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--simple
+            ]
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Tolak dokumen ini?
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: apx_mbms_approval_pkg.can_act_yn(:P191_APPROVAL_ID) = 'Y'
+        }
+    )
+
+    button approve (
+        buttonName: APPROVE
+        label: Approve
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: apx_mbms_approval_pkg.can_act_yn(:P191_APPROVAL_ID) = 'Y'
+        }
+    )
+
+    dynamicAction on-click-cancel-close-dialog (
+        name: ON_CLICK_CANCEL_CLOSE_DIALOG
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancel
+        }
+
+        action native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process init-approval-form (
+        name: INIT_APPROVAL_FORM
+        type: formInitialization
+        formRegion: @approval
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 900191001
+        }
+    )
+
+    process call-approve (
+        name: CALL_APPROVE
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                apx_mbms_approval_pkg.approve(p_approval_id => :P191_APPROVAL_ID, p_note => :P191_NOTE);
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Dokumen disetujui.
+        }
+        serverSideCondition {
+            whenButtonPressed: @approve
+        }
+        advanced {
+            executionMappingIdentifier: 900191002
+        }
+    )
+
+    process call-reject (
+        name: CALL_REJECT
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                apx_mbms_approval_pkg.reject(p_approval_id => :P191_APPROVAL_ID, p_note => :P191_NOTE);
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        successMessage {
+            successMessage: Dokumen ditolak.
+        }
+        serverSideCondition {
+            whenButtonPressed: @reject
+        }
+        advanced {
+            executionMappingIdentifier: 900191003
+        }
+    )
+
+    process close-dialog (
+        name: CLOSE_DIALOG
+        type: closeDialog
+        settings {
+            showSuccessMessages: true
+        }
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: APPROVE,REJECT
+        }
+        advanced {
+            executionMappingIdentifier: 900191004
+        }
+    )
+
+)

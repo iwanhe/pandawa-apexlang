@@ -1,0 +1,305 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry home (
+        name: Home
+        pageNumber: 100
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 100
+            }
+        }
+    )
+
+    entry approval-inbox (
+        name: Approval Inbox
+        pageNumber: 190
+        execution {
+            sequence: 20
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 190
+            }
+        }
+    )
+
+    entry business-units (
+        name: Business Units
+        pageNumber: 200
+        execution {
+            sequence: 30
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 200
+            }
+        }
+    )
+
+    entry customers (
+        name: Customers
+        pageNumber: 210
+        execution {
+            sequence: 40
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 210
+            }
+        }
+    )
+
+    entry vendors (
+        name: Vendors
+        pageNumber: 220
+        execution {
+            sequence: 50
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 220
+            }
+        }
+    )
+
+    entry items (
+        name: Items
+        pageNumber: 230
+        execution {
+            sequence: 60
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 230
+            }
+        }
+    )
+
+    entry warehouses (
+        name: Warehouses & Locations
+        pageNumber: 240
+        execution {
+            sequence: 70
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 240
+            }
+        }
+    )
+
+    entry job-orders (
+        name: Job Orders
+        pageNumber: 300
+        execution {
+            sequence: 80
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 300
+            }
+        }
+    )
+
+    entry projects (
+        name: Projects
+        pageNumber: 310
+        execution {
+            sequence: 90
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 310
+            }
+        }
+    )
+
+    entry wbs-budget (
+        name: WBS Budget
+        pageNumber: 320
+        execution {
+            sequence: 100
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 320
+            }
+        }
+    )
+
+    entry purchase-requisitions (
+        name: Purchase Requisitions
+        pageNumber: 330
+        execution {
+            sequence: 110
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 330
+            }
+        }
+    )
+
+    entry pr-lines (
+        name: PR Lines
+        pageNumber: 340
+        execution {
+            sequence: 120
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 340
+            }
+        }
+    )
+
+    entry stock-transactions (
+        name: Stock Transactions
+        pageNumber: 350
+        execution {
+            sequence: 130
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 350
+            }
+        }
+    )
+
+    entry stock-on-hand (
+        name: Stock On Hand
+        pageNumber: 430
+        execution {
+            sequence: 140
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 430
+            }
+        }
+    )
+
+    entry job-costing (
+        name: Job Costing
+        pageNumber: 400
+        execution {
+            sequence: 150
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 400
+            }
+        }
+    )
+
+    entry project-summary (
+        name: Project Summary
+        pageNumber: 410
+        execution {
+            sequence: 160
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 410
+            }
+        }
+    )
+
+    entry budget-vs-actual (
+        name: Budget vs Actual
+        pageNumber: 420
+        execution {
+            sequence: 170
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 420
+            }
+        }
+    )
+
+    entry users-roles (
+        name: Users & Roles
+        pageNumber: 500
+        execution {
+            sequence: 180
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 500
+            }
+        }
+    )
+
+    entry document-types (
+        name: Document Types & Approval
+        pageNumber: 510
+        execution {
+            sequence: 190
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 510
+            }
+        }
+    )
+
+)

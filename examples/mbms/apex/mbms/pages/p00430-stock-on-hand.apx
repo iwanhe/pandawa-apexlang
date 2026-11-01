@@ -1,0 +1,284 @@
+page 430 (
+    name: Stock On Hand
+    alias: STOCK-ON-HAND
+    title: Stock On Hand
+    pageGroup: @inventory
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region stock-on-hand (
+        name: Stock On Hand
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select wh_code, item_code, item_name, uom, min_stock, qty_on_hand, avg_cost, stock_value, below_min_yn
+                  from apx_mbms_stock_on_hand_v
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: Tidak ada data.
+        }
+        actionsMenu {
+            subscription: false
+        }
+
+        column WH_CODE (
+            type: plainText
+            heading {
+                heading: Gudang
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column ITEM_CODE (
+            type: plainText
+            heading {
+                heading: Kode Item
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column ITEM_NAME (
+            type: plainText
+            heading {
+                heading: Nama Item
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column UOM (
+            type: plainText
+            heading {
+                heading: UoM
+            }
+            layout {
+                sequence: 4
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column MIN_STOCK (
+            type: plainText
+            heading {
+                heading: Min. Stok
+                alignment: end
+            }
+            layout {
+                sequence: 5
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G990D99
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column QTY_ON_HAND (
+            type: plainText
+            heading {
+                heading: On Hand
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G990D99
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column AVG_COST (
+            type: plainText
+            heading {
+                heading: Biaya Rata-rata
+                alignment: end
+            }
+            layout {
+                sequence: 7
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column STOCK_VALUE (
+            type: plainText
+            heading {
+                heading: Nilai Stok
+                alignment: end
+            }
+            layout {
+                sequence: 8
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column BELOW_MIN_YN (
+            type: plainText
+            heading {
+                heading: Di Bawah Min?
+            }
+            layout {
+                sequence: 9
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        savedReport 430001 (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn WH_CODE (
+                sequence: 1
+            )
+
+            displayColumn ITEM_CODE (
+                sequence: 2
+            )
+
+            displayColumn ITEM_NAME (
+                sequence: 3
+            )
+
+            displayColumn UOM (
+                sequence: 4
+            )
+
+            displayColumn MIN_STOCK (
+                sequence: 5
+            )
+
+            displayColumn QTY_ON_HAND (
+                sequence: 6
+            )
+
+            displayColumn AVG_COST (
+                sequence: 7
+            )
+
+            displayColumn STOCK_VALUE (
+                sequence: 8
+            )
+
+            displayColumn BELOW_MIN_YN (
+                sequence: 9
+            )
+
+            sort (
+                column: ITEM_CODE
+                sort {
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+)

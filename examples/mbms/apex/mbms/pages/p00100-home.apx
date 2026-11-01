@@ -1,0 +1,440 @@
+page 100 (
+    name: Home
+    alias: HOME
+    title: Home
+    pageGroup: @home
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @app-users
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region app-name (
+        name: Home
+        title: MBMS Dashboard
+        type: staticContent
+        source {
+            htmlCode: Satu sistem untuk Printing dan Engineering di atas shared core. MVP sandbox - data dummy.
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/hero
+            templateOptions: #DEFAULT#
+        }
+        image {
+            fileUrl: #APP_FILES#icons/app-icon-512.png
+        }
+    )
+
+    region kpi (
+        name: Ringkasan
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select kpi_1, kpi_2, kpi_3, kpi_4, kpi_5
+                  from apx_mbms_dash_kpi_v
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--hideNoPagination
+            ]
+        }
+
+        column KPI_1 (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Approval Menunggu Anda
+                alignment: center
+            }
+            layout {
+                sequence: 1
+                columnAlignment: center
+            }
+        )
+
+        column KPI_2 (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Job Order Aktif
+                alignment: center
+            }
+            layout {
+                sequence: 2
+                columnAlignment: center
+            }
+        )
+
+        column KPI_3 (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Proyek Aktif
+                alignment: center
+            }
+            layout {
+                sequence: 3
+                columnAlignment: center
+            }
+        )
+
+        column KPI_4 (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: PR Menunggu Approval
+                alignment: center
+            }
+            layout {
+                sequence: 4
+                columnAlignment: center
+            }
+        )
+
+        column KPI_5 (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Item di Bawah Min. Stok
+                alignment: center
+            }
+            layout {
+                sequence: 5
+                columnAlignment: center
+            }
+        )
+
+    )
+
+    region chart-1 (
+        name: Job Order per Status
+        type: chart
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        chart {
+            type: pie
+        }
+        performance {
+            lazyLoading: false
+        }
+        value {
+            format: decimal
+            decimalPlaces: 0
+        }
+        legend {
+            show: false
+        }
+
+        series series-1 (
+            name: Job Orders
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c1_s1_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: true
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+    )
+
+    region chart-2 (
+        name: Nilai Stok per Gudang
+        type: chart
+        layout {
+            sequence: 50
+            slot: body
+            startNewRow: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        performance {
+            lazyLoading: false
+        }
+        legend {
+            show: false
+        }
+
+        series series-1 (
+            name: Nilai Stok
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c2_s1_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: false
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+        axis x (
+            name: x
+            majorTicks {
+                show: auto
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+            }
+            majorTicks {
+                show: auto
+            }
+        )
+
+    )
+
+    region chart-3 (
+        name: Proyek: Budget vs Aktual
+        type: chart
+        layout {
+            sequence: 60
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        performance {
+            lazyLoading: false
+        }
+        legend {
+            show: true
+        }
+
+        series series-1 (
+            name: Budget
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c3_s1_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: false
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+        series series-2 (
+            name: Aktual
+            execution {
+                sequence: 20
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c3_s2_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: false
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+        axis x (
+            name: x
+            majorTicks {
+                show: auto
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+            }
+            majorTicks {
+                show: auto
+            }
+        )
+
+    )
+
+    region chart-4 (
+        name: Job: HPP Estimasi vs Aktual
+        type: chart
+        layout {
+            sequence: 70
+            slot: body
+            startNewRow: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        performance {
+            lazyLoading: false
+        }
+        legend {
+            show: true
+        }
+
+        series series-1 (
+            name: Estimasi
+            execution {
+                sequence: 10
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c4_s1_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: false
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+        series series-2 (
+            name: Aktual
+            execution {
+                sequence: 20
+            }
+            source {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select label, value
+                      from apx_mbms_dash_c4_s2_v
+                    ```
+            }
+            columnMapping {
+                label: LABEL
+                value: VALUE
+            }
+            label {
+                show: false
+            }
+            performance {
+                maxRowsToProcess: 50
+            }
+        )
+
+        axis x (
+            name: x
+            majorTicks {
+                show: auto
+            }
+        )
+
+        axis y (
+            name: y
+            value {
+                format: decimal
+                decimalPlaces: 0
+            }
+            majorTicks {
+                show: auto
+            }
+        )
+
+    )
+
+)

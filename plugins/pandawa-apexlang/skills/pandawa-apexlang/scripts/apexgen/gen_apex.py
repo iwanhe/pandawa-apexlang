@@ -331,7 +331,7 @@ def entity_form_page(ctx, e):
         elif c.type == "ref":
             r = app.entity(c.ref)
             if c.lov_sql:
-                item = page_item(num, c.name, c.label, "select", rid, seq, lov_sql=c.lov_sql, cascade=c.cascade,
+                item = page_item(num, c.name, c.label, "select", rid, seq, lov_sql=c.lov_sql.replace(":P_", ":P%d_" % num), cascade=c.cascade,
                                  default_sql=c.default_sql, readonly_expr=ro, **common)
             else:
                 item = page_item(num, c.name, c.label, "select", rid, seq, lov=r.lov_name, default_sql=c.default_sql,

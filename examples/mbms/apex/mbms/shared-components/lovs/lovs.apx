@@ -1,0 +1,593 @@
+lov yes-no (
+    name: YES_NO
+    source {
+        location: staticValues
+    }
+
+    entry y (
+        sequence: 10
+        display: Ya
+        return: Y
+    )
+
+    entry n (
+        sequence: 20
+        display: Tidak
+        return: N
+    )
+
+)
+
+lov roles (
+    name: MBMS_ROLES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select role_code || ' - ' || role_name d, role_code r
+              from apx_mbms_roles
+             order by role_code
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov business-units (
+    name: APX_MBMS_BUSINESS_UNITS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select bu_code || ' - ' || bu_name d, bu_id r
+              from apx_mbms_business_units
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov customers (
+    name: APX_MBMS_CUSTOMERS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select customer_code || ' - ' || customer_name d, customer_id r
+              from apx_mbms_customers
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov vendors (
+    name: APX_MBMS_VENDORS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select vendor_code || ' - ' || vendor_name d, vendor_id r
+              from apx_mbms_vendors
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov vendors-vendor-type (
+    name: VENDORS_VENDOR_TYPE
+    source {
+        location: staticValues
+    }
+
+    entry goods (
+        sequence: 10
+        display: Barang
+        return: GOODS
+    )
+
+    entry subcon (
+        sequence: 20
+        display: Subkontraktor
+        return: SUBCON
+    )
+
+    entry service (
+        sequence: 30
+        display: Jasa
+        return: SERVICE
+    )
+
+)
+
+lov items (
+    name: APX_MBMS_ITEMS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select item_code || ' - ' || item_name || ' (' || uom || ')' d, item_id r
+              from apx_mbms_items
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov items-item-category (
+    name: ITEMS_ITEM_CATEGORY
+    source {
+        location: staticValues
+    }
+
+    entry raw (
+        sequence: 10
+        display: Raw Material
+        return: RAW
+    )
+
+    entry consumable (
+        sequence: 20
+        display: Consumables
+        return: CONSUMABLE
+    )
+
+    entry spare-part (
+        sequence: 30
+        display: Spare Part
+        return: SPARE_PART
+    )
+
+    entry finished-good (
+        sequence: 40
+        display: Finished Goods
+        return: FINISHED_GOOD
+    )
+
+    entry plate (
+        sequence: 50
+        display: Plat Cetak
+        return: PLATE
+    )
+
+    entry service (
+        sequence: 60
+        display: Jasa
+        return: SERVICE
+    )
+
+)
+
+lov warehouses (
+    name: APX_MBMS_WAREHOUSES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select wh_code || ' - ' || wh_name d, warehouse_id r
+              from apx_mbms_warehouses
+             where active_yn = 'Y'
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov warehouses-location-type (
+    name: WAREHOUSES_LOCATION_TYPE
+    source {
+        location: staticValues
+    }
+
+    entry main (
+        sequence: 10
+        display: Gudang Utama
+        return: MAIN
+    )
+
+    entry site (
+        sequence: 20
+        display: Site Proyek
+        return: SITE
+    )
+
+    entry vendor (
+        sequence: 30
+        display: Lokasi Vendor Subkon
+        return: VENDOR
+    )
+
+)
+
+lov job-orders (
+    name: APX_MBMS_JOB_ORDERS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select job_no || ' - ' || substr(product_desc, 1, 60) d, job_id r
+              from apx_mbms_job_orders
+             where status in ('APPROVED', 'IN_PROGRESS', 'COMPLETED')
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov job-orders-job-type (
+    name: JOB_ORDERS_JOB_TYPE
+    source {
+        location: staticValues
+    }
+
+    entry mto (
+        sequence: 10
+        display: Make to Order
+        return: MTO
+    )
+
+    entry stock (
+        sequence: 20
+        display: Produksi untuk Stok
+        return: STOCK
+    )
+
+)
+
+lov job-orders-status (
+    name: JOB_ORDERS_STATUS
+    source {
+        location: staticValues
+    }
+
+    entry draft (
+        sequence: 10
+        display: Draft
+        return: DRAFT
+    )
+
+    entry submitted (
+        sequence: 20
+        display: Submitted
+        return: SUBMITTED
+    )
+
+    entry approved (
+        sequence: 30
+        display: Approved
+        return: APPROVED
+    )
+
+    entry rejected (
+        sequence: 40
+        display: Rejected
+        return: REJECTED
+    )
+
+    entry cancelled (
+        sequence: 50
+        display: Cancelled
+        return: CANCELLED
+    )
+
+    entry in-progress (
+        sequence: 60
+        display: In Progress
+        return: IN_PROGRESS
+    )
+
+    entry completed (
+        sequence: 70
+        display: Completed
+        return: COMPLETED
+    )
+
+    entry closed (
+        sequence: 80
+        display: Closed
+        return: CLOSED
+    )
+
+)
+
+lov projects (
+    name: APX_MBMS_PROJECTS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select project_no || ' - ' || project_name d, project_id r
+              from apx_mbms_projects
+             where status in ('APPROVED', 'IN_PROGRESS', 'COMPLETED')
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov projects-project-type (
+    name: PROJECTS_PROJECT_TYPE
+    source {
+        location: staticValues
+    }
+
+    entry fabrication (
+        sequence: 10
+        display: Fabrikasi
+        return: FABRICATION
+    )
+
+    entry installation (
+        sequence: 20
+        display: Instalasi
+        return: INSTALLATION
+    )
+
+    entry maintenance (
+        sequence: 30
+        display: Maintenance Service
+        return: MAINTENANCE
+    )
+
+)
+
+lov projects-status (
+    name: PROJECTS_STATUS
+    source {
+        location: staticValues
+    }
+
+    entry draft (
+        sequence: 10
+        display: Draft
+        return: DRAFT
+    )
+
+    entry submitted (
+        sequence: 20
+        display: Submitted
+        return: SUBMITTED
+    )
+
+    entry approved (
+        sequence: 30
+        display: Approved
+        return: APPROVED
+    )
+
+    entry rejected (
+        sequence: 40
+        display: Rejected
+        return: REJECTED
+    )
+
+    entry cancelled (
+        sequence: 50
+        display: Cancelled
+        return: CANCELLED
+    )
+
+    entry in-progress (
+        sequence: 60
+        display: In Progress
+        return: IN_PROGRESS
+    )
+
+    entry completed (
+        sequence: 70
+        display: Completed
+        return: COMPLETED
+    )
+
+    entry closed (
+        sequence: 80
+        display: Closed
+        return: CLOSED
+    )
+
+)
+
+lov wbs (
+    name: APX_MBMS_WBS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select wbs_code || ' - ' || wbs_name d, wbs_id r
+              from apx_mbms_wbs
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov wbs-cost-category (
+    name: WBS_COST_CATEGORY
+    source {
+        location: staticValues
+    }
+
+    entry material (
+        sequence: 10
+        display: Material
+        return: MATERIAL
+    )
+
+    entry labor (
+        sequence: 20
+        display: Labor
+        return: LABOR
+    )
+
+    entry equipment (
+        sequence: 30
+        display: Equipment
+        return: EQUIPMENT
+    )
+
+    entry subcon (
+        sequence: 40
+        display: Subkon
+        return: SUBCON
+    )
+
+    entry operational (
+        sequence: 50
+        display: Operational
+        return: OPERATIONAL
+    )
+
+    entry other (
+        sequence: 60
+        display: Other
+        return: OTHER
+    )
+
+)
+
+lov purchase-reqs (
+    name: APX_MBMS_PURCHASE_REQS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select pr_no || ' - ' || substr(description, 1, 60) d, pr_id r
+              from apx_mbms_purchase_reqs
+             where status in ('DRAFT', 'REJECTED')
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov purchase-reqs-purpose (
+    name: PURCHASE_REQS_PURPOSE
+    source {
+        location: staticValues
+    }
+
+    entry stock (
+        sequence: 10
+        display: Stock Replenishment
+        return: STOCK
+    )
+
+    entry job (
+        sequence: 20
+        display: Printing Job Order
+        return: JOB
+    )
+
+    entry project (
+        sequence: 30
+        display: Engineering Project
+        return: PROJECT
+    )
+
+)
+
+lov pr-lines (
+    name: APX_MBMS_PR_LINES
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select to_char(line_id) d, line_id r
+              from apx_mbms_pr_lines
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov stock-txns (
+    name: APX_MBMS_STOCK_TXNS
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select txn_no d, txn_id r
+              from apx_mbms_stock_txns
+             order by 1
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov stock-txns-txn-type (
+    name: STOCK_TXNS_TXN_TYPE
+    source {
+        location: staticValues
+    }
+
+    entry receipt (
+        sequence: 10
+        display: Goods Receipt
+        return: RECEIPT
+    )
+
+    entry issue (
+        sequence: 20
+        display: Material Issue
+        return: ISSUE
+    )
+
+    entry return (
+        sequence: 30
+        display: Material Return
+        return: RETURN
+    )
+
+    entry adj-in (
+        sequence: 40
+        display: Adjustment (+)
+        return: ADJ_IN
+    )
+
+    entry adj-out (
+        sequence: 50
+        display: Adjustment (-)
+        return: ADJ_OUT
+    )
+
+)

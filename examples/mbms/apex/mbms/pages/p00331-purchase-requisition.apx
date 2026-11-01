@@ -1,0 +1,637 @@
+page 331 (
+    name: Purchase Requisition
+    alias: PURCHASE-REQUISITION
+    title: Purchase Requisition
+    pageGroup: @procurement
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        chained: false
+        resizable: true
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        settings {
+            outputAs: text
+        }
+    )
+
+    region purchase-reqs (
+        name: Purchase Requisition
+        type: form
+        source {
+            location: localDatabase
+            tableName: APX_MBMS_PURCHASE_REQS
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    pageItem P331_PR_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @purchase-reqs
+            slot: regionBody
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: PR_ID
+            dataType: number
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P331_PR_NO (
+        type: displayOnly
+        label {
+            label: No. Purchase Requisition
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 10
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: PR_NO
+            dataType: varchar2
+            queryOnly: true
+        }
+    )
+
+    pageItem P331_STATUS (
+        type: displayOnly
+        label {
+            label: Status
+            alignment: right
+        }
+        settings {
+            sendOnPageSubmit: false
+        }
+        layout {
+            sequence: 15
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: STATUS
+            dataType: varchar2
+            queryOnly: true
+        }
+    )
+
+    pageItem P331_BU_ID (
+        type: selectList
+        label {
+            label: Business Unit
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @business-units
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 25
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: BU_ID
+            dataType: number
+        }
+    )
+
+    pageItem P331_PR_DATE (
+        type: datePicker
+        label {
+            label: Tanggal
+            alignment: right
+        }
+        layout {
+            sequence: 35
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: PR_DATE
+            dataType: date
+        }
+        default {
+            type: sqlQuerySingleValue
+            sqlQuerySingleValue: select trunc(sysdate) from dual
+        }
+    )
+
+    pageItem P331_PURPOSE (
+        type: selectList
+        label {
+            label: Tujuan
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @purchase-reqs-purpose
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 45
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: PURPOSE
+            dataType: varchar2
+        }
+        default {
+            type: static
+            staticValue: STOCK
+        }
+    )
+
+    pageItem P331_JOB_ID (
+        type: selectList
+        label {
+            label: Job Order
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @job-orders
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 55
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: JOB_ID
+            dataType: number
+        }
+    )
+
+    pageItem P331_PROJECT_ID (
+        type: selectList
+        label {
+            label: Proyek
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @projects
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 65
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: PROJECT_ID
+            dataType: number
+        }
+        help {
+            inlineHelpText: Budget dicek saat Submit (BR-03).
+        }
+    )
+
+    pageItem P331_WBS_ID (
+        type: selectList
+        label {
+            label: WBS
+            alignment: right
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery: select wbs_code || ' - ' || wbs_name d, wbs_id r from apx_mbms_wbs where project_id = :P331_PROJECT_ID order by wbs_code
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        cascadingLov {
+            parentItems: P331_PROJECT_ID
+            parentRequired: false
+        }
+        layout {
+            sequence: 75
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: WBS_ID
+            dataType: number
+        }
+    )
+
+    pageItem P331_NEED_DATE (
+        type: datePicker
+        label {
+            label: Dibutuhkan
+            alignment: right
+        }
+        layout {
+            sequence: 85
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: NEED_DATE
+            dataType: date
+        }
+    )
+
+    pageItem P331_DESCRIPTION (
+        type: textarea
+        label {
+            label: Keterangan
+            alignment: right
+        }
+        layout {
+            sequence: 95
+            region: @purchase-reqs
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 60
+            height: 3
+        }
+        validation {
+            maxLength: 1000
+        }
+        source {
+            formRegion: @purchase-reqs
+            column: DESCRIPTION
+            dataType: varchar2
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Delete
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--simple
+            ]
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P331_PR_ID is not null and nvl(:P331_STATUS,'DRAFT') = 'DRAFT'
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Apply Changes
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P331_PR_ID is not null and nvl(:P331_STATUS,'DRAFT') not in ('SUBMITTED','CANCELLED','CLOSED')
+        }
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 40
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P331_PR_ID is null
+        }
+    )
+
+    button submit (
+        buttonName: SUBMIT
+        label: Submit for Approval
+        layout {
+            sequence: 50
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Ajukan dokumen ini untuk approval? Setelah diajukan dokumen terkunci.
+            style: information
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P331_PR_ID is not null and nvl(:P331_STATUS,'DRAFT') in ('DRAFT','REJECTED')
+        }
+    )
+
+    dynamicAction on-click-cancel-close-dialog (
+        name: ON_CLICK_CANCEL_CLOSE_DIALOG
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancel
+        }
+
+        action native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    validation check-purchase-reqs-1 (
+        name: JOB_REQUIRED_FOR_JOB
+        execution {
+            sequence: 10
+        }
+        validation {
+            type: expression
+            plsqlExpression: :P331_PURPOSE <> 'JOB' or :P331_JOB_ID is not null
+        }
+        error {
+            errorMessage: Pilih Job Order untuk PR tujuan Printing Job Order.
+            displayLocation: inlineWithFieldAndInNotification
+            associatedItem: @P331_JOB_ID
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SAVE,CREATE,SUBMIT
+        }
+    )
+
+    validation check-purchase-reqs-2 (
+        name: PROJECT_REQUIRED_FOR_PROJECT
+        execution {
+            sequence: 20
+        }
+        validation {
+            type: expression
+            plsqlExpression: :P331_PURPOSE <> 'PROJECT' or :P331_PROJECT_ID is not null
+        }
+        error {
+            errorMessage: Pilih Proyek untuk PR tujuan Engineering Project.
+            displayLocation: inlineWithFieldAndInNotification
+            associatedItem: @P331_PROJECT_ID
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SAVE,CREATE,SUBMIT
+        }
+    )
+
+    process init-purchase-reqs-form (
+        name: INIT_PURCHASE_REQS_FORM
+        type: formInitialization
+        formRegion: @purchase-reqs
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 900331001
+        }
+    )
+
+    process save-purchase-reqs (
+        name: SAVE_PURCHASE_REQS
+        type: formAutoRowProcessing
+        formRegion: @purchase-reqs
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 900331002
+        }
+    )
+
+    process call-submit-purchase-reqs (
+        name: CALL_SUBMIT_PURCHASE_REQS
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                apx_mbms_approval_pkg.submit(p_doc_type => 'PR', p_doc_id => :P331_PR_ID);
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        successMessage {
+            successMessage: Dokumen diajukan untuk approval.
+        }
+        serverSideCondition {
+            whenButtonPressed: @submit
+        }
+        advanced {
+            executionMappingIdentifier: 900331003
+        }
+    )
+
+    process close-dialog (
+        name: CLOSE_DIALOG
+        type: closeDialog
+        settings {
+            showSuccessMessages: true
+        }
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: DELETE,SAVE,CREATE,SUBMIT
+        }
+        advanced {
+            executionMappingIdentifier: 900331004
+        }
+    )
+
+)

@@ -1,0 +1,435 @@
+# =============================================================================
+# MBMS - Multisarana Business Management System (MVP), PT. Multisarana Niaga Mandiri
+# Contoh referensi besar: master data, Printing (job order + actual costing),
+# Engineering (proyek + WBS budget), Procurement (PR + budget control), stock ledger.
+# Versi pertama (pra-template) ada di repo iwanhe/mnm-poc.
+# =============================================================================
+
+app:
+  code: MBMS
+  alias: MBMS
+  name: MBMS - PT. Multisarana Niaga Mandiri
+  logo: MBMS
+  author: Tim PANDAWA
+  date: 2026-11-01
+  description: Satu sistem untuk Printing (Job Manufacturing) dan Engineering (Project Cost Control) di atas shared core. Data dummy.
+
+roles:
+  DIRECTOR: Director
+  PRINT_MGR: Printing Manager
+  PROJECT_MGR: Project Manager
+  ENG_MGR: Engineering Manager
+  PROCUREMENT: Procurement
+  WAREHOUSE: Warehouse
+  FINANCE: Finance
+  SALES: Sales
+
+authorizations:
+  master-data: [FINANCE, PROCUREMENT, SALES]
+  printing: [PRINT_MGR, SALES, DIRECTOR]
+  engineering: [PROJECT_MGR, ENG_MGR, DIRECTOR]
+  warehouse: [WAREHOUSE]
+
+groups:
+  master-data: {name: Master Data, icon: fa-table}
+  printing: {name: Printing, icon: fa-print}
+  engineering: {name: Engineering, icon: fa-wrench}
+  procurement: {name: Procurement, icon: fa-shopping-cart}
+  inventory: {name: Inventory, icon: fa-cubes}
+  reports: {name: Reports, icon: fa-bar-chart}
+
+entities:
+  # --------------------------------------------------------------- master data
+  - name: BUSINESS_UNITS
+    label: Business Unit
+    pk: BU_ID
+    group: master-data
+    pages: [200, 201]
+    auth: admin-rights
+    icon: fa-building-o
+    display: "bu_code || ' - ' || bu_name"
+    columns:
+      - {name: BU_CODE, type: code, label: Kode BU, required: true, unique: true, size: 10}
+      - {name: BU_NAME, type: text, label: Nama BU, required: true, size: 100}
+      - {name: ACTIVE_YN, type: yn, label: Aktif}
+
+  - name: CUSTOMERS
+    label: Customer
+    pk: CUSTOMER_ID
+    group: master-data
+    pages: [210, 211]
+    auth: master-data
+    icon: fa-users
+    display: "customer_code || ' - ' || customer_name"
+    columns:
+      - {name: CUSTOMER_CODE, type: code, label: Kode, required: true, unique: true}
+      - {name: CUSTOMER_NAME, type: text, label: Nama Customer, required: true}
+      - {name: NPWP, type: text, label: NPWP, size: 30}
+      - {name: NITKU, type: text, label: NITKU, size: 30}
+      - {name: ADDRESS, type: textarea, label: Alamat, size: 500, list: false}
+      - {name: CITY, type: text, label: Kota, size: 100}
+      - {name: CONTACT_PERSON, type: text, label: Contact Person, size: 100}
+      - {name: PHONE, type: text, label: Telepon, size: 50}
+      - {name: EMAIL, type: text, label: Email}
+      - {name: PAYMENT_TERM_DAYS, type: int, label: TOP (hari), required: true, default: 30, min: 0}
+      - {name: ACTIVE_YN, type: yn, label: Aktif}
+
+  - name: VENDORS
+    label: Vendor
+    pk: VENDOR_ID
+    group: master-data
+    pages: [220, 221]
+    auth: master-data
+    icon: fa-truck
+    display: "vendor_code || ' - ' || vendor_name"
+    columns:
+      - {name: VENDOR_CODE, type: code, label: Kode, required: true, unique: true}
+      - {name: VENDOR_NAME, type: text, label: Nama Vendor, required: true}
+      - {name: VENDOR_TYPE, type: enum, label: Tipe, required: true, default: GOODS, values: {GOODS: Barang, SUBCON: Subkontraktor, SERVICE: Jasa}}
+      - {name: NPWP, type: text, label: NPWP, size: 30}
+      - {name: CITY, type: text, label: Kota, size: 100}
+      - {name: PHONE, type: text, label: Telepon, size: 50}
+      - {name: PAYMENT_TERM_DAYS, type: int, label: TOP (hari), required: true, default: 30, min: 0}
+      - {name: ACTIVE_YN, type: yn, label: Aktif}
+
+  - name: ITEMS
+    label: Item
+    pk: ITEM_ID
+    group: master-data
+    pages: [230, 231]
+    auth: master-data
+    icon: fa-tag
+    display: "item_code || ' - ' || item_name || ' (' || uom || ')'"
+    columns:
+      - {name: ITEM_CODE, type: code, label: Kode Item, required: true, unique: true}
+      - {name: ITEM_NAME, type: text, label: Nama Item, required: true}
+      - {name: ITEM_CATEGORY, type: enum, label: Kategori, required: true, values: {RAW: Raw Material, CONSUMABLE: Consumables, SPARE_PART: Spare Part, FINISHED_GOOD: Finished Goods, PLATE: Plat Cetak, SERVICE: Jasa}}
+      - {name: UOM, type: code, label: UoM, required: true, size: 20}
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: Business Unit}
+      - {name: MIN_STOCK, type: qty, label: Min. Stok, required: true, default: 0, min: 0}
+      - {name: STD_COST, type: money, label: Std Cost, required: true, default: 0, min: 0}
+      - {name: ACTIVE_YN, type: yn, label: Aktif}
+
+  - name: WAREHOUSES
+    label: Warehouse / Location
+    label_plural: Warehouses & Locations
+    list_alias: warehouses
+    form_alias: warehouse
+    pk: WAREHOUSE_ID
+    group: master-data
+    pages: [240, 241]
+    auth: master-data
+    icon: fa-home
+    display: "wh_code || ' - ' || wh_name"
+    columns:
+      - {name: WH_CODE, type: code, label: Kode, required: true, unique: true}
+      - {name: WH_NAME, type: text, label: Nama, required: true}
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: Business Unit, required: true}
+      - {name: LOCATION_TYPE, type: enum, label: Tipe Lokasi, required: true, default: MAIN, values: {MAIN: Gudang Utama, SITE: Site Proyek, VENDOR: Lokasi Vendor Subkon}, help: "Site proyek dan vendor subkon dicatat sebagai lokasi di bawah BU pemilik (D-04, BR-12)."}
+      - {name: ACTIVE_YN, type: yn, label: Aktif}
+
+  # --------------------------------------------------------------- printing
+  - name: JOB_ORDERS
+    label: Job Order
+    pk: JOB_ID
+    group: printing
+    pages: [300, 301]
+    auth: printing
+    icon: fa-file-text-o
+    display: "job_no || ' - ' || substr(product_desc, 1, 60)"
+    lov_where: "status in ('APPROVED', 'IN_PROGRESS', 'COMPLETED')"
+    document:
+      type: JO
+      name: Job Order
+      prefix: JO
+      number: JOB_NO
+      amount: "t.est_hpp"
+      approver1: PRINT_MGR
+      operational: [IN_PROGRESS, COMPLETED, CLOSED]
+      lock: [JOB_TYPE, CUSTOMER_ID, PRODUCT_DESC, QTY_ORDER, UPS_PER_SHEET, INSHEET_PCT, SELLING_PRICE, EST_PAPER, EST_INK, EST_PLATE, EST_MACHINE, EST_FINISHING, EST_LABOR, EST_OVERHEAD]
+    columns:
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: BU, required: true, form: hidden, list: false, default_sql: "select bu_id from apx_mbms_business_units where bu_code = 'PRT'"}
+      - {name: JOB_TYPE, type: enum, label: Tipe Produksi, required: true, default: MTO, values: {MTO: Make to Order, STOCK: Produksi untuk Stok}}
+      - {name: CUSTOMER_ID, type: ref, ref: CUSTOMERS, label: Customer, help: Wajib untuk Make to Order.}
+      - {name: PRODUCT_DESC, type: textarea, label: Produk / Spesifikasi, required: true, size: 500}
+      - {name: QTY_ORDER, type: qty, label: Qty Order, required: true, min: 1}
+      - {name: UPS_PER_SHEET, type: int, label: Imposition (up/lembar), required: true, default: 1, min: 1}
+      - {name: INSHEET_PCT, type: pct, label: Toleransi Insheet (%), required: true, default: 5, min: 0, max: 100}
+      - {name: DUE_DATE, type: date, label: Due Date}
+      - {name: SELLING_PRICE, type: money, label: Harga Jual, required: true, default: 0, min: 0}
+      - {name: EST_PAPER, type: money, label: Est. Kertas, required: true, default: 0, list: false}
+      - {name: EST_INK, type: money, label: Est. Tinta, required: true, default: 0, list: false}
+      - {name: EST_PLATE, type: money, label: Est. Plat, required: true, default: 0, list: false}
+      - {name: EST_MACHINE, type: money, label: Est. Mesin, required: true, default: 0, list: false}
+      - {name: EST_FINISHING, type: money, label: Est. Finishing, required: true, default: 0, list: false}
+      - {name: EST_LABOR, type: money, label: Est. Tenaga Kerja, required: true, default: 0, list: false}
+      - {name: EST_OVERHEAD, type: money, label: Est. Overhead, required: true, default: 0, list: false}
+      - {name: EST_HPP, type: money, label: Est. HPP, virtual: "est_paper + est_ink + est_plate + est_machine + est_finishing + est_labor + est_overhead"}
+      - {name: QTY_PRODUCED, type: qty, label: Qty Produced, required: true, default: 0, min: 0, list: false}
+      - {name: QTY_REJECT, type: qty, label: Qty Reject, required: true, default: 0, min: 0, list: false}
+      - {name: QTY_DELIVERED, type: qty, label: Qty Delivered, required: true, default: 0, min: 0, list: false}
+      - {name: ACT_OTHER_COST, type: money, label: Biaya Aktual Lain, required: true, default: 0, min: 0, list: false, help: Material aktual dihitung dari material issue.}
+      - {name: NOTES, type: textarea, label: Catatan, list: false}
+    validations:
+      - name: CUSTOMER_REQUIRED_FOR_MTO
+        expr: ":P_JOB_TYPE = 'STOCK' or :P_CUSTOMER_ID is not null"
+        message: Customer wajib diisi untuk job Make to Order.
+        item: CUSTOMER_ID
+
+  # --------------------------------------------------------------- engineering
+  - name: PROJECTS
+    label: Project
+    pk: PROJECT_ID
+    group: engineering
+    pages: [310, 311]
+    auth: engineering
+    icon: fa-briefcase
+    display: "project_no || ' - ' || project_name"
+    lov_where: "status in ('APPROVED', 'IN_PROGRESS', 'COMPLETED')"
+    document:
+      type: PRJ
+      name: Project Budget
+      prefix: PJ
+      number: PROJECT_NO
+      amount: "(select nvl(sum(w.budget_amount), 0) from apx_mbms_wbs w where w.project_id = t.project_id)"
+      approver1: ENG_MGR
+      approver2: DIRECTOR
+      level2_limit: 100000000
+      validate: apx_mbms_rules_pkg.check_project_submit
+      operational: [IN_PROGRESS, COMPLETED, CLOSED]
+      lock: [CUSTOMER_ID, CONTRACT_VALUE]
+    columns:
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: BU, required: true, form: hidden, list: false, default_sql: "select bu_id from apx_mbms_business_units where bu_code = 'ENG'"}
+      - {name: PROJECT_NAME, type: text, label: Nama Proyek, required: true, size: 300}
+      - {name: PROJECT_TYPE, type: enum, label: Tipe, required: true, default: FABRICATION, values: {FABRICATION: Fabrikasi, INSTALLATION: Instalasi, MAINTENANCE: Maintenance Service}}
+      - {name: CUSTOMER_ID, type: ref, ref: CUSTOMERS, label: Customer, required: true}
+      - {name: CONTRACT_VALUE, type: money, label: Nilai Kontrak, required: true, default: 0, min: 0}
+      - {name: RETENTION_PCT, type: pct, label: Retensi (%), required: true, default: 5, min: 0, max: 100}
+      - {name: START_DATE, type: date, label: Mulai}
+      - {name: END_DATE, type: date, label: Target Selesai}
+      - {name: PROGRESS_PCT, type: pct, label: Progres (%), required: true, default: 0, min: 0, max: 100}
+      - {name: PROJECT_MANAGER, type: text, label: Project Manager, size: 255}
+      - {name: NOTES, type: textarea, label: Catatan, list: false}
+
+  - name: WBS
+    label: WBS Budget
+    label_plural: WBS Budget
+    list_alias: wbs-budget
+    form_alias: wbs
+    pk: WBS_ID
+    group: engineering
+    pages: [320, 321]
+    auth: engineering
+    icon: fa-sitemap
+    display: "wbs_code || ' - ' || wbs_name"
+    parent: {entity: PROJECTS, column: PROJECT_ID}
+    columns:
+      - {name: PROJECT_ID, type: ref, ref: PROJECTS, label: Proyek, required: true,
+         lov_sql: "select project_no || ' - ' || project_name d, project_id r from apx_mbms_projects where status in ('DRAFT', 'REJECTED') order by 1"}
+      - {name: WBS_CODE, type: code, label: Kode WBS, required: true, size: 20}
+      - {name: WBS_NAME, type: text, label: Aktivitas, required: true}
+      - {name: COST_CATEGORY, type: enum, label: Kategori Biaya, required: true, default: MATERIAL, values: {MATERIAL: Material, LABOR: Labor, EQUIPMENT: Equipment, SUBCON: Subkon, OPERATIONAL: Operational, OTHER: Other}}
+      - {name: BUDGET_AMOUNT, type: money, label: Budget, required: true, default: 0, min: 0}
+
+  # --------------------------------------------------------------- procurement
+  - name: PURCHASE_REQS
+    label: Purchase Requisition
+    pk: PR_ID
+    group: procurement
+    pages: [330, 331]
+    icon: fa-file-o
+    display: "pr_no || ' - ' || substr(description, 1, 60)"
+    lov_where: "status in ('DRAFT', 'REJECTED')"
+    document:
+      type: PR
+      name: Purchase Requisition
+      prefix: PR
+      number: PR_NO
+      amount: "(select nvl(sum(l.line_amount), 0) from apx_mbms_pr_lines l where l.pr_id = t.pr_id)"
+      approver1: PROCUREMENT
+      approver2: DIRECTOR
+      level2_limit: 50000000
+      validate: apx_mbms_rules_pkg.check_pr_submit
+    columns:
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: Business Unit, required: true}
+      - {name: PR_DATE, type: date, label: Tanggal, required: true, default_sql: "select trunc(sysdate) from dual"}
+      - {name: PURPOSE, type: enum, label: Tujuan, required: true, default: STOCK, values: {STOCK: Stock Replenishment, JOB: Printing Job Order, PROJECT: Engineering Project}}
+      - {name: JOB_ID, type: ref, ref: JOB_ORDERS, label: Job Order}
+      - {name: PROJECT_ID, type: ref, ref: PROJECTS, label: Proyek, help: Budget dicek saat Submit (BR-03).}
+      - {name: WBS_ID, type: ref, ref: WBS, label: WBS, cascade: PROJECT_ID,
+         lov_sql: "select wbs_code || ' - ' || wbs_name d, wbs_id r from apx_mbms_wbs where project_id = :P_PROJECT_ID order by wbs_code"}
+      - {name: NEED_DATE, type: date, label: Dibutuhkan}
+      - {name: DESCRIPTION, type: textarea, label: Keterangan}
+    validations:
+      - {name: JOB_REQUIRED_FOR_JOB, expr: ":P_PURPOSE <> 'JOB' or :P_JOB_ID is not null", message: Pilih Job Order untuk PR tujuan Printing Job Order., item: JOB_ID}
+      - {name: PROJECT_REQUIRED_FOR_PROJECT, expr: ":P_PURPOSE <> 'PROJECT' or :P_PROJECT_ID is not null", message: Pilih Proyek untuk PR tujuan Engineering Project., item: PROJECT_ID}
+
+  - name: PR_LINES
+    label: PR Line
+    pk: LINE_ID
+    group: procurement
+    pages: [340, 341]
+    icon: fa-list
+    display: "to_char(line_id)"
+    parent: {entity: PURCHASE_REQS, column: PR_ID}
+    columns:
+      - {name: PR_ID, type: ref, ref: PURCHASE_REQS, label: No. PR, required: true}
+      - {name: ITEM_ID, type: ref, ref: ITEMS, label: Item, required: true}
+      - {name: QTY, type: qty, label: Qty, required: true, min: 0}
+      - {name: UNIT_PRICE, type: money, label: Harga Satuan, required: true, default: 0, min: 0}
+      - {name: LINE_AMOUNT, type: money, label: Jumlah, virtual: "qty * unit_price"}
+      - {name: NOTES, type: text, label: Catatan, size: 500}
+
+  # --------------------------------------------------------------- inventory
+  - name: STOCK_TXNS
+    label: Stock Transaction
+    pk: TXN_ID
+    group: inventory
+    pages: [350, 351]
+    auth: warehouse
+    icon: fa-exchange
+    display: "txn_no"
+    immutable: true
+    operations: [add]
+    help: Stock ledger. Transaksi yang sudah diposting tidak dapat diubah/dihapus; koreksi dengan ADJ_IN/ADJ_OUT/RETURN.
+    columns:
+      - {name: TXN_NO, type: code, label: No. Transaksi, form: display}
+      - {name: TXN_DATE, type: date, label: Tanggal, required: true, default_sql: "select trunc(sysdate) from dual"}
+      - {name: TXN_TYPE, type: enum, label: Tipe, required: true, default: RECEIPT, values: {RECEIPT: Goods Receipt, ISSUE: Material Issue, RETURN: Material Return, ADJ_IN: Adjustment (+), ADJ_OUT: Adjustment (-)}}
+      - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: BU, form: none}
+      - {name: WAREHOUSE_ID, type: ref, ref: WAREHOUSES, label: Gudang / Lokasi, required: true}
+      - {name: ITEM_ID, type: ref, ref: ITEMS, label: Item, required: true}
+      - {name: QTY, type: qty, label: Qty, required: true, min: 0}
+      - {name: QTY_SIGNED, type: qty, label: Qty (+/-), form: none}
+      - {name: UNIT_COST, type: money, label: Biaya Satuan, min: 0, help: Kosongkan untuk Issue/Return (biaya rata-rata).}
+      - {name: TOTAL_COST, type: money, label: Total Biaya, virtual: "qty * nvl(unit_cost, 0)"}
+      - {name: JOB_ID, type: ref, ref: JOB_ORDERS, label: Job Order}
+      - {name: PROJECT_ID, type: ref, ref: PROJECTS, label: Proyek}
+      - {name: WBS_ID, type: ref, ref: WBS, label: WBS, cascade: PROJECT_ID,
+         lov_sql: "select wbs_code || ' - ' || wbs_name d, wbs_id r from apx_mbms_wbs where project_id = :P_PROJECT_ID order by wbs_code"}
+      - {name: REFERENCE, type: text, label: Referensi, size: 100}
+      - {name: NOTES, type: text, label: Catatan, size: 500, list: false}
+    validations:
+      - {name: RECEIPT_COST_REQUIRED, expr: ":P_TXN_TYPE not in ('RECEIPT', 'ADJ_IN') or :P_UNIT_COST is not null", message: Biaya satuan wajib untuk Receipt / Adjustment (+)., item: UNIT_COST}
+      - {name: ISSUE_REFERENCE_REQUIRED, expr: ":P_TXN_TYPE not in ('ISSUE', 'RETURN') or :P_JOB_ID is not null or :P_PROJECT_ID is not null", message: Issue/Return wajib ke Job Order atau Proyek., item: JOB_ID}
+
+reports:
+  - page: 400
+    title: Job Costing
+    group: reports
+    view: JOB_COST_V
+    sort: JOB_NO
+    help: "Actual costing per job (D-07): HPP aktual = material issue (biaya rata-rata) + biaya lain. Varians positif = penghematan."
+    columns:
+      - {name: JOB_NO, label: No. Job}
+      - {name: CUSTOMER_NAME, label: Customer}
+      - {name: STATUS, label: Status}
+      - {name: QTY_ORDER, label: Qty Order, type: qty}
+      - {name: QTY_PRODUCED, label: Produced, type: qty}
+      - {name: WASTE_PCT, label: Waste %, type: pct}
+      - {name: INSHEET_PCT, label: Toleransi %, type: pct}
+      - {name: SELLING_PRICE, label: Harga Jual, type: money}
+      - {name: EST_HPP, label: Est. HPP, type: money}
+      - {name: ACT_MATERIAL, label: Material Aktual, type: money}
+      - {name: ACT_HPP, label: HPP Aktual, type: money}
+      - {name: HPP_VARIANCE, label: Varians, type: money}
+      - {name: ACT_MARGIN_PCT, label: Margin %, type: pct}
+  - page: 410
+    title: Project Summary
+    group: reports
+    view: PROJECT_SUMMARY_V
+    sort: PROJECT_NO
+    help: "Estimasi rugi = budget melebihi nilai kontrak (PSAK 72 onerous contract)."
+    columns:
+      - {name: PROJECT_NO, label: No. Proyek}
+      - {name: PROJECT_NAME, label: Proyek}
+      - {name: CUSTOMER_NAME, label: Customer}
+      - {name: STATUS, label: Status}
+      - {name: PROGRESS_PCT, label: Progres %, type: pct}
+      - {name: CONTRACT_VALUE, label: Nilai Kontrak, type: money}
+      - {name: RETENTION_AMOUNT, label: Retensi, type: money}
+      - {name: BUDGET_AMOUNT, label: Budget, type: money}
+      - {name: ACTUAL_AMOUNT, label: Aktual, type: money}
+      - {name: COST_VARIANCE, label: Cost Variance, type: money}
+      - {name: LOSS_WARNING_YN, label: "Estimasi Rugi?"}
+      - {name: OVERDUE_YN, label: "Terlambat?"}
+  - page: 420
+    title: Budget vs Actual
+    group: reports
+    view: WBS_BUDGET_V
+    sort: PROJECT_NO
+    columns:
+      - {name: PROJECT_NO, label: No. Proyek}
+      - {name: WBS_CODE, label: WBS}
+      - {name: WBS_NAME, label: Aktivitas}
+      - {name: BUDGET_AMOUNT, label: Budget, type: money}
+      - {name: ACTUAL_AMOUNT, label: Aktual, type: money}
+      - {name: COMMITTED_AMOUNT, label: Committed (PR), type: money}
+      - {name: REMAINING_AMOUNT, label: Sisa Anggaran, type: money}
+      - {name: USED_PCT, label: Terpakai %, type: pct}
+  - page: 430
+    title: Stock On Hand
+    group: inventory
+    view: STOCK_ON_HAND_V
+    sort: ITEM_CODE
+    icon: fa-database
+    columns:
+      - {name: WH_CODE, label: Gudang}
+      - {name: ITEM_CODE, label: Kode Item}
+      - {name: ITEM_NAME, label: Nama Item}
+      - {name: UOM, label: UoM}
+      - {name: MIN_STOCK, label: Min. Stok, type: qty}
+      - {name: QTY_ON_HAND, label: On Hand, type: qty}
+      - {name: AVG_COST, label: Biaya Rata-rata, type: money}
+      - {name: STOCK_VALUE, label: Nilai Stok, type: money}
+      - {name: BELOW_MIN_YN, label: "Di Bawah Min?"}
+
+dashboard:
+  title: MBMS Dashboard
+  subtitle: Satu sistem untuk Printing dan Engineering di atas shared core. MVP sandbox - data dummy.
+  kpis:
+    - {label: Approval Menunggu Anda, sql: "select count(*) from apx_mbms_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
+    - {label: Job Order Aktif, sql: "select count(*) from apx_mbms_job_orders where status in ('APPROVED', 'IN_PROGRESS')"}
+    - {label: Proyek Aktif, sql: "select count(*) from apx_mbms_projects where status in ('APPROVED', 'IN_PROGRESS')"}
+    - {label: PR Menunggu Approval, sql: "select count(*) from apx_mbms_purchase_reqs where status = 'SUBMITTED'"}
+    - {label: Item di Bawah Min. Stok, sql: "select count(*) from apx_mbms_stock_on_hand_v where below_min_yn = 'Y'"}
+  charts:
+    - title: Job Order per Status
+      type: pie
+      series:
+        - {name: Job Orders, sql: "select status label, count(*) value from apx_mbms_job_orders group by status"}
+    - title: Nilai Stok per Gudang
+      type: bar
+      series:
+        - {name: Nilai Stok, sql: "select wh_code label, sum(stock_value) value from apx_mbms_stock_on_hand_v group by wh_code"}
+    - title: "Proyek: Budget vs Aktual"
+      type: bar
+      series:
+        - {name: Budget, sql: "select project_no label, budget_amount value from apx_mbms_project_summary_v"}
+        - {name: Aktual, sql: "select project_no label, actual_amount value from apx_mbms_project_summary_v"}
+    - title: "Job: HPP Estimasi vs Aktual"
+      type: bar
+      series:
+        - {name: Estimasi, sql: "select job_no label, est_hpp value from apx_mbms_job_cost_v where status <> 'DRAFT'"}
+        - {name: Aktual, sql: "select job_no label, act_hpp value from apx_mbms_job_cost_v where status <> 'DRAFT'"}
+
+users:
+  - {username: MBMS_ADMIN, roles: [ADMIN], name: Admin}
+  - {username: MBMS_SALES, roles: [SALES], name: Sales}
+  - {username: MBMS_PRINT_MGR, roles: [PRINT_MGR], name: Printing Manager}
+  - {username: MBMS_PM, roles: [PROJECT_MGR], name: Project Manager}
+  - {username: MBMS_ENG_MGR, roles: [ENG_MGR], name: Engineering Manager}
+  - {username: MBMS_DIRECTOR, roles: [DIRECTOR], name: Director}
+  - {username: MBMS_PROC, roles: [PROCUREMENT], name: Procurement}
+  - {username: MBMS_WH, roles: [WAREHOUSE], name: Warehouse}
+  - {username: MBMS_FIN, roles: [FINANCE], name: Finance}
+  - {username: MBMS_E2E, roles: [DIRECTOR], name: E2E Test}
+
+custom_sql:
+  - database/custom/01_inv_pkg.sql
+  - database/custom/02_rules_pkg.sql
+  - database/custom/03_stock_post_trg.sql
+  - database/custom/04_views.sql
+  - database/custom/05_stock_doc_types.sql
+seed_sql:
+  - database/seed/01_demo_data.sql

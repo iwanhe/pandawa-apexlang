@@ -1,0 +1,90 @@
+{
+  "app": "MBMS",
+  "pages": [
+    {
+      "alias": "home",
+      "no": 100,
+      "title": "Home"
+    },
+    {
+      "alias": "approval-inbox",
+      "no": 190,
+      "title": "Approval Inbox"
+    },
+    {
+      "alias": "business-units",
+      "no": 200,
+      "title": "Business Units"
+    },
+    {
+      "alias": "customers",
+      "no": 210,
+      "title": "Customers"
+    },
+    {
+      "alias": "vendors",
+      "no": 220,
+      "title": "Vendors"
+    },
+    {
+      "alias": "items",
+      "no": 230,
+      "title": "Items"
+    },
+    {
+      "alias": "warehouses",
+      "no": 240,
+      "title": "Warehouses & Locations"
+    },
+    {
+      "alias": "job-orders",
+      "no": 300,
+      "title": "Job Orders"
+    },
+    {
+      "alias": "projects",
+      "no": 310,
+      "title": "Projects"
+    },
+    {
+      "alias": "wbs-budget",
+      "no": 320,
+      "title": "WBS Budget"
+    },
+    {
+      "alias": "purchase-requisitions",
+      "no": 330,
+      "title": "Purchase Requisitions"
+    },
+    {
+      "alias": "pr-lines",
+      "no": 340,
+      "title": "PR Lines"
+    },
+    {
+      "alias": "stock-transactions",
+      "no": 350,
+      "title": "Stock Transactions"
+    },
+    {
+      "alias": "job-costing",
+      "no": 400,
+      "title": "Job Costing"
+    },
+    {
+      "alias": "project-summary",
+      "no": 410,
+      "title": "Project Summary"
+    },
+    {
+      "alias": "budget-vs-actual",
+      "no": 420,
+      "title": "Budget vs Actual"
+    },
+    {
+      "alias": "stock-on-hand",
+      "no": 430,
+      "title": "Stock On Hand"
+    }
+  ]
+}

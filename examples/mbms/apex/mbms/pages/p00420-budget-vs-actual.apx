@@ -1,0 +1,266 @@
+page 420 (
+    name: Budget vs Actual
+    alias: BUDGET-VS-ACTUAL
+    title: Budget vs Actual
+    pageGroup: @reports
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region budget-vs-actual (
+        name: Budget vs Actual
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select project_no, wbs_code, wbs_name, budget_amount, actual_amount, committed_amount, remaining_amount, used_pct
+                  from apx_mbms_wbs_budget_v
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: Tidak ada data.
+        }
+        actionsMenu {
+            subscription: false
+        }
+
+        column PROJECT_NO (
+            type: plainText
+            heading {
+                heading: No. Proyek
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column WBS_CODE (
+            type: plainText
+            heading {
+                heading: WBS
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column WBS_NAME (
+            type: plainText
+            heading {
+                heading: Aktivitas
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: varchar2
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column BUDGET_AMOUNT (
+            type: plainText
+            heading {
+                heading: Budget
+                alignment: end
+            }
+            layout {
+                sequence: 4
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column ACTUAL_AMOUNT (
+            type: plainText
+            heading {
+                heading: Aktual
+                alignment: end
+            }
+            layout {
+                sequence: 5
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column COMMITTED_AMOUNT (
+            type: plainText
+            heading {
+                heading: Committed (PR)
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column REMAINING_AMOUNT (
+            type: plainText
+            heading {
+                heading: Sisa Anggaran
+                alignment: end
+            }
+            layout {
+                sequence: 7
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column USED_PCT (
+            type: plainText
+            heading {
+                heading: Terpakai %
+                alignment: end
+            }
+            layout {
+                sequence: 8
+                columnAlignment: end
+            }
+            source {
+                dataType: number
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        savedReport 420001 (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn PROJECT_NO (
+                sequence: 1
+            )
+
+            displayColumn WBS_CODE (
+                sequence: 2
+            )
+
+            displayColumn WBS_NAME (
+                sequence: 3
+            )
+
+            displayColumn BUDGET_AMOUNT (
+                sequence: 4
+            )
+
+            displayColumn ACTUAL_AMOUNT (
+                sequence: 5
+            )
+
+            displayColumn COMMITTED_AMOUNT (
+                sequence: 6
+            )
+
+            displayColumn REMAINING_AMOUNT (
+                sequence: 7
+            )
+
+            displayColumn USED_PCT (
+                sequence: 8
+            )
+
+            sort (
+                column: PROJECT_NO
+                sort {
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+)

@@ -1,0 +1,328 @@
+page 201 (
+    name: Business Unit
+    alias: BUSINESS-UNIT
+    title: Business Unit
+    pageGroup: @master-data
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        chained: false
+        resizable: true
+    }
+    security {
+        authorizationScheme: @admin-rights
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        settings {
+            outputAs: text
+        }
+    )
+
+    region business-units (
+        name: Business Unit
+        type: form
+        source {
+            location: localDatabase
+            tableName: APX_MBMS_BUSINESS_UNITS
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    pageItem P201_BU_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @business-units
+            slot: regionBody
+        }
+        source {
+            formRegion: @business-units
+            column: BU_ID
+            dataType: number
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P201_BU_CODE (
+        type: textField
+        label {
+            label: Kode BU
+            alignment: right
+        }
+        layout {
+            sequence: 15
+            region: @business-units
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 10
+        }
+        source {
+            formRegion: @business-units
+            column: BU_CODE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P201_BU_NAME (
+        type: textField
+        label {
+            label: Nama BU
+            alignment: right
+        }
+        layout {
+            sequence: 25
+            region: @business-units
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        source {
+            formRegion: @business-units
+            column: BU_NAME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P201_ACTIVE_YN (
+        type: selectList
+        label {
+            label: Aktif
+            alignment: right
+        }
+        lov {
+            type: sharedComponent
+            lov: @yes-no
+            displayExtraValues: true
+            displayNullValue: true
+            nullDisplayValue: - Pilih -
+        }
+        layout {
+            sequence: 35
+            region: @business-units
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        source {
+            formRegion: @business-units
+            column: ACTIVE_YN
+            dataType: varchar2
+        }
+        default {
+            type: static
+            staticValue: Y
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancel
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Delete
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+                t-Button--simple
+            ]
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P201_BU_ID is not null
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Apply Changes
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P201_BU_ID is not null
+        }
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 40
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P201_BU_ID is null
+        }
+    )
+
+    dynamicAction on-click-cancel-close-dialog (
+        name: ON_CLICK_CANCEL_CLOSE_DIALOG
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancel
+        }
+
+        action native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process init-business-units-form (
+        name: INIT_BUSINESS_UNITS_FORM
+        type: formInitialization
+        formRegion: @business-units
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 900201001
+        }
+    )
+
+    process save-business-units (
+        name: SAVE_BUSINESS_UNITS
+        type: formAutoRowProcessing
+        formRegion: @business-units
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 900201002
+        }
+    )
+
+    process close-dialog (
+        name: CLOSE_DIALOG
+        type: closeDialog
+        settings {
+            showSuccessMessages: true
+        }
+        execution {
+            sequence: 50
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: DELETE,SAVE,CREATE
+        }
+        advanced {
+            executionMappingIdentifier: 900201003
+        }
+    )
+
+)
