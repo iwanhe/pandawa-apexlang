@@ -15,7 +15,7 @@ declare
    l_status apx_demo_requests.status%type;
    l_count  number;
 
-   procedure check (
+   procedure assert_true (
       p_ok  in boolean
      ,p_msg in varchar2
    )
@@ -25,7 +25,7 @@ declare
          raise_application_error(-20900, 'TEST GAGAL: ' || p_msg);
       end if;
       dbms_output.put_line('  ok  ' || p_msg);
-   end check;
+   end assert_true;
 
    function status_of (
       p_id in number
@@ -79,34 +79,34 @@ begin
      into l_small
          ,l_big
      from apx_demo_requests;
-   check(status_of(l_small) = 'DRAFT', 'seed: permintaan berstatus DRAFT');
-   check(apx_demo_approval_pkg.doc_amount('REQ', l_small) = 20 * 55000 + 5 * 30000, 'doc_amount = total baris (1.250.000)');
+   assert_true(status_of(l_small) = 'DRAFT', 'seed: permintaan berstatus DRAFT');
+   assert_true(apx_demo_approval_pkg.doc_amount('REQ', l_small) = 20 * 55000 + 5 * 30000, 'doc_amount = total baris (1.250.000)');
 
    -- 1. validate hook: permintaan tanpa baris ditolak
    apx_demo_sec_pkg.set_test_user('T_REQ');
    insert into apx_demo_requests (department_id, request_date, purpose)
    values ((select min(department_id) from apx_demo_departments), trunc(sysdate), 'tanpa baris')
    returning request_id into l_empty;
-   check(expect_error('begin apx_demo_approval_pkg.submit(''REQ'', ' || l_empty || '); end;', -20201),
+   assert_true(expect_error('begin apx_demo_approval_pkg.submit(''REQ'', ' || l_empty || '); end;', -20201),
          'submit tanpa baris ditolak oleh validate hook');
 
    -- 2. submit kecil -> 1 level (MANAGER)
    apx_demo_approval_pkg.submit('REQ', l_small);
-   check(status_of(l_small) = 'SUBMITTED', 'submit -> SUBMITTED');
-   check(expect_error('update apx_demo_requests set purpose = ''x'' where request_id = ' || l_small, -20110),
+   assert_true(status_of(l_small) = 'SUBMITTED', 'submit -> SUBMITTED');
+   assert_true(expect_error('update apx_demo_requests set purpose = ''x'' where request_id = ' || l_small, -20110),
          'dokumen SUBMITTED terkunci (trigger guard)');
-   check(expect_error('update apx_demo_request_lines set qty = 1 where request_id = ' || l_small, -20121),
+   assert_true(expect_error('update apx_demo_request_lines set qty = 1 where request_id = ' || l_small, -20121),
          'baris dokumen SUBMITTED terkunci (parent lock)');
    l_appr := pending_for(l_small);
-   check(apx_demo_approval_pkg.can_act_yn(l_appr) = 'N', 'maker-checker: pengaju tidak bisa memproses');
-   check(expect_error('begin apx_demo_approval_pkg.approve(' || l_appr || '); end;', -20106), 'approve oleh pengaju ditolak');
+   assert_true(apx_demo_approval_pkg.can_act_yn(l_appr) = 'N', 'maker-checker: pengaju tidak bisa memproses');
+   assert_true(expect_error('begin apx_demo_approval_pkg.approve(' || l_appr || '); end;', -20106), 'approve oleh pengaju ditolak');
    apx_demo_sec_pkg.set_test_user('T_DIR');
-   check(expect_error('begin apx_demo_approval_pkg.approve(' || l_appr || '); end;', -20107),
+   assert_true(expect_error('begin apx_demo_approval_pkg.approve(' || l_appr || '); end;', -20107),
          'role salah (DIRECTOR untuk level 1 MANAGER) ditolak');
    apx_demo_sec_pkg.set_test_user('T_MGR');
-   check(apx_demo_approval_pkg.can_act_yn(l_appr) = 'Y', 'MANAGER bisa memproses');
+   assert_true(apx_demo_approval_pkg.can_act_yn(l_appr) = 'Y', 'MANAGER bisa memproses');
    apx_demo_approval_pkg.approve(l_appr, 'ok');
-   check(status_of(l_small) = 'APPROVED', 'nilai < limit: APPROVED setelah level 1');
+   assert_true(status_of(l_small) = 'APPROVED', 'nilai < limit: APPROVED setelah level 1');
 
    -- 3. submit besar -> 2 level (MANAGER, DIRECTOR)
    apx_demo_sec_pkg.set_test_user('T_REQ');
@@ -119,10 +119,10 @@ begin
     where doc_id = l_big
       and approval_level = 2
       and status = 'PENDING';
-   check(l_count = 1 and status_of(l_big) = 'SUBMITTED', 'nilai > limit: level 2 DIRECTOR dibuat');
+   assert_true(l_count = 1 and status_of(l_big) = 'SUBMITTED', 'nilai > limit: level 2 DIRECTOR dibuat');
    apx_demo_sec_pkg.set_test_user('T_DIR');
    apx_demo_approval_pkg.approve(pending_for(l_big));
-   check(status_of(l_big) = 'APPROVED', 'level 2 approve -> APPROVED');
+   assert_true(status_of(l_big) = 'APPROVED', 'level 2 approve -> APPROVED');
 
    -- 4. kolom lock setelah approval, status operasional diizinkan
    apx_demo_sec_pkg.set_test_user('T_REQ');
@@ -135,8 +135,8 @@ begin
      from apx_demo_requests
     where request_id = l_big
       and purpose <> 'diubah';
-   check(l_status = 'FULFILLED', 'kolom lock dikembalikan, status operasional FULFILLED diterima');
-   check(expect_error('update apx_demo_requests set status = ''DRAFT'' where request_id = ' || l_big, -20112),
+   assert_true(l_status = 'FULFILLED', 'kolom lock dikembalikan, status operasional FULFILLED diterima');
+   assert_true(expect_error('update apx_demo_requests set status = ''DRAFT'' where request_id = ' || l_big, -20112),
          'transisi status ilegal ditolak');
 
    -- 5. reject wajib catatan, dokumen kembali REJECTED
@@ -145,16 +145,16 @@ begin
    apx_demo_approval_pkg.submit('REQ', l_empty);
    apx_demo_sec_pkg.set_test_user('T_MGR');
    l_appr := pending_for(l_empty);
-   check(expect_error('begin apx_demo_approval_pkg.reject(' || l_appr || ', null); end;', -20108), 'reject tanpa catatan ditolak');
+   assert_true(expect_error('begin apx_demo_approval_pkg.reject(' || l_appr || ', null); end;', -20108), 'reject tanpa catatan ditolak');
    apx_demo_approval_pkg.reject(l_appr, 'kurang lengkap');
-   check(status_of(l_empty) = 'REJECTED', 'reject -> REJECTED');
+   assert_true(status_of(l_empty) = 'REJECTED', 'reject -> REJECTED');
 
    -- 6. penomoran dokumen
    select count(*)
      into l_count
      from apx_demo_requests
     where request_no like 'REQ-' || to_char(sysdate, 'YYYY') || '-____';
-   check(l_count = 3, 'penomoran REQ-YYYY-NNNN');
+   assert_true(l_count = 3, 'penomoran REQ-YYYY-NNNN');
 
    apx_demo_sec_pkg.set_test_user(null);
    rollback;

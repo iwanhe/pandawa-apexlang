@@ -87,7 +87,7 @@ entities:
       lock: [DEPARTMENT_ID, PURPOSE, NEED_DATE]
     columns:
       - {name: DEPARTMENT_ID, type: ref, ref: DEPARTMENTS, label: Department, required: true}
-      - {name: REQUEST_DATE, type: date, label: Tanggal, required: true, default_sql: "select trunc(sysdate) from dual"}
+      - {name: REQUEST_DATE, type: date, label: Tanggal, required: true, default: trunc(sysdate), default_sql: "select trunc(sysdate) from dual"}
       - {name: NEED_DATE, type: date, label: Dibutuhkan Tanggal}
       - {name: PURPOSE, type: text, label: Keperluan, required: true, size: 300}
       - {name: NOTES, type: textarea, label: Catatan, list: false}

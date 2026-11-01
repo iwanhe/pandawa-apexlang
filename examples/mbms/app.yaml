@@ -252,7 +252,7 @@ entities:
       validate: apx_mbms_rules_pkg.check_pr_submit
     columns:
       - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: Business Unit, required: true}
-      - {name: PR_DATE, type: date, label: Tanggal, required: true, default_sql: "select trunc(sysdate) from dual"}
+      - {name: PR_DATE, type: date, label: Tanggal, required: true, default: trunc(sysdate), default_sql: "select trunc(sysdate) from dual"}
       - {name: PURPOSE, type: enum, label: Tujuan, required: true, default: STOCK, values: {STOCK: Stock Replenishment, JOB: Printing Job Order, PROJECT: Engineering Project}}
       - {name: JOB_ID, type: ref, ref: JOB_ORDERS, label: Job Order}
       - {name: PROJECT_ID, type: ref, ref: PROJECTS, label: Proyek, help: Budget dicek saat Submit (BR-03).}
@@ -294,7 +294,7 @@ entities:
     help: Stock ledger. Transaksi yang sudah diposting tidak dapat diubah/dihapus; koreksi dengan ADJ_IN/ADJ_OUT/RETURN.
     columns:
       - {name: TXN_NO, type: code, label: No. Transaksi, form: display}
-      - {name: TXN_DATE, type: date, label: Tanggal, required: true, default_sql: "select trunc(sysdate) from dual"}
+      - {name: TXN_DATE, type: date, label: Tanggal, required: true, default: trunc(sysdate), default_sql: "select trunc(sysdate) from dual"}
       - {name: TXN_TYPE, type: enum, label: Tipe, required: true, default: RECEIPT, values: {RECEIPT: Goods Receipt, ISSUE: Material Issue, RETURN: Material Return, ADJ_IN: Adjustment (+), ADJ_OUT: Adjustment (-)}}
       - {name: BU_ID, type: ref, ref: BUSINESS_UNITS, label: BU, form: none}
       - {name: WAREHOUSE_ID, type: ref, ref: WAREHOUSES, label: Gudang / Lokasi, required: true}

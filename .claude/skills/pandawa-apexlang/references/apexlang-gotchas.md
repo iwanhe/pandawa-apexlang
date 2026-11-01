@@ -41,6 +41,7 @@ Setiap butir di bawah pernah menyebabkan gagal validasi, gagal import, atau bug 
 | P2 | `ORA-04091 mutating table` di trigger detail saat delete cascade | Tangkap `-4091` lalu `return` (generator melakukannya untuk `parent:`) |
 | P3 | Nama fungsi `current_user` | Hindari keyword Oracle. Generator memakai `app_user` |
 | P4 | `set serveroutput on` di SQL Commands | Hanya SQLcl/SQL Scripts. Di SQL Commands tempel blok `declare ... end;` saja |
+| P6 | `ORA-04091 mutating` di trigger yang membaca tabelnya sendiri (mis. cek stok on hand) | Hanya aman untuk `INSERT ... VALUES` satu baris (form APEX, seed). Jangan `INSERT ... SELECT` ke tabel ledger; untuk bulk pakai loop atau compound trigger |
 | P5 | Angka di pesan error | `to_char(..., 'FM999G999...')` mengikuti NLS database (oracleapex.com: koma) |
 
 ## Playwright / E2E
