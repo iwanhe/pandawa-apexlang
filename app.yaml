@@ -155,7 +155,7 @@ users:                           # dipakai database/admin/create_users.sql
   - {username: DEMO_MGR, roles: [MANAGER], name: Manager}
   - {username: DEMO_DIR, roles: [DIRECTOR], name: Director}
   - {username: DEMO_WH, roles: [WAREHOUSE], name: Warehouse}
-  - {username: DEMO_E2E, roles: [], name: E2E Test}
+  - {username: DEMO_E2E, roles: [REQUESTER], name: E2E Test}   # butuh minimal 1 role (skema app-users)
 
 custom_sql:                      # logika bisnis manual (MVC: controller di package, query di view)
   - database/custom/01_request_pkg.sql

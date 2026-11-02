@@ -71,7 +71,7 @@ begin
    add_user('DEMO_MGR',            'MANAGER',                   'Manager');
    add_user('DEMO_DIR',            'DIRECTOR',                  'Director');
    add_user('DEMO_WH',             'WAREHOUSE',                 'Warehouse');
-   add_user('DEMO_E2E',            null,                        'E2E Test');
+   add_user('DEMO_E2E',            'REQUESTER',                 'E2E Test');
 
    for r in (select upper(column_value) username
                from table(apex_t_varchar2(l_runner, c_extra_admin))

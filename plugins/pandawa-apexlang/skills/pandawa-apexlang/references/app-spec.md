@@ -136,7 +136,7 @@ dashboard:
 
 ## `users`
 
-Daftar `{username, roles: [..], name}` untuk `database/admin/create_users.sql`. Sertakan akun E2E tanpa role, atau dengan role bila smoke test perlu membuka halaman ber-otorisasi.
+Daftar `{username, roles: [..], name}` untuk `database/admin/create_users.sql`. Sertakan akun E2E dengan **minimal satu role**. Setelah ADMIN pertama terdaftar, user tanpa role ditolak skema `app-users` di semua halaman, sehingga smoke test gagal.
 
 ## `custom_sql`, `seed_sql`
 
