@@ -31,7 +31,7 @@ Setiap butir di bawah pernah menyebabkan gagal validasi, gagal import, atau bug 
 | I1 | `ORDS Authentication request failed. Reason: Not Found` saat import zip | SQL Workshop → RESTful Services → **Register Schema with ORDS**, lalu ulangi. Bisa juga masalah instance yang hilang sendiri |
 | I2 | Zip ditolak | Zip berisi `application.apx` di root (bukan di subfolder). Upload zip apa adanya |
 | I3 | Tabel belum ada saat import | Jalankan `database/install.sql` dulu, baru import |
-| I4 | Halaman "Akses ditolak" | User belum punya role. Mode bootstrap: selama belum ada ADMIN, semua user dianggap ADMIN |
+| I4 | Halaman "Akses ditolak ... APP_USERS" tepat setelah `create_users.sql` | Begitu ADMIN pertama terdaftar, mode bootstrap berakhir: akun yang tidak punya role ditolak. `create_users.sql` kini otomatis mendaftarkan akun yang menjalankannya sebagai ADMIN; untuk akun lain: `insert into apx_<app>_user_roles (username, role_code) values ('<USER>', 'ADMIN'); commit;` |
 
 ## PL/SQL & SQL
 

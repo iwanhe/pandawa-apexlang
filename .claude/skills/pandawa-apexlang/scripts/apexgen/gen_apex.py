@@ -601,7 +601,7 @@ def lovs(app):
 def authorizations(app):
     out = [Comp("authorization", "app-users", ("name", "APP_USERS"), ("type", "plSqlFunctionBody"),
                 ("settings", G(("plsqlFunctionBody", "return %s_sec_pkg.has_any_role;" % app.prefix))),
-                ("error", G(("errorMessage", "Akses ditolak: akun Anda belum didaftarkan di aplikasi ini. Hubungi admin."))))]
+                ("error", G(("errorMessage", "Akses ditolak: akun &APP_USER. belum punya role di aplikasi ini. Admin mendaftarkannya di Administration > Users & Roles (atau tabel ..._USER_ROLES)."))))]
     for name, roles in app.authorizations.items():
         if name == "app-users":
             continue

@@ -15,7 +15,10 @@ declare
    c_password     constant varchar2(100) := null;
    c_email_domain constant varchar2(100) := 'example.com';
    c_workspace    constant varchar2(100) := null;  -- isi bila dijalankan via SQLcl
-   c_extra_admin  constant varchar2(255) := null;  -- akun workspace Anda, didaftarkan sebagai ADMIN
+   c_extra_admin  constant varchar2(255) := null;  -- akun workspace lain yang juga dijadikan ADMIN
+   -- Akun yang menjalankan script ini (developer di SQL Workshop) otomatis didaftarkan sebagai ADMIN,
+   -- supaya tidak terkunci begitu mode bootstrap berakhir (ADMIN pertama terdaftar).
+   l_runner       varchar2(255) := upper(sys_context('APEX$SESSION', 'APP_USER'));
 
    procedure add_user (
       p_user       in varchar2
@@ -74,14 +77,18 @@ begin
    add_user('MBMS_FIN',            'FINANCE',                   'Finance');
    add_user('MBMS_E2E',            'DIRECTOR',                  'E2E Test');
 
-   if c_extra_admin is not null then
+   for r in (select upper(column_value) username
+               from table(apex_t_varchar2(l_runner, c_extra_admin))
+              where column_value is not null
+                and upper(column_value) <> 'NOBODY')
+   loop
       merge into apx_mbms_user_roles t
-      using (select upper(c_extra_admin) username, 'ADMIN' role_code from dual) s
+      using (select r.username username, 'ADMIN' role_code from dual) s
          on (t.username = s.username and t.role_code = s.role_code)
        when not matched then
             insert (username, role_code) values (s.username, s.role_code);
-      dbms_output.put_line(rpad(upper(c_extra_admin), 20) || ' role: ADMIN (akun sudah ada)');
-   end if;
+      dbms_output.put_line(rpad(r.username, 20) || ' role: ADMIN (akun yang sudah ada / yang menjalankan script)');
+   end loop;
 
    commit;
 end;
