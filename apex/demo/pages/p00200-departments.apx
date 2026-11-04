@@ -10,6 +10,26 @@ page 200 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Daftar Departments (master data).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka Departments. Create/Edit membuka form drawer di halaman 201 (department).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_demo_departments_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit master-data.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.DEPARTMENTS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,14 @@ page 200 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Departments yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

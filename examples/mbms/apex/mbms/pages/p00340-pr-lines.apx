@@ -10,6 +10,26 @@ page 340 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Daftar PR Lines (baris detail dari Purchase Requisition).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka PR Lines. Create/Edit membuka form drawer di halaman 341 (pr-line).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_mbms_pr_lines_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit app-users.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PR_LINES. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,14 @@ page 340 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan PR Lines yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

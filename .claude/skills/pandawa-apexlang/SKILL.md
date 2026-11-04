@@ -62,7 +62,13 @@ Detail langkah, checklist, dan contoh prompt per fase ada di `references/workflo
 
    Jangan mengubah status dokumen dengan update langsung.
 5. **Data sandbox selalu dummy.** Password tidak boleh di-commit (`c_password` hanya di salinan yang diupload).
-6. **Jangan klaim selesai sebelum CI hijau.** Klaim "lolos validasi" hanya dari hasil `apex validate` dan test DB. Klaim "berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
+6. **Metadata AI di setiap halaman dan region** (konvensi Oracle APEX UX Pattern Catalog). Generator mengisi `comments` otomatis:
+   - halaman: `## Purpose / ## When to Use / ## AI Guidance / ## Source`;
+   - region: `Intent: / Pattern role: / AI guidance:`.
+
+   Baca `comments` ini sebelum mengubah `.apx`. Saat menulis halaman manual, ikuti pola yang sama. Jangan taruh metadata ini di `help` (itu teks untuk user).
+7. **Ikon** harus ada di Font APEX. Generator mengecek `icon:` terhadap `assets/apex-fa-icons-allowlist.txt` dan memberi saran ikon terdekat.
+8. **Jangan klaim selesai sebelum CI hijau.** Klaim "lolos validasi" hanya dari hasil `apex validate` dan test DB. Klaim "berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
 
 ## Gotcha APEXlang 26.2 (wajib dibaca sebelum menulis `.apx` manual)
 
@@ -71,6 +77,7 @@ Ringkasan, detailnya di `references/apexlang-gotchas.md`:
 - **LOV:** `name` harus HURUF BESAR.
 - **Chart:** chart bar/line wajib punya komponen `axis x` dan `axis y`. Format angka diletakkan di axis y, bukan di region.
 - **Process:** setiap process butuh `advanced.executionMappingIdentifier` yang unik.
+- **Metric card dan drawer:** sintaks diambil dari UX Pattern Catalog (`themeTemplateComponent/metricCard`, `dialogTemplate: @/drawer`). `settings.layout` metric card yang terbukti: `2Columns`, `4Columns`.
 - **Theme dan runtime:**
   - Pakai `baseTheme: ut-26.2` dan prefix `theme_42/26.2/`.
   - Jangan set `compatibilityMode` lama.

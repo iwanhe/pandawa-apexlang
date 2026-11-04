@@ -190,8 +190,11 @@ def dashboard_views(app):
     dash = app.dashboard
     kpis = dash.get("kpis", [])
     if kpis:
-        sel = "\n      ,".join("(%s) kpi_%d" % (k["sql"].strip().rstrip(";"), i + 1) for i, k in enumerate(kpis))
-        out.append("create or replace force view %s_dash_kpi_v as\nselect %s\n  from dual;\n" % (app.prefix, sel))
+        # satu baris per KPI -> region metric card (seq, icon, label, metric_value)
+        rows = "\nunion all\n".join(
+            "select %d seq\n      ,%s icon\n      ,%s label\n      ,(%s) metric_value\n  from dual"
+            % (i + 1, q(k["icon"]), q(k["label"]), k["sql"].strip().rstrip(";")) for i, k in enumerate(kpis))
+        out.append("create or replace force view %s_dash_kpi_v as\n%s;\n" % (app.prefix, rows))
     for i, ch in enumerate(dash.get("charts", []), 1):
         for j, s in enumerate(ch.get("series", []), 1):
             out.append("create or replace force view %s_dash_c%d_s%d_v as\n%s;\n" % (app.prefix, i, j, s["sql"].strip().rstrip(";")))

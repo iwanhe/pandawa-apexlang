@@ -10,6 +10,26 @@ page 210 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Daftar Items (master data).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka Items. Create/Edit membuka form drawer di halaman 211 (item).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_demo_items_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit master-data.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.ITEMS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,14 @@ page 210 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Items yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

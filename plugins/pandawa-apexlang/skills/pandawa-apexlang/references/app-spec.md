@@ -50,7 +50,7 @@ Satu entitas menghasilkan:
 | `list_alias` / `form_alias` | | kebab dari label | Alias halaman (friendly URL) |
 | `auth` | | `app-users` | Skema untuk halaman form + tombol Create |
 | `view_auth` | | `app-users` | Skema untuk halaman list |
-| `icon` | | `fa-table` | Ikon menu (Font APEX) |
+| `icon` | | `fa-table` | Ikon menu (Font APEX). Divalidasi terhadap allowlist |
 | `display` | | kolom text pertama | Ekspresi SQL tampilan LOV, mis. `"code \|\| ' - ' \|\| name"` |
 | `lov_where` | | | Filter tambahan LOV (bila ada kolom `ACTIVE_YN`, filter `= 'Y'` otomatis) |
 | `operations` | | `[add, update, delete]` | Operasi form |
@@ -58,7 +58,9 @@ Satu entitas menghasilkan:
 | `parent` | | | `{entity, column, lock_unless: [DRAFT, REJECTED]}`: baris detail terkunci bila dokumen induk tidak berstatus itu. FK otomatis `on delete cascade` |
 | `validations` | | | `[{name, expr, message, item, when}]`. `expr` = ekspresi PL/SQL dengan `:P_KOLOM` (diganti nomor halaman otomatis). `when` = request (default CREATE,SAVE,SUBMIT) |
 | `nav` | | `true` | Tampilkan di menu |
-| `help` | | | Teks bantuan halaman list |
+| `help` | | | Teks bantuan halaman list (tampil ke user) |
+| `purpose` | | otomatis | Satu kalimat tujuan bisnis. Masuk ke `comments` halaman (metadata AI, tidak tampil ke user) |
+| `form_style` | | `drawer` (non-dokumen), `modal` (dokumen) | `drawer`: panel kanan untuk form pendek, konteks list tetap terlihat. `modal`: dialog tengah untuk dokumen atau form panjang |
 | `document` | | | Jadikan entitas dokumen ber-approval (lihat bawah) |
 | `columns` | ya | | Daftar kolom |
 
@@ -125,14 +127,31 @@ Halaman IR read-only dari view custom (`database/custom/*.sql`).
 dashboard:
   title: ...
   subtitle: ...
-  kpis:                      # -> view APX_<APP>_DASH_KPI_V
-    - {label: Approval Menunggu Anda, sql: "select count(*) from apx_x_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
+  kpis:                      # -> view APX_<APP>_DASH_KPI_V (1 baris per KPI: SEQ, ICON, LABEL, METRIC_VALUE)
+    - {label: Approval Menunggu Anda, icon: fa-check-square-o, sql: "select count(*) from apx_x_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
   charts:                    # tiap series -> view APX_<APP>_DASH_C<n>_S<m>_V (kolom LABEL, VALUE)
     - title: ...
       type: pie | bar
       series:
         - {name: ..., sql: "select x label, sum(y) value from ... group by x"}
 ```
+
+KPI tampil sebagai **Metric Card** (template component Universal Theme): 1–2 KPI dua kolom, 3 KPI atau lebih empat kolom. `icon` opsional (default `fa-dashboard`). Sebaiknya 2–4 KPI yang sebanding.
+
+## Ikon
+
+Semua `icon:` (`groups`, `entities`, `reports`, `dashboard.kpis`) dicek terhadap `assets/apex-fa-icons-allowlist.txt` (1.488 ikon Font APEX, dari `oracle/apex` blueprints, lisensi UPL). Kelas pertama harus ikon yang valid; modifier seperti `fa-lg` boleh menyusul. Bila salah ketik: `SPEC ERROR: ITEMS: icon 'fa-tags-x' tidak ada di Font APEX (mungkin: fa-tags, fa-tag, fa-taxi)`.
+
+## Metadata AI (`comments`)
+
+Setiap halaman dan region hasil generate membawa `comments` (tidak tampil ke user), mengikuti konvensi Oracle APEX UX Pattern Catalog:
+
+```text
+## Purpose / ## When to Use / ## AI Guidance / ## Source     (halaman)
+Intent: ... / Pattern role: ... / AI guidance: ...            (region)
+```
+
+Isinya diturunkan dari spec (`purpose`, `help`, `document`, `auth`, view sumber). `## Source` menyebut bagian `app.yaml` asal halaman itu.
 
 ## `users`
 

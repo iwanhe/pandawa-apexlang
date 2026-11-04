@@ -10,6 +10,26 @@ page 200 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Daftar Business Units (master data).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka Business Units. Create/Edit membuka form drawer di halaman 201 (business-unit).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_mbms_business_units_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit admin-rights.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.BUSINESS_UNITS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,14 @@ page 200 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Business Units yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

@@ -388,11 +388,11 @@ dashboard:
   title: MBMS Dashboard
   subtitle: Satu sistem untuk Printing dan Engineering di atas shared core. MVP sandbox - data dummy.
   kpis:
-    - {label: Approval Menunggu Anda, sql: "select count(*) from apx_mbms_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
-    - {label: Job Order Aktif, sql: "select count(*) from apx_mbms_job_orders where status in ('APPROVED', 'IN_PROGRESS')"}
-    - {label: Proyek Aktif, sql: "select count(*) from apx_mbms_projects where status in ('APPROVED', 'IN_PROGRESS')"}
-    - {label: PR Menunggu Approval, sql: "select count(*) from apx_mbms_purchase_reqs where status = 'SUBMITTED'"}
-    - {label: Item di Bawah Min. Stok, sql: "select count(*) from apx_mbms_stock_on_hand_v where below_min_yn = 'Y'"}
+    - {label: Approval Menunggu Anda, icon: fa-check-square-o, sql: "select count(*) from apx_mbms_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
+    - {label: Job Order Aktif, icon: fa-briefcase, sql: "select count(*) from apx_mbms_job_orders where status in ('APPROVED', 'IN_PROGRESS')"}
+    - {label: Proyek Aktif, icon: fa-sitemap, sql: "select count(*) from apx_mbms_projects where status in ('APPROVED', 'IN_PROGRESS')"}
+    - {label: PR Menunggu Approval, icon: fa-shopping-cart, sql: "select count(*) from apx_mbms_purchase_reqs where status = 'SUBMITTED'"}
+    - {label: Item di Bawah Min. Stok, icon: fa-warning, sql: "select count(*) from apx_mbms_stock_on_hand_v where below_min_yn = 'Y'"}
   charts:
     - title: Job Order per Status
       type: pie

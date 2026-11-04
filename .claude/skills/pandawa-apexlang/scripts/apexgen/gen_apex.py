@@ -11,6 +11,7 @@ MONEY = "999G999G999G999G990"
 QTY = "999G999G999G990D99"
 EDIT_ICON = '<span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>'
 EDITABLE = "('DRAFT','REJECTED')"
+CORE = "Halaman inti template (core module), bukan dari entities."
 
 
 class Ctx:
@@ -36,6 +37,21 @@ class Ctx:
 # ----------------------------------------------------------------------------- helpers
 def auth(name):
     return ("security", G(("authorizationScheme", "@" + kebab(name))))
+
+
+def region_comments(intent, role, guidance=None):
+    """Metadata AI per region (konvensi Oracle APEX UX Pattern Catalog)."""
+    lines = ["Intent: " + intent, "Pattern role: " + role]
+    if guidance:
+        lines.append("AI guidance: " + guidance)
+    return ("comments", G(("comments", ML("", "\n".join(lines)))))
+
+
+def page_comments(purpose, when_use, guidance, source):
+    """Metadata AI per halaman: Purpose / When to Use / AI Guidance / Source (bukan help user)."""
+    text = "\n\n".join(["## Purpose", purpose, "## When to Use", when_use, "## AI Guidance", guidance,
+                         "## Source", source + " Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini."])
+    return ("comments", G(("comments", ML("", text))))
 
 
 def cond_expr(expr):
@@ -99,7 +115,7 @@ def _alias(i):
 
 
 def ir_page(ctx, num, name, alias_, group, region_id, sql, cols, auth_name, form_page=None, pk=None,
-            create=True, create_auth=None, sort_col=None, sort_desc=False, help_text=None):
+            create=True, create_auth=None, sort_col=None, sort_desc=False, help_text=None, meta=None, region_meta=None):
     col_comps, shown = [], []
     for i, (c, h, k) in enumerate(cols):
         col_comps.append(ir_column(c, h, k, i + 1, _alias(i)))
@@ -108,7 +124,8 @@ def ir_page(ctx, num, name, alias_, group, region_id, sql, cols, auth_name, form
     rm = [("name", name), ("type", "interactiveReport"),
           ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", sql)))),
           ("layout", G(("sequence", 20), ("slot", "body"))),
-          ("appearance", G(("template", "@/interactive-report"), ("templateOptions", "#DEFAULT#")))]
+          ("appearance", G(("template", "@/interactive-report"), ("templateOptions", "#DEFAULT#"))),
+          region_comments(*region_meta) if region_meta else None]
     if form_page:
         rm.append(("link", G(("linkColumn", "customTarget"),
                              ("target", O(("page", form_page), ("items", O(("P%d_%s" % (form_page, pk), "\\#%s#\\" % pk))),
@@ -138,7 +155,18 @@ def ir_page(ctx, num, name, alias_, group, region_id, sql, cols, auth_name, form
                 ("appearance", G(("pageTemplate", "@/standard"), ("templateOptions", "#DEFAULT#"))),
                 auth(auth_name),
                 ("help", G(("helpText", help_text))) if help_text else None,
+                page_comments(*meta) if meta else None,
                 *comps)
+
+
+def dialog_appearance(style="modal"):
+    """modal: dialog tengah (dokumen/form panjang). drawer: panel kanan untuk form pendek (UX Pattern Catalog p420)."""
+    if style == "drawer":
+        return [("appearance", G(("pageMode", "modalDialog"), ("dialogTemplate", "@/drawer"),
+                                 ("templateOptions", A(["#DEFAULT#", "js-dialog-class-t-Drawer--pullOutEnd"])))),
+                ("dialog", G(("chained", False)))]
+    return [("appearance", G(("pageMode", "modalDialog"), ("dialogTemplate", "@/modal-dialog"), ("templateOptions", "#DEFAULT#"))),
+            ("dialog", G(("chained", False), ("resizable", True)))]
 
 
 def buttons_region():
@@ -264,10 +292,20 @@ def entity_list_page(ctx, e):
     sel = ", ".join(c.lower() for c, _, _ in cols if c in names)
     sql = "select %s\n  from %s_v" % (sel, e.table)
     sort = e.document.number if e.document else next((c.name for c in e.columns if c.type in ("code", "text")), e.pk)
+    kind = "dokumen ber-approval %s" % e.document.name if e.document else ("baris detail dari %s" % app.entity(e.parent["entity"]).label
+                                                                           if e.parent else "master data")
+    purpose = e.purpose or "Daftar %s (%s)." % (e.label_plural, kind)
+    meta = (purpose,
+            "Mencari, memfilter, dan membuka %s. Create/Edit membuka form %s di halaman %d (%s)." % (e.label_plural, e.form_style, e.form_page, e.form_alias),
+            "Pola list: Interactive Report dari view %s_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. "
+            "Hak akses list %s, create/edit %s." % (e.table, e.view_auth, e.auth),
+            "Generated dari app.yaml entities.%s." % e.name)
+    region_meta = ("Menampilkan %s yang bisa dicari dan difilter." % e.label_plural, "Browse list (Interactive Report).",
+                   "Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.")
     ctx.page(e.list_page, e.list_alias,
              ir_page(ctx, e.list_page, e.label_plural, e.list_alias, e.group, kebab(e.name), sql, cols, e.view_auth,
                      form_page=e.form_page, pk=e.pk, create="add" in e.operations, create_auth=e.auth,
-                     sort_col=sort, sort_desc=bool(e.document), help_text=e.help),
+                     sort_col=sort, sort_desc=bool(e.document), help_text=e.help, meta=meta, region_meta=region_meta),
              e2e_title=e.label_plural)
 
 
@@ -283,6 +321,10 @@ def entity_form_page(ctx, e):
                   ("source", G(("location", "localDatabase"), ("tableName", e.table.upper()))),
                   ("layout", G(("sequence", 10), ("slot", "contentBody"))),
                   ("appearance", G(("template", "@/blank-with-attributes"), ("templateOptions", "#DEFAULT#"))),
+                  region_comments("Membuat dan mengubah satu record %s." % e.label,
+                                  "Single-record form (%s)." % e.form_style,
+                                  "Validasi bisnis ada di trigger %s_trg dan package; item ini hanya UI." % e.table
+                                  + (" Status hanya berubah lewat approval engine." if d else "")),
                   ("edit", G(("enabled", True), ("allowedOperations", A(e.operations)))))]
     seq = 5
     comps.append(page_item(num, e.pk, e.pk, "hidden", rid, seq, dtype="number", pk=True))
@@ -381,19 +423,31 @@ def entity_form_page(ctx, e):
     comps.append(Comp("process", "close-dialog", ("name", "CLOSE_DIALOG"), ("type", "closeDialog"),
                       ("settings", G(("showSuccessMessages", True))), ("execution", G(("sequence", 50))),
                       ("serverSideCondition", G(("type", "requestIsContainedInValue"), ("value", ",".join(requests))))))
+    if d:
+        guidance = ("Dokumen ber-approval %s: DRAFT -> Submit for Approval -> APPROVED/REJECTED. Kolom %s terkunci setelah approval. "
+                    "Logika ada di %s_approval_pkg dan trigger, bukan di halaman." % (d.type, ", ".join(d.lock) or "-", app.prefix))
+    else:
+        guidance = "Form pendek; simpan dengan Create/Apply Changes. Logika validasi di database (trigger/constraint)."
+    meta = (e.purpose or "Form %s." % e.label,
+            "Dibuka dari halaman list %d (%s) untuk create/edit satu record." % (e.list_page, e.list_alias),
+            guidance, "Generated dari app.yaml entities.%s (form_style: %s)." % (e.name, e.form_style))
     page = Comp("page", str(num), ("name", e.label), ("alias", e.form_alias.upper()), ("title", e.label),
                 ("pageGroup", "@" + e.group),
-                ("appearance", G(("pageMode", "modalDialog"), ("dialogTemplate", "@/modal-dialog"), ("templateOptions", "#DEFAULT#"))),
-                ("dialog", G(("chained", False), ("resizable", True))),
-                auth(e.auth), *comps)
+                *dialog_appearance(e.form_style),
+                auth(e.auth), page_comments(*meta), *comps)
     ctx.page(num, e.form_alias, page)
 
 
 def report_page(ctx, r):
     cols = [(c["name"], c["label"], c["type"]) for c in r.columns]
     sql = "select %s\n  from %s" % (", ".join(c[0].lower() for c in cols), r.view)
+    meta = (r.help or "Laporan %s." % r.title, "Analisis read-only; export lewat menu Actions Interactive Report.",
+            "Query ada di view %s (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml." % r.view,
+            "Generated dari app.yaml reports (page %d)." % r.page)
     ctx.page(r.page, r.alias, ir_page(ctx, r.page, r.title, r.alias, r.group, r.alias, sql, cols, r.auth,
-                                      sort_col=r.sort or cols[0][0], help_text=r.help), e2e_title=r.title)
+                                      sort_col=r.sort or cols[0][0], help_text=r.help, meta=meta,
+                                      region_meta=("Menampilkan %s." % r.title, "Read-only report (Interactive Report).")),
+             e2e_title=r.title)
 
 
 # ----------------------------------------------------------------------------- system pages
@@ -404,21 +458,12 @@ def home_page(ctx):
                   ("source", G(("htmlCode", dash.get("subtitle", app.description)))),
                   ("layout", G(("sequence", 10), ("slot", "breadcrumbBar"))),
                   ("appearance", G(("template", "@/hero"), ("templateOptions", "#DEFAULT#"))),
-                  ("image", G(("fileUrl", "#APP_FILES#icons/app-icon-512.png"))))]
+                  ("image", G(("fileUrl", "#APP_FILES#icons/app-icon-512.png"))),
+                  region_comments("Judul dan konteks singkat aplikasi.", "Dashboard header.",
+                                  "Ringkas; jangan dipakai untuk instruksi panjang."))]
     kpis = dash.get("kpis", [])
     if kpis:
-        sel = ", ".join("kpi_%d" % (i + 1) for i in range(len(kpis)))
-        comps.append(Comp("region", "kpi", ("name", dash.get("kpi_title", "Ringkasan")), ("type", "classicReport"),
-                          ("source", G(("location", "localDatabase"), ("type", "sqlQuery"),
-                                       ("sqlQuery", ML("sql", "select %s\n  from %s_dash_kpi_v" % (sel, app.prefix))))),
-                          ("layout", G(("sequence", 20), ("slot", "body"))),
-                          ("appearance", G(("template", "@/standard"), ("templateOptions", "#DEFAULT#"))),
-                          ("componentAppearance", G(("template", "@/standard"),
-                                                    ("templateOptions", A(["#DEFAULT#", "t-Report--stretch", "t-Report--hideNoPagination"])))),
-                          *[Comp("column", "KPI_%d" % (i + 1), ("reportColumnQueryId", i + 1), ("derivedColumn", "N"),
-                                 ("heading", G(("heading", k["label"]), ("alignment", "center"))),
-                                 ("layout", G(("sequence", i + 1), ("columnAlignment", "center"))))
-                            for i, k in enumerate(kpis)]))
+        comps.append(metric_cards(app, kpis, dash.get("kpi_title", "Ringkasan")))
     for i, ch in enumerate(dash.get("charts", []), 1):
         ctype = ch.get("type", "bar")
         series = []
@@ -436,6 +481,9 @@ def home_page(ctx):
         comps.append(Comp("region", "chart-%d" % i, ("name", ch.get("title", "Chart %d" % i)), ("type", "chart"),
                           ("layout", G(("sequence", 30 + i * 10), ("slot", "body"), ("startNewRow", False) if i % 2 == 0 else None)),
                           ("appearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Region--scrollBody"])))),
+                          region_comments("Visualisasi %s." % ch.get("title", "data"), "Dashboard chart (%s)." % ctype,
+                                          "Data dari view %s_dash_c%d_s*_v (kolom LABEL, VALUE); ubah sql-nya di dashboard.charts app.yaml."
+                                          % (app.prefix, i)),
                           ("chart", G(("type", ctype))) if ctype == "pie" else None,
                           ("performance", G(("lazyLoading", False))),
                           ("value", G(("format", "decimal"), ("decimalPlaces", 0))) if ctype == "pie" else None,
@@ -446,8 +494,35 @@ def home_page(ctx):
                 ("navigation", G(("cursorFocus", "doNotFocusCursor"))),
                 ("security", G(("authorizationScheme", "@app-users"), ("pageAccessProtection", "argumentsMustHaveChecksum"),
                                ("formAutoComplete", False))),
+                page_comments("Ringkasan kondisi aplikasi: KPI dan chart utama.",
+                              "Halaman pertama setelah login; titik awal navigasi.",
+                              "Pola dashboard: metric card di atas (2-4 KPI sebanding), chart dua kolom di bawah. "
+                              "KPI dari view %s_dash_kpi_v (satu baris per KPI)." % app.prefix,
+                              "Generated dari app.yaml dashboard."),
                 *comps)
     ctx.page(100, "home", page, e2e_title="Home")
+
+
+def metric_cards(app, kpis, title):
+    """KPI sebagai template component Metric Card (UX Pattern Catalog p110)."""
+    cols = [("SEQ", "number"), ("ICON", "varchar2"), ("LABEL", "varchar2"), ("METRIC_VALUE", "number")]
+    return Comp("region", "kpi", ("name", title), ("type", "themeTemplateComponent/metricCard"),
+                ("source", G(("location", "localDatabase"), ("type", "sqlQuery"),
+                             ("sqlQuery", ML("sql", "select seq, icon, label, metric_value\n  from %s_dash_kpi_v" % app.prefix)))),
+                ("orderBy", G(("type", "staticValue"), ("orderByClause", "SEQ"))),
+                ("layout", G(("sequence", 20), ("slot", "body"))),
+                ("appearance", G(("template", "@/blank-with-attributes-no-grid"),
+                                 ("templateOptions", A(["#DEFAULT#", "margin-bottom-md"])))),
+                ("accessibility", G(("landmarkType", "region"))),
+                region_comments("KPI utama untuk dipindai cepat.", "KPI summary (Metric Card).",
+                                "Pakai 2-4 KPI yang sebanding; ubah lewat dashboard.kpis (label, sql, icon) di app.yaml."),
+                ("componentAppearance", G(("display", "report"))),
+                ("settings", G(("metric", "&METRIC_VALUE."), ("metricCssClasses", "u-text-subheading-md"),
+                               ("meta", "&LABEL."), ("layout", "2Columns" if len(kpis) <= 2 else "4Columns"))),
+                ("plugin-avatar", G(("displayAvatar", True), ("icon", "&ICON."), ("style", "subtle"), ("position", "inline"))),
+                *[Comp("column", c, ("layout", G(("sequence", (i + 1) * 10))), ("source", G(("databaseColumn", c), ("dataType", t))),
+                       ("appearance", G(("formatMask", "999G999G999G999G990"))) if c == "METRIC_VALUE" else None)
+                  for i, (c, t) in enumerate(cols)])
 
 
 def approval_pages(ctx):
@@ -462,12 +537,21 @@ def approval_pages(ctx):
     ctx.page(190, "approval-inbox", ir_page(ctx, 190, "Approval Inbox", "approval-inbox", "home", "approvals", sql, cols,
                                             "app-users", form_page=191, pk="APPROVAL_ID", create=False,
                                             sort_col="APPROVAL_ID", sort_desc=True,
-                                            help_text="Pengaju tidak dapat menyetujui dokumennya sendiri (maker-checker)."),
+                                            help_text="Pengaju tidak dapat menyetujui dokumennya sendiri (maker-checker).",
+                                            meta=("Kotak masuk approval semua jenis dokumen.",
+                                                  "Approver mencari dokumen PENDING yang bisa diproses (Bisa Saya Proses? = Y).",
+                                                  "Data dari %s_approvals_v; can_act_yn menegakkan role approver dan maker-checker. "
+                                                  "Jangan menambah logika approval di halaman." % app.prefix,
+                                                  "%s Approval engine: %s_approval_pkg." % (CORE, app.prefix)),
+                                            region_meta=("Daftar langkah approval.", "Work queue (Interactive Report).")),
              e2e_title="Approval Inbox")
     can_act = "%s_approval_pkg.can_act_yn(:P191_APPROVAL_ID) = 'Y'" % app.prefix
     m = [("name", "Approval"), ("alias", "APPROVAL"), ("title", "Approval"), ("pageGroup", "@home"),
-         ("appearance", G(("pageMode", "modalDialog"), ("dialogTemplate", "@/modal-dialog"), ("templateOptions", "#DEFAULT#"))),
-         ("dialog", G(("chained", False), ("resizable", True))), auth("app-users"), buttons_region(),
+         *dialog_appearance("modal"), auth("app-users"),
+         page_comments("Approve atau reject satu langkah approval.", "Dibuka dari Approval Inbox (190).",
+                       "Tombol hanya tampil bila can_act_yn = Y; proses memanggil %s_approval_pkg.approve/reject. "
+                       "Catatan wajib saat Reject (dicek di package)." % app.prefix, CORE),
+         buttons_region(),
          Comp("region", "approval", ("name", "Approval"), ("type", "form"),
               ("source", G(("location", "localDatabase"), ("tableName", (app.prefix + "_approvals_v").upper()))),
               ("layout", G(("sequence", 10), ("slot", "contentBody"))),
@@ -506,7 +590,11 @@ def admin_pages(ctx):
                                          [("USER_ROLE_ID", "ID", "hidden"), ("USERNAME", "Username", "text"), ("ROLE_CODE", "Role", "text"),
                                           ("ROLE_NAME", "Nama Role", "text"), ("CREATED_BY", "Dibuat Oleh", "text"), ("CREATED_ON", "Dibuat", "date")],
                                          "admin-rights", form_page=501, pk="USER_ROLE_ID", sort_col="USERNAME",
-                                         help_text="Selama belum ada user ber-role ADMIN, semua user dianggap ADMIN (bootstrap)."))
+                                         help_text="Selama belum ada user ber-role ADMIN, semua user dianggap ADMIN (bootstrap).",
+                                         meta=("Mengatur role per user APEX.", "Admin mendaftarkan user dan role-nya.",
+                                               "Otorisasi dibaca %s_sec_pkg dari %s_user_roles. Bootstrap berakhir saat ADMIN pertama terdaftar."
+                                               % (app.prefix, app.prefix), CORE),
+                                         region_meta=("Daftar user dan role.", "Admin list (Interactive Report).")))
     _simple_form(ctx, 501, "User Role", "user-role", "administration", "user-role", app.prefix.upper() + "_USER_ROLES",
                  "USER_ROLE_ID", "number",
                  [page_item(501, "USERNAME", "Username (APEX)", "text", "user-role", 10, req=True, maxlen=255,
@@ -519,7 +607,12 @@ def admin_pages(ctx):
                                                 [("DOC_TYPE", "Kode", "text"), ("DOC_NAME", "Dokumen", "text"), ("PREFIX", "Prefix Nomor", "text"),
                                                  ("APPROVER1_ROLE", "Approver 1", "text"), ("APPROVER2_ROLE", "Approver 2", "text"),
                                                  ("LEVEL2_LIMIT", "Approver 2 bila nilai >", "money")],
-                                                "admin-rights", form_page=511, pk="DOC_TYPE", create=False, sort_col="DOC_TYPE"))
+                                                "admin-rights", form_page=511, pk="DOC_TYPE", create=False, sort_col="DOC_TYPE",
+                                                meta=("Konfigurasi approver dan limit per jenis dokumen.",
+                                                      "Admin mengubah approver level 1/2 dan limit level 2 tanpa deploy ulang.",
+                                                      "Nilai awal dari document di app.yaml (config seed); perubahan di sini disimpan di %s_doc_types."
+                                                      % app.prefix, CORE),
+                                                region_meta=("Daftar jenis dokumen.", "Admin list (Interactive Report).")))
         _simple_form(ctx, 511, "Document Type", "document-type", "administration", "document-type", app.prefix.upper() + "_DOC_TYPES",
                      "DOC_TYPE", "varchar2",
                      [page_item(511, "DOC_NAME", "Nama Dokumen", "text", "document-type", 10, req=True, maxlen=100),
@@ -561,8 +654,9 @@ def _simple_form(ctx, num, name, alias_, group, rid, table, pk, pk_dtype, items,
                    ("settings", G(("showSuccessMessages", True))), ("execution", G(("sequence", 50))),
                    ("serverSideCondition", G(("type", "requestIsContainedInValue"), ("value", ",".join(requests)))))]
     ctx.page(num, alias_, Comp("page", str(num), ("name", name), ("alias", alias_.upper()), ("title", name), ("pageGroup", "@" + group),
-                               ("appearance", G(("pageMode", "modalDialog"), ("dialogTemplate", "@/modal-dialog"), ("templateOptions", "#DEFAULT#"))),
-                               ("dialog", G(("chained", False), ("resizable", True))), auth("admin-rights"), *comps))
+                               *dialog_appearance("modal"), auth("admin-rights"),
+                               page_comments("Form admin %s." % name, "Dibuka dari halaman list administrasi.",
+                                             "Form tabel langsung; hanya untuk role ADMIN.", CORE), *comps))
 
 
 # ----------------------------------------------------------------------------- shared components

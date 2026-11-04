@@ -15,6 +15,26 @@ page 301 (
     security {
         authorizationScheme: @requester
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Permintaan barang dari department ke gudang, disetujui Manager (dan Director bila > 10 jt).
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 300 (requests) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Dokumen ber-approval REQ: DRAFT -> Submit for Approval -> APPROVED/REJECTED. Kolom DEPARTMENT_ID, PURPOSE, NEED_DATE terkunci setelah approval. Logika ada di apx_demo_approval_pkg dan trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.REQUESTS (form_style: modal). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region buttons (
         name: Buttons
@@ -46,6 +66,14 @@ page 301 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record Permintaan Barang.
+                Pattern role: Single-record form (modal).
+                AI guidance: Validasi bisnis ada di trigger apx_demo_requests_trg dan package; item ini hanya UI. Status hanya berubah lewat approval engine.
+                ```
         }
         edit {
             enabled: true

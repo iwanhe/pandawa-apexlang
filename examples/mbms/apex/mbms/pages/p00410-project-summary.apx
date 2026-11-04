@@ -13,6 +13,26 @@ page 410 (
     help {
         helpText: Estimasi rugi = budget melebihi nilai kontrak (PSAK 72 onerous contract).
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Estimasi rugi = budget melebihi nilai kontrak (PSAK 72 onerous contract).
+            
+            ## When to Use
+            
+            Analisis read-only; export lewat menu Actions Interactive Report.
+            
+            ## AI Guidance
+            
+            Query ada di view apx_mbms_project_summary_v (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml.
+            
+            ## Source
+            
+            Generated dari app.yaml reports (page 410). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -56,6 +76,13 @@ page 410 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Project Summary.
+                Pattern role: Read-only report (Interactive Report).
+                ```
         }
         pagination {
             type: rowRangesXToY

@@ -10,6 +10,26 @@ page 300 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Permintaan barang dari department ke gudang, disetujui Manager (dan Director bila > 10 jt).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka Permintaan Barang. Create/Edit membuka form modal di halaman 301 (request).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_demo_requests_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit requester.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.REQUESTS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,14 @@ page 300 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Permintaan Barang yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

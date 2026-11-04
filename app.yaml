@@ -39,6 +39,7 @@ entities:
     pages: [200, 201]
     auth: master-data
     icon: fa-building-o
+    form_style: drawer             # drawer (default non-dokumen) | modal
     display: "dept_code || ' - ' || dept_name"
     columns:
       - {name: DEPT_CODE, type: code, label: Kode, required: true, unique: true, size: 20}
@@ -71,6 +72,7 @@ entities:
     pages: [300, 301]
     auth: requester
     icon: fa-file-text-o
+    purpose: Permintaan barang dari department ke gudang, disetujui Manager (dan Director bila > 10 jt).
     display: "request_no || ' - ' || purpose"
     lov_where: "status in ('DRAFT', 'REJECTED')"
     document:
@@ -136,9 +138,9 @@ dashboard:
   title: Demo Permintaan Barang
   subtitle: Template Pandawa APEXlang - data dummy.
   kpis:
-    - {label: Approval Menunggu Anda, sql: "select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
-    - {label: Permintaan Draft, sql: "select count(*) from apx_demo_requests where status = 'DRAFT'"}
-    - {label: Menunggu Approval, sql: "select count(*) from apx_demo_requests where status = 'SUBMITTED'"}
+    - {label: Approval Menunggu Anda, icon: fa-check-square-o, sql: "select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
+    - {label: Permintaan Draft, icon: fa-file-o, sql: "select count(*) from apx_demo_requests where status = 'DRAFT'"}
+    - {label: Menunggu Approval, icon: fa-clock-o, sql: "select count(*) from apx_demo_requests where status = 'SUBMITTED'"}
   charts:
     - title: Permintaan per Status
       type: pie

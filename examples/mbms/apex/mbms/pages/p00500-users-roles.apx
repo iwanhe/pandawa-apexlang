@@ -13,6 +13,26 @@ page 500 (
     help {
         helpText: Selama belum ada user ber-role ADMIN, semua user dianggap ADMIN (bootstrap).
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Mengatur role per user APEX.
+            
+            ## When to Use
+            
+            Admin mendaftarkan user dan role-nya.
+            
+            ## AI Guidance
+            
+            Otorisasi dibaca apx_mbms_sec_pkg dari apx_mbms_user_roles. Bootstrap berakhir saat ADMIN pertama terdaftar.
+            
+            ## Source
+            
+            Halaman inti template (core module), bukan dari entities. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -56,6 +76,13 @@ page 500 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Daftar user dan role.
+                Pattern role: Admin list (Interactive Report).
+                ```
         }
         link {
             linkColumn: customTarget

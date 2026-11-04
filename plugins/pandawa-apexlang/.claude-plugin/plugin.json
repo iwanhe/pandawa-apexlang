@@ -1,6 +1,6 @@
 {
   "name": "pandawa-apexlang",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Metodologi & generator aplikasi Oracle APEX 26.2 (APEXlang) Tim PANDAWA: spec app.yaml → DDL, core approval/security/penomoran, aplikasi APEXlang, script user, CI & E2E",
   "author": {
     "name": "Tim PANDAWA"

@@ -15,6 +15,26 @@ page 191 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Approve atau reject satu langkah approval.
+            
+            ## When to Use
+            
+            Dibuka dari Approval Inbox (190).
+            
+            ## AI Guidance
+            
+            Tombol hanya tampil bila can_act_yn = Y; proses memanggil apx_demo_approval_pkg.approve/reject. Catatan wajib saat Reject (dicek di package).
+            
+            ## Source
+            
+            Halaman inti template (core module), bukan dari entities. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region buttons (
         name: Buttons

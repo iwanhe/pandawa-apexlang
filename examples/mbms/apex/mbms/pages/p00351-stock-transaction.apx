@@ -5,15 +5,37 @@ page 351 (
     pageGroup: @inventory
     appearance {
         pageMode: modalDialog
-        dialogTemplate: @/modal-dialog
-        templateOptions: #DEFAULT#
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
     }
     dialog {
         chained: false
-        resizable: true
     }
     security {
         authorizationScheme: @warehouse
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form Stock Transaction.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 350 (stock-transactions) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Form pendek; simpan dengan Create/Apply Changes. Logika validasi di database (trigger/constraint).
+            
+            ## Source
+            
+            Generated dari app.yaml entities.STOCK_TXNS (form_style: drawer). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
     }
 
     region buttons (
@@ -46,6 +68,14 @@ page 351 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record Stock Transaction.
+                Pattern role: Single-record form (drawer).
+                AI guidance: Validasi bisnis ada di trigger apx_mbms_stock_txns_trg dan package; item ini hanya UI.
+                ```
         }
         edit {
             enabled: true

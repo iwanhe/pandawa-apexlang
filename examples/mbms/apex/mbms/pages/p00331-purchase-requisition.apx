@@ -15,6 +15,26 @@ page 331 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form Purchase Requisition.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 330 (purchase-requisitions) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Dokumen ber-approval PR: DRAFT -> Submit for Approval -> APPROVED/REJECTED. Kolom - terkunci setelah approval. Logika ada di apx_mbms_approval_pkg dan trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PURCHASE_REQS (form_style: modal). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region buttons (
         name: Buttons
@@ -46,6 +66,14 @@ page 331 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record Purchase Requisition.
+                Pattern role: Single-record form (modal).
+                AI guidance: Validasi bisnis ada di trigger apx_mbms_purchase_reqs_trg dan package; item ini hanya UI. Status hanya berubah lewat approval engine.
+                ```
         }
         edit {
             enabled: true

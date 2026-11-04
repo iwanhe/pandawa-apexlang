@@ -23,6 +23,8 @@ Setiap butir di bawah pernah menyebabkan gagal validasi, gagal import, atau bug 
 | R3 | **Side menu di HP terbuka lalu langsung tertutup** (juga terjadi di starter app Oracle) | Bug Universal Theme 26.2.1: `onExpand` → `delayResize()` → resize sintetis → `onResize` → `collapse()` di lebar < lg. Workaround: `static-files/js/nav-fix.js` (abaikan resize sintetis 800 ms setelah expand bila ukuran viewport sama), dimuat via `app javaScript fileUrls`. Dibuktikan lewat E2E Playwright. Hapus bila Oracle sudah memperbaiki |
 | R4 | Template option `#DEFAULT#` side nav | Untuk Side Navigation Menu, `#DEFAULT#` = `js-defaultCollapsed`. Bukan penyebab R3 |
 | R5 | Display-only item ikut tersubmit | `settings { sendOnPageSubmit: false }` + `source { queryOnly: true }` |
+| R6 | Metric card (`themeTemplateComponent/metricCard`) | Atribut khusus template ada di `settings { metric, meta, layout }` dan `plugin-avatar { ... }`, tidak tercantum di inventaris APEXlang. Nilai `layout` yang terbukti (UX Pattern Catalog): `2Columns`, `4Columns`. Urutan pakai `orderBy { type: staticValue  orderByClause: SEQ }`, bukan `order by` di SQL |
+| R7 | Drawer | `dialogTemplate: @/drawer` + template option `js-dialog-class-t-Drawer--pullOutEnd` (panel dari kanan). Untuk form pendek; form panjang/dokumen tetap `@/modal-dialog` |
 
 ## Import & instance oracleapex.com
 

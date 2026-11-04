@@ -5,15 +5,37 @@ page 341 (
     pageGroup: @procurement
     appearance {
         pageMode: modalDialog
-        dialogTemplate: @/modal-dialog
-        templateOptions: #DEFAULT#
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
     }
     dialog {
         chained: false
-        resizable: true
     }
     security {
         authorizationScheme: @app-users
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form PR Line.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 340 (pr-lines) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Form pendek; simpan dengan Create/Apply Changes. Logika validasi di database (trigger/constraint).
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PR_LINES (form_style: drawer). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
     }
 
     region buttons (
@@ -46,6 +68,14 @@ page 341 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record PR Line.
+                Pattern role: Single-record form (drawer).
+                AI guidance: Validasi bisnis ada di trigger apx_mbms_pr_lines_trg dan package; item ini hanya UI.
+                ```
         }
         edit {
             enabled: true
