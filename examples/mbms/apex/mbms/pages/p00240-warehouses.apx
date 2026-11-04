@@ -4,7 +4,7 @@ page 240 (
     title: Warehouses & Locations
     pageGroup: @master-data
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -23,255 +23,216 @@ page 240 (
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_mbms_warehouses_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit master-data.
+            Pola faceted search (faceted-cards): facet di kolom kiri, hasil di body, dari view apx_mbms_warehouses_v (MVC). Hak akses list app-users, create/edit master-data.
             
             ## Source
             
-            Generated dari app.yaml entities.WAREHOUSES. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.WAREHOUSES. (list_type: faceted-cards) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Warehouses & Locations
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region warehouses (
-        name: Warehouses & Locations
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Warehouses & Locations berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P240_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P240_BU_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Business Unit
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: BU_ID_DSP
+            }
+        )
+
+        facet P240_LOCATION_TYPE (
+            type: checkboxGroup
+            label {
+                label: Tipe Lokasi
+            }
+            lov {
+                type: sharedComponent
+                lov: @warehouses-location-type
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: LOCATION_TYPE
+            }
+        )
+
+        facet P240_ACTIVE_YN (
+            type: checkboxGroup
+            label {
+                label: Aktif
+            }
+            lov {
+                type: sharedComponent
+                lov: @yes-no
+            }
+            layout {
+                sequence: 40
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: ACTIVE_YN
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Warehouses & Locations
+        type: cards
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select warehouse_id, wh_code, wh_name, bu_id_dsp, location_type, active_yn, updated_by, updated_on
+                select warehouse_id
+                      ,wh_code
+                      ,wh_name
+                      ,bu_id_dsp
+                      ,location_type
+                      ,active_yn
+                      ,updated_by
+                      ,updated_on
                   from apx_mbms_warehouses_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: WH_CODE
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/cards-container
+            templateOptions: [
+                #DEFAULT#
+                t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc
+                t-CardsRegion--styleC
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Warehouses & Locations yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Warehouses & Locations yang sudah difilter facet.
+                Pattern role: Faceted search results (Cards).
+                AI guidance: Klik judul kartu untuk membuka form. Kolom kartu diambil dari columns di app.yaml.
                 ```
-        }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 241
-                items: {
-                    P241_WAREHOUSE_ID: \#WAREHOUSE_ID#\
-                }
-                clearCache: 241
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
-        }
-        pagination {
-            type: rowRangesXToY
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
+        title {
+            column: WH_CODE
+        }
+        subtitle {
+            column: WH_NAME
+        }
+        body {
+            column: BU_ID_DSP
+        }
+        iconAndBadge {
+            iconSource: iconClass
+            iconCssClasses: fa fa-home
         }
 
-        column WAREHOUSE_ID (
-            type: hidden
-            heading {
-                heading: ID
-            }
+        action open (
+            type: title
             layout {
-                sequence: 1
+                sequence: 10
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
-            }
-        )
-
-        column WH_CODE (
-            type: plainText
-            heading {
-                heading: Kode
-            }
-            layout {
-                sequence: 2
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
-            }
-        )
-
-        column WH_NAME (
-            type: plainText
-            heading {
-                heading: Nama
-            }
-            layout {
-                sequence: 3
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: C
-            }
-        )
-
-        column BU_ID_DSP (
-            type: plainText
-            heading {
-                heading: Business Unit
-            }
-            layout {
-                sequence: 4
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: D
-            }
-        )
-
-        column LOCATION_TYPE (
-            type: plainText
-            heading {
-                heading: Tipe Lokasi
-            }
-            layout {
-                sequence: 5
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: E
-            }
-        )
-
-        column ACTIVE_YN (
-            type: plainText
-            heading {
-                heading: Aktif
-            }
-            layout {
-                sequence: 6
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: F
-            }
-        )
-
-        column UPDATED_BY (
-            type: plainText
-            heading {
-                heading: Diubah Oleh
-            }
-            layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
-            }
-        )
-
-        column UPDATED_ON (
-            type: plainText
-            heading {
-                heading: Diubah
-            }
-            layout {
-                sequence: 8
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: H
-            }
-        )
-
-        savedReport 240001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn WH_CODE (
-                sequence: 1
-            )
-
-            displayColumn WH_NAME (
-                sequence: 2
-            )
-
-            displayColumn BU_ID_DSP (
-                sequence: 3
-            )
-
-            displayColumn LOCATION_TYPE (
-                sequence: 4
-            )
-
-            displayColumn ACTIVE_YN (
-                sequence: 5
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 6
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 7
-            )
-
-            sort (
-                column: WH_CODE
-                sort {
-                    sequence: 1
+            behavior {
+                type: redirectThisApp
+                target: {
+                    page: 241
+                    items: {
+                        P241_WAREHOUSE_ID: &WAREHOUSE_ID.
+                    }
+                    clearCache: 241
                 }
-            )
-
+            }
         )
 
     )
@@ -281,8 +242,8 @@ page 240 (
         label: Create
         layout {
             sequence: 10
-            region: @warehouses
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -310,14 +271,14 @@ page 240 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @warehouses
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @warehouses
+                region: @results
             }
             execution {
                 sequence: 10

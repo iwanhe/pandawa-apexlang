@@ -14,6 +14,7 @@ Contoh lengkap ada di `app.yaml` pada template repo (aplikasi DEMO Permintaan Ba
 | `date` | | `lihat git log` | Tanggal di header script. Tetap, supaya output deterministik |
 | `description` | | `name` | Subjudul home |
 | `nav_fix` | | `true` | Muat `js/nav-fix.js` (workaround side menu HP, Universal Theme 26.2.1) |
+| `advice` | | `true` | Cetak `SARAN:` pola halaman saat generate (lihat `page-patterns.md` §8) |
 | `frs` | | `docs/02-frs.md` | FRS sumber REQ-ID (lihat **Traceability requirement**) |
 | `req` | | | REQ-ID yang direalisasikan di level aplikasi (security core, navigasi, dll.) |
 
@@ -91,6 +92,7 @@ Satu entitas menghasilkan:
 | `readonly_when` | Ekspresi PL/SQL read-only item |
 | `on_delete` | `cascade` untuk FK ref |
 | `help` | Inline help item |
+| `semantic` | Untuk `text`/`code`: `email`, `phone`, `url`, `npwp`. Menambah check constraint `regexp_like`, normalisasi di trigger (email: lowercase + trim; lainnya: trim), subtype input (email/telepon/URL), dan validasi format dengan pesan ramah di form. Ukuran default: email 255, phone 30, url 500, npwp 20 |
 | `facet` | Jadikan facet di halaman faceted search. Default `true` untuk `enum`, `yn`, `ref` (plus `STATUS` dokumen); `false` untuk lainnya |
 
 ### `workspace` (master-detail)
@@ -110,14 +112,7 @@ Tombol **Tambah** hanya tampil bila status induk ada di `lock_unless` (untuk dok
 
 ### Memilih pola halaman
 
-| Kebutuhan user | Pakai |
-| --- | --- |
-| Data banyak, user butuh sort/filter bebas, export, kolom bisa diatur | `list_type: ir` (default) |
-| Master data yang dicari lewat beberapa dimensi (kategori, status, aktif) dan dikenali dari nama | `faceted-cards` |
-| Dokumen/transaksi yang disaring per status/department lalu dibuka satu per satu | `faceted-report` |
-| Dokumen dengan baris detail yang ditinjau atau diisi bersama header | `workspace` (sebagai tambahan halaman list) |
-| Form pendek master data | `form_style: drawer` (default non-dokumen) |
-| Form dokumen atau form panjang | `form_style: modal` (default dokumen) |
+Tabel keputusan lengkap (list, detail/master-detail, form, dashboard, laporan, kolom, anti-pola, dan saran otomatis) ada di [`page-patterns.md`](page-patterns.md). Ringkasnya: `ir` untuk export/filter bebas, `faceted-report` untuk dokumen/transaksi, `faceted-cards` untuk master yang dicari lewat ≥ 2 dimensi, `workspace` untuk dokumen ber-detail, `modal` untuk dokumen/form panjang, `drawer` untuk form pendek.
 
 ### `document` (approval)
 

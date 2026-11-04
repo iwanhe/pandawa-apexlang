@@ -4,7 +4,7 @@ page 350 (
     title: Stock Transactions
     pageGroup: @inventory
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -22,459 +22,519 @@ page 350 (
             
             ## When to Use
             
-            Mencari, memfilter, dan membuka Stock Transactions. Create/Edit membuka form drawer di halaman 351 (stock-transaction).
+            Mencari, memfilter, dan membuka Stock Transactions. Create/Edit membuka form modal di halaman 351 (stock-transaction).
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_mbms_stock_txns_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit warehouse.
+            Pola faceted search (faceted-report): facet di kolom kiri, hasil di body, dari view apx_mbms_stock_txns_v (MVC). Hak akses list app-users, create/edit warehouse.
             
             ## Source
             
-            Generated dari app.yaml entities.STOCK_TXNS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.STOCK_TXNS. (list_type: faceted-report) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Stock Transactions
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region stock-txns (
-        name: Stock Transactions
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Stock Transactions berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P350_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P350_TXN_TYPE (
+            type: checkboxGroup
+            label {
+                label: Tipe
+            }
+            lov {
+                type: sharedComponent
+                lov: @stock-txns-txn-type
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: TXN_TYPE
+            }
+        )
+
+        facet P350_BU_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: BU
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: BU_ID_DSP
+            }
+        )
+
+        facet P350_WAREHOUSE_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Gudang / Lokasi
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 40
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: WAREHOUSE_ID_DSP
+            }
+        )
+
+        facet P350_ITEM_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Item
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 50
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: ITEM_ID_DSP
+            }
+        )
+
+        facet P350_JOB_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Job Order
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 60
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: JOB_ID_DSP
+            }
+        )
+
+        facet P350_PROJECT_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Proyek
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 70
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: PROJECT_ID_DSP
+            }
+        )
+
+        facet P350_WBS_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: WBS
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 80
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: WBS_ID_DSP
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Stock Transactions
+        type: classicReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select txn_id, txn_no, txn_date, txn_type, bu_id_dsp, warehouse_id_dsp, item_id_dsp, qty, qty_signed, unit_cost, total_cost, job_id_dsp, project_id_dsp, wbs_id_dsp, reference, updated_by, updated_on
+                select txn_id
+                      ,txn_no
+                      ,txn_date
+                      ,txn_type
+                      ,bu_id_dsp
+                      ,warehouse_id_dsp
+                      ,item_id_dsp
+                      ,qty
+                      ,qty_signed
+                      ,unit_cost
+                      ,total_cost
+                      ,job_id_dsp
+                      ,project_id_dsp
+                      ,wbs_id_dsp
+                      ,reference
+                      ,updated_by
+                      ,updated_on
                   from apx_mbms_stock_txns_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: TXN_NO
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Stock Transactions yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Stock Transactions yang sudah difilter facet.
+                Pattern role: Faceted search results (Classic Report).
+                AI guidance: Klik kolom judul untuk membuka form. Kolom diambil dari columns di app.yaml.
                 ```
         }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 351
-                items: {
-                    P351_TXN_ID: \#TXN_ID#\
-                }
-                clearCache: 351
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
         }
         pagination {
-            type: rowRangesXToY
+            type: rowRangesXToYOfZWithPagination
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
-        }
 
         column TXN_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
             type: hidden
-            heading {
-                heading: ID
-            }
             layout {
-                sequence: 1
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
+                sequence: 10
             }
         )
 
         column TXN_NO (
-            type: plainText
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
             heading {
                 heading: No. Transaksi
             }
             layout {
-                sequence: 2
+                sequence: 20
             }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
+            link {
+                target: {
+                    page: 351
+                    items: {
+                        P351_TXN_ID: #TXN_ID#
+                    }
+                    clearCache: 351
+                }
+                linkText: #TXN_NO#
+                linkAttributes: class="u-text-bold"
             }
         )
 
         column TXN_DATE (
+            reportColumnQueryId: 3
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tanggal
             }
             layout {
-                sequence: 3
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: C
+                sequence: 30
             }
         )
 
         column TXN_TYPE (
+            reportColumnQueryId: 4
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tipe
             }
             layout {
-                sequence: 4
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: D
+                sequence: 40
             }
         )
 
         column BU_ID_DSP (
+            reportColumnQueryId: 5
+            derivedColumn: N
             type: plainText
             heading {
                 heading: BU
             }
             layout {
-                sequence: 5
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: E
+                sequence: 50
             }
         )
 
         column WAREHOUSE_ID_DSP (
+            reportColumnQueryId: 6
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Gudang / Lokasi
             }
             layout {
-                sequence: 6
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: F
+                sequence: 60
             }
         )
 
         column ITEM_ID_DSP (
+            reportColumnQueryId: 7
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Item
             }
             layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
+                sequence: 70
             }
         )
 
         column QTY (
+            reportColumnQueryId: 8
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Qty
                 alignment: end
             }
             layout {
-                sequence: 8
+                sequence: 80
                 columnAlignment: end
             }
             appearance {
                 formatMask: 999G999G999G990D99
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: H
-            }
         )
 
         column QTY_SIGNED (
+            reportColumnQueryId: 9
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Qty (+/-)
                 alignment: end
             }
             layout {
-                sequence: 9
+                sequence: 90
                 columnAlignment: end
             }
             appearance {
                 formatMask: 999G999G999G990D99
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: I
-            }
         )
 
         column UNIT_COST (
+            reportColumnQueryId: 10
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Biaya Satuan
                 alignment: end
             }
             layout {
-                sequence: 10
+                sequence: 100
                 columnAlignment: end
             }
             appearance {
                 formatMask: 999G999G999G999G990
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: J
-            }
         )
 
         column TOTAL_COST (
+            reportColumnQueryId: 11
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Total Biaya
                 alignment: end
             }
             layout {
-                sequence: 11
+                sequence: 110
                 columnAlignment: end
             }
             appearance {
                 formatMask: 999G999G999G999G990
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: K
-            }
         )
 
         column JOB_ID_DSP (
+            reportColumnQueryId: 12
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Job Order
             }
             layout {
-                sequence: 12
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: L
+                sequence: 120
             }
         )
 
         column PROJECT_ID_DSP (
+            reportColumnQueryId: 13
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Proyek
             }
             layout {
-                sequence: 13
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: M
+                sequence: 130
             }
         )
 
         column WBS_ID_DSP (
+            reportColumnQueryId: 14
+            derivedColumn: N
             type: plainText
             heading {
                 heading: WBS
             }
             layout {
-                sequence: 14
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: N
+                sequence: 140
             }
         )
 
         column REFERENCE (
+            reportColumnQueryId: 15
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Referensi
             }
             layout {
-                sequence: 15
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: O
+                sequence: 150
             }
         )
 
         column UPDATED_BY (
+            reportColumnQueryId: 16
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah Oleh
             }
             layout {
-                sequence: 16
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: P
+                sequence: 160
             }
         )
 
         column UPDATED_ON (
+            reportColumnQueryId: 17
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah
             }
             layout {
-                sequence: 17
+                sequence: 170
             }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: Q
-            }
-        )
-
-        savedReport 350001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn TXN_NO (
-                sequence: 1
-            )
-
-            displayColumn TXN_DATE (
-                sequence: 2
-            )
-
-            displayColumn TXN_TYPE (
-                sequence: 3
-            )
-
-            displayColumn BU_ID_DSP (
-                sequence: 4
-            )
-
-            displayColumn WAREHOUSE_ID_DSP (
-                sequence: 5
-            )
-
-            displayColumn ITEM_ID_DSP (
-                sequence: 6
-            )
-
-            displayColumn QTY (
-                sequence: 7
-            )
-
-            displayColumn QTY_SIGNED (
-                sequence: 8
-            )
-
-            displayColumn UNIT_COST (
-                sequence: 9
-            )
-
-            displayColumn TOTAL_COST (
-                sequence: 10
-            )
-
-            displayColumn JOB_ID_DSP (
-                sequence: 11
-            )
-
-            displayColumn PROJECT_ID_DSP (
-                sequence: 12
-            )
-
-            displayColumn WBS_ID_DSP (
-                sequence: 13
-            )
-
-            displayColumn REFERENCE (
-                sequence: 14
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 15
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 16
-            )
-
-            sort (
-                column: TXN_NO
-                sort {
-                    sequence: 1
-                }
-            )
-
         )
 
     )
@@ -484,8 +544,8 @@ page 350 (
         label: Create
         layout {
             sequence: 10
-            region: @stock-txns
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -513,14 +573,14 @@ page 350 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @stock-txns
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @stock-txns
+                region: @results
             }
             execution {
                 sequence: 10

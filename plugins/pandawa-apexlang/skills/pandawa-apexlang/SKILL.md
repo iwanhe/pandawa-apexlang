@@ -39,7 +39,7 @@ Generator butuh Python 3 + PyYAML.
 | 0. Setup | Repo dari template, secret CI | `references/deployment-testing.md` §1 |
 | 1. Blueprint | `docs/01-blueprint.md` | Template `assets/templates/docs/01-blueprint.md`. Isi: sasaran, modul, keputusan (D-xx), risiko, platform. |
 | 2. FRS | `docs/02-frs.md` | Template `assets/templates/docs/02-frs.md`. Isi: entitas & kolom, **requirement ber-ID gaya EARS (`REQ-x.y`)** termasuk business rule, approval matrix, role × akses, peta halaman (rentang nomor Pandawa). |
-| 3. Spec | `app.yaml` | Terjemahkan FRS ke spec (`references/app-spec.md`). Satu tabel FRS = satu `entities:`, approval = `document:`, laporan = `reports:` + view custom. Pilih pola halaman (`list_type`, `workspace`, `form_style`) dengan tabel **Memilih pola halaman**. |
+| 3. Spec | `app.yaml` | Terjemahkan FRS ke spec (`references/app-spec.md`). Satu tabel FRS = satu `entities:`, approval = `document:`, laporan = `reports:` + view custom. Pilih pola halaman (`list_type`, `workspace`, `form_style`, `semantic`) dengan `references/page-patterns.md`; tindak lanjuti `SARAN:` dari generator. |
 | 4. Logic custom | `database/custom/*.sql`, `database/seed/*.sql`, `tests/db/test_*.sql` | Package `APX_<APP>_<NAMA>_PKG`, view laporan, validate hook, data dummy, test PL/SQL. Wajib standar Pandawa (`references/pandawa-standards.md`). |
 | 5. Generate & CI | Output generate di-commit; CI hijau | `scripts/generate.sh`, commit, push. CI menjalankan: generate-up-to-date, **SQLcl `apex validate`**, **install + test di Oracle Free**, cek sinkron skill. |
 | 6. Deploy sandbox | Aplikasi jalan di oracleapex.com | `database/install.sql` di SQL Workshop → import `dist/<alias>-apexlang.zip` → `database/admin/create_users.sql` (`references/deployment-testing.md` §2) |

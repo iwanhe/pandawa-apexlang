@@ -40,6 +40,9 @@ before insert or update on apx_mbms_customers
 for each row
 begin
    :new.customer_code := upper(:new.customer_code);
+   :new.npwp := trim(:new.npwp);
+   :new.phone := trim(:new.phone);
+   :new.email := lower(trim(:new.email));
    if inserting then
       :new.created_by := apx_mbms_sec_pkg.app_user;
       :new.created_on := sysdate;
@@ -54,6 +57,8 @@ before insert or update on apx_mbms_vendors
 for each row
 begin
    :new.vendor_code := upper(:new.vendor_code);
+   :new.npwp := trim(:new.npwp);
+   :new.phone := trim(:new.phone);
    if inserting then
       :new.created_by := apx_mbms_sec_pkg.app_user;
       :new.created_on := sysdate;

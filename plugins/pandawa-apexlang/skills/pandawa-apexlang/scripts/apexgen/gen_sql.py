@@ -49,6 +49,8 @@ def entity_table(app, e):
             checks.append("%s >= %s" % (c.name.lower(), c.min))
         if c.max is not None:
             checks.append("%s <= %s" % (c.name.lower(), c.max))
+        if c.sem:
+            checks.append("regexp_like(%s, %s)" % (c.name.lower(), q(c.sem["regex"])))
         if c.unique:
             uniques.append(c.name.lower())
     if d:
@@ -118,8 +120,12 @@ def entity_trigger(app, e):
     if "delete" in events:
         body.append("   if deleting then\n      return;\n   end if;")
     for c in e.columns:
-        if c.type == "code" and not c.virtual:
+        if c.type == "code" and not c.virtual and not c.semantic:
             body.append("   :new.%s := upper(:new.%s);" % (c.name.lower(), c.name.lower()))
+        elif c.sem and c.sem.get("case") == "lower":
+            body.append("   :new.%s := lower(trim(:new.%s));" % (c.name.lower(), c.name.lower()))
+        elif c.sem:
+            body.append("   :new.%s := trim(:new.%s);" % (c.name.lower(), c.name.lower()))
     if d:
         ops = ", ".join(q(s) for s in d.operational)
         restore = "\n".join("         :new.%s := :old.%s;" % (c.lower(), c.lower()) for c in d.lock)

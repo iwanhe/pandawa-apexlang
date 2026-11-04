@@ -5,14 +5,12 @@ page 351 (
     pageGroup: @inventory
     appearance {
         pageMode: modalDialog
-        dialogTemplate: @/drawer
-        templateOptions: [
-            #DEFAULT#
-            js-dialog-class-t-Drawer--pullOutEnd
-        ]
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
     }
     dialog {
         chained: false
+        resizable: true
     }
     security {
         authorizationScheme: @warehouse
@@ -34,7 +32,7 @@ page 351 (
             
             ## Source
             
-            Generated dari app.yaml entities.STOCK_TXNS (form_style: drawer). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.STOCK_TXNS (form_style: modal). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
@@ -73,7 +71,7 @@ page 351 (
             comments:
                 ```
                 Intent: Membuat dan mengubah satu record Stock Transaction.
-                Pattern role: Single-record form (drawer).
+                Pattern role: Single-record form (modal).
                 AI guidance: Validasi bisnis ada di trigger apx_mbms_stock_txns_trg dan package; item ini hanya UI.
                 ```
         }

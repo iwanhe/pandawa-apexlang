@@ -216,7 +216,8 @@ def cancel_da():
 
 def page_item(num, col, label, kind, region_id, seq, dtype="varchar2", req=False, maxlen=None, lov=None,
               lov_sql=None, cascade=None, default_static=None, default_sql=None, readonly_expr=None,
-              query_only=False, form=True, pk=False, help_=None, min_=None, max_=None, null_text="- Pilih -", wide=False):
+              query_only=False, form=True, pk=False, help_=None, min_=None, max_=None, null_text="- Pilih -", wide=False,
+              subtype=None, text_case=None):
     t = {"text": "textField", "number": "numberField", "date": "datePicker", "textarea": "textarea",
          "select": "selectList", "display": "displayOnly", "hidden": "hidden"}[kind]
     m = [("type", t)]
@@ -227,6 +228,8 @@ def page_item(num, col, label, kind, region_id, seq, dtype="varchar2", req=False
                                 ("minValue", min_) if min_ is not None else None, ("maxValue", max_) if max_ is not None else None)))
     if kind == "display":
         m.append(("settings", G(("sendOnPageSubmit", False))))
+    if kind == "text" and (subtype or text_case):
+        m.append(("settings", G(("subtype", subtype) if subtype else None, ("textCase", text_case) if text_case else None)))
     if kind == "select":
         lg = [("type", "sharedComponent"), ("lov", "@" + lov)] if lov else [("type", "sqlQuery"), ("sqlQuery", lov_sql)]
         lg += [("displayExtraValues", True), ("displayNullValue", True), ("nullDisplayValue", null_text)]
@@ -664,8 +667,10 @@ def entity_form_page(ctx, e):
             comps.append(page_item(num, c.name, c.label, "display", rid, seq, dtype=c.apex_dtype, query_only=True, help_=c.help))
             continue
         if c.type in ("text", "code"):
+            sem = c.sem or {}
             item = page_item(num, c.name, c.label, "text", rid, seq, maxlen=c.maxlen, readonly_expr=ro,
-                             default_static=c.default, default_sql=c.default_sql, wide=(c.size or 0) > 100, **common)
+                             default_static=c.default, default_sql=c.default_sql, wide=(c.size or 0) > 100,
+                             subtype=sem.get("subtype"), text_case=sem.get("case"), **common)
         elif c.type == "textarea":
             item = page_item(num, c.name, c.label, "textarea", rid, seq, maxlen=c.maxlen, readonly_expr=ro, **common)
         elif c.type in ("number", "int", "money", "qty", "pct"):
@@ -714,10 +719,18 @@ def entity_form_page(ctx, e):
                                    confirm="Ajukan dokumen ini untuk approval? Setelah diajukan dokumen terkunci."))
         requests.append("SUBMIT")
     comps.append(cancel_da())
+    save_requests = ",".join(r for r in requests if r != "DELETE")
     for i, v in enumerate(e.validations, 1):
         item = ("P%d_%s" % (num, v["item"].upper())) if v.get("item") else None
         comps.append(val_expr("check-%s-%d" % (rid, i), v.get("name", "CHECK_%s_%d" % (e.name, i)), i * 10, v["expr"].replace(":P_", ":P%d_" % num),
-                              v["message"], item, requests=v.get("when", ",".join(r for r in requests if r != "DELETE"))))
+                              v["message"], item, requests=v.get("when", save_requests)))
+    # validasi format dari semantic (sama dengan check constraint, tapi pesan ramah di item)
+    for j, c in enumerate([c for c in e.columns if c.sem and c.form == "edit"], 1):
+        it = "P%d_%s" % (num, c.name)
+        expr = ":%s is null or regexp_like(%s, '%s')" % (it, "lower(trim(:%s))" % it if c.sem.get("case") == "lower" else "trim(:%s)" % it,
+                                                         c.sem["regex"].replace("'", "''"))
+        comps.append(val_expr("format-%s" % kebab(c.name), "FORMAT_%s" % c.name, 500 + j * 10, expr, c.sem["msg"], it,
+                              requests=save_requests))
     comps.append(Comp("process", "init-%s-form" % rid, ("name", "INIT_%s_FORM" % e.name), ("type", "formInitialization"),
                       ("formRegion", "@" + rid), ("execution", G(("sequence", 10), ("point", "beforeHeader")))))
     comps.append(Comp("process", "save-%s" % rid, ("name", "SAVE_%s" % e.name), ("type", "formAutoRowProcessing"),
