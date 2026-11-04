@@ -1,0 +1,50 @@
+name: Sinkron Wiki
+
+# docs/wiki/ adalah sumber kebenaran wiki. Setiap push ke main yang mengubahnya
+# disalin ke GitHub Wiki repo ini (halaman yang tidak ada di docs/wiki/ dihapus).
+# Syarat sekali saja: Settings > General > Features > Wikis aktif, dan satu halaman
+# awal sudah dibuat lewat web (GitHub baru membuat repo wiki setelah itu).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/wiki/**'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Salin docs/wiki ke GitHub Wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          if ! git clone --depth 1 "$url" "$RUNNER_TEMP/wiki" 2>"$RUNNER_TEMP/clone.err"; then
+            sed "s/${GH_TOKEN}/***/g" "$RUNNER_TEMP/clone.err"
+            echo "::error::Repo wiki tidak bisa di-clone. Aktifkan Settings > General > Features > Wikis, buat satu halaman awal lewat web, lalu jalankan ulang workflow ini."
+            exit 1
+          fi
+          rsync -a --delete --exclude '.git' docs/wiki/ "$RUNNER_TEMP/wiki/"
+          cd "$RUNNER_TEMP/wiki"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki sudah sama dengan docs/wiki."
+            exit 0
+          fi
+          git commit -q -m "Sinkron dari docs/wiki (${GITHUB_SHA::7})"
+          git push -q origin HEAD
+          echo "Wiki diperbarui: https://github.com/${GITHUB_REPOSITORY}/wiki"

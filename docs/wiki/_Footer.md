@@ -1,0 +1,1 @@
+Wiki ini dikelola di repo ([`docs/wiki/`](https://github.com/iwanhe/pandawa-apexlang/blob/main/docs/wiki)) dan disinkronkan otomatis oleh workflow **Sinkron Wiki**. Edit lewat PR; perubahan langsung di halaman wiki akan tertimpa.
