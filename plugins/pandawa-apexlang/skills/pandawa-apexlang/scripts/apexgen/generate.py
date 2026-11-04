@@ -82,6 +82,11 @@ def overlay_custom(app, root, out, ctx):
                 alias = re.search(r"^\s+alias: (\S+)", txt, re.M)
                 name = re.search(r"^\s+name: (.+)$", txt, re.M)
                 modal = re.search(r"pageMode: modalDialog", txt)
+                scheme = re.search(r"^    security \{\n\s+authorizationScheme: @(\S+)", txt, re.M)
+                if alias:
+                    ctx.access = [a for a in ctx.access if a["no"] != no]
+                    ctx.access.append({"alias": alias.group(1).lower(), "no": no,
+                                       "auth": scheme.group(1) if scheme else None, "modal": bool(modal)})
                 if alias and name and not modal and no not in generated:
                     ctx.e2e_pages.append({"alias": alias.group(1).lower(), "no": no, "title": name.group(1).strip()})
 
@@ -127,8 +132,12 @@ def main():
     write(os.path.join(root, "database", "admin", "remove_users.sql"), gen_sql.remove_users_script(app))
 
     out, ctx = build_apex(app, root)
+    # akses per role untuk E2E: skema -> role (None = semua role terdaftar), user demo per role
+    schemes = {k: v for k, v in app.authorizations.items()}
+    users = [{"username": u["username"].upper(), "roles": [r.upper() for r in u.get("roles", [])]} for u in app.users]
     write(os.path.join(root, "tests", "e2e", "pages.json"),
-          json.dumps({"app": app.alias, "pages": ctx.e2e_pages}, indent=2) + "\n")
+          json.dumps({"app": app.alias, "schemes": schemes, "users": users, "pages": ctx.e2e_pages,
+                     "access": sorted(ctx.access, key=lambda p: p["no"])}, indent=2) + "\n")
 
     tr = traceability.build(app)
     if tr:

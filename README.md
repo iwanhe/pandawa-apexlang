@@ -97,7 +97,7 @@ Ganti isinya dengan aplikasi Anda.
 | Workflow | Isi |
 | --- | --- |
 | **CI** (`ci.yml`, push/PR) | Untuk setiap `app.yaml`: generate → output sudah di-commit → SQLcl `apex validate` → artifact zip. Install di **Oracle Free** + compile + `tests/db/test_*.sql`. Skill sinkron + artifact zip skill |
-| **E2E Playwright** (manual) | Butuh secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD` |
+| **E2E Playwright** (manual) | Butuh secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD`. Opsional `APEX_ROLE_PASSWORD` (password bersama dari `create_users.sql`) untuk test akses per role |
 
 ## Mengembangkan toolkit ini
 

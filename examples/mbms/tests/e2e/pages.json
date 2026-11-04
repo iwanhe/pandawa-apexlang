@@ -1,100 +1,428 @@
 {
   "app": "MBMS",
+  "schemes": {
+    "app-users": null,
+    "admin-rights": [
+      "ADMIN"
+    ],
+    "master-data": [
+      "FINANCE",
+      "PROCUREMENT",
+      "SALES"
+    ],
+    "printing": [
+      "PRINT_MGR",
+      "SALES",
+      "DIRECTOR"
+    ],
+    "engineering": [
+      "PROJECT_MGR",
+      "ENG_MGR",
+      "DIRECTOR"
+    ],
+    "warehouse": [
+      "WAREHOUSE"
+    ]
+  },
+  "users": [
+    {
+      "username": "MBMS_ADMIN",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "MBMS_SALES",
+      "roles": [
+        "SALES"
+      ]
+    },
+    {
+      "username": "MBMS_PRINT_MGR",
+      "roles": [
+        "PRINT_MGR"
+      ]
+    },
+    {
+      "username": "MBMS_PM",
+      "roles": [
+        "PROJECT_MGR"
+      ]
+    },
+    {
+      "username": "MBMS_ENG_MGR",
+      "roles": [
+        "ENG_MGR"
+      ]
+    },
+    {
+      "username": "MBMS_DIRECTOR",
+      "roles": [
+        "DIRECTOR"
+      ]
+    },
+    {
+      "username": "MBMS_PROC",
+      "roles": [
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "username": "MBMS_WH",
+      "roles": [
+        "WAREHOUSE"
+      ]
+    },
+    {
+      "username": "MBMS_FIN",
+      "roles": [
+        "FINANCE"
+      ]
+    },
+    {
+      "username": "MBMS_E2E",
+      "roles": [
+        "DIRECTOR"
+      ]
+    }
+  ],
   "pages": [
     {
       "alias": "home",
       "no": 100,
-      "title": "Home"
+      "title": "Home",
+      "auth": "app-users"
     },
     {
       "alias": "approval-inbox",
       "no": 190,
-      "title": "Approval Inbox"
+      "title": "Approval Inbox",
+      "auth": "app-users"
     },
     {
       "alias": "business-units",
       "no": 200,
-      "title": "Business Units"
+      "title": "Business Units",
+      "auth": "app-users",
+      "create_auth": "admin-rights"
     },
     {
       "alias": "customers",
       "no": 210,
-      "title": "Customers"
+      "title": "Customers",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "vendors",
       "no": 220,
-      "title": "Vendors"
+      "title": "Vendors",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "items",
       "no": 230,
-      "title": "Items"
+      "title": "Items",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "warehouses",
       "no": 240,
-      "title": "Warehouses & Locations"
+      "title": "Warehouses & Locations",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "job-orders",
       "no": 300,
-      "title": "Job Orders"
+      "title": "Job Orders",
+      "auth": "app-users",
+      "create_auth": "printing"
     },
     {
       "alias": "projects",
       "no": 310,
-      "title": "Projects"
+      "title": "Projects",
+      "auth": "app-users",
+      "create_auth": "engineering"
     },
     {
       "alias": "projects-detail",
       "no": 312,
-      "title": "Detail Project"
+      "title": "Detail Project",
+      "auth": "app-users"
     },
     {
       "alias": "wbs-budget",
       "no": 320,
-      "title": "WBS Budget"
+      "title": "WBS Budget",
+      "auth": "app-users",
+      "create_auth": "engineering"
     },
     {
       "alias": "purchase-requisitions",
       "no": 330,
-      "title": "Purchase Requisitions"
+      "title": "Purchase Requisitions",
+      "auth": "app-users",
+      "create_auth": "app-users"
     },
     {
       "alias": "purchase-requisitions-detail",
       "no": 332,
-      "title": "Detail PR"
+      "title": "Detail PR",
+      "auth": "app-users"
     },
     {
       "alias": "pr-lines",
       "no": 340,
-      "title": "PR Lines"
+      "title": "PR Lines",
+      "auth": "app-users",
+      "create_auth": "app-users"
     },
     {
       "alias": "stock-transactions",
       "no": 350,
-      "title": "Stock Transactions"
+      "title": "Stock Transactions",
+      "auth": "app-users",
+      "create_auth": "warehouse"
     },
     {
       "alias": "job-costing",
       "no": 400,
-      "title": "Job Costing"
+      "title": "Job Costing",
+      "auth": "app-users"
     },
     {
       "alias": "project-summary",
       "no": 410,
-      "title": "Project Summary"
+      "title": "Project Summary",
+      "auth": "app-users"
     },
     {
       "alias": "budget-vs-actual",
       "no": 420,
-      "title": "Budget vs Actual"
+      "title": "Budget vs Actual",
+      "auth": "app-users"
     },
     {
       "alias": "stock-on-hand",
       "no": 430,
-      "title": "Stock On Hand"
+      "title": "Stock On Hand",
+      "auth": "app-users"
+    }
+  ],
+  "access": [
+    {
+      "alias": "home",
+      "no": 100,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "approval-inbox",
+      "no": 190,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "approval",
+      "no": 191,
+      "auth": "app-users",
+      "modal": true
+    },
+    {
+      "alias": "business-units",
+      "no": 200,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "business-unit",
+      "no": 201,
+      "auth": "admin-rights",
+      "modal": true
+    },
+    {
+      "alias": "customers",
+      "no": 210,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "customer",
+      "no": 211,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "vendors",
+      "no": 220,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "vendor",
+      "no": 221,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "items",
+      "no": 230,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "item",
+      "no": 231,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "warehouses",
+      "no": 240,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "warehouse",
+      "no": 241,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "job-orders",
+      "no": 300,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "job-order",
+      "no": 301,
+      "auth": "printing",
+      "modal": true
+    },
+    {
+      "alias": "projects",
+      "no": 310,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "project",
+      "no": 311,
+      "auth": "engineering",
+      "modal": true
+    },
+    {
+      "alias": "projects-detail",
+      "no": 312,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "wbs-budget",
+      "no": 320,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "wbs",
+      "no": 321,
+      "auth": "engineering",
+      "modal": true
+    },
+    {
+      "alias": "purchase-requisitions",
+      "no": 330,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "purchase-requisition",
+      "no": 331,
+      "auth": "app-users",
+      "modal": true
+    },
+    {
+      "alias": "purchase-requisitions-detail",
+      "no": 332,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "pr-lines",
+      "no": 340,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "pr-line",
+      "no": 341,
+      "auth": "app-users",
+      "modal": true
+    },
+    {
+      "alias": "stock-transactions",
+      "no": 350,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "stock-transaction",
+      "no": 351,
+      "auth": "warehouse",
+      "modal": true
+    },
+    {
+      "alias": "job-costing",
+      "no": 400,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "project-summary",
+      "no": 410,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "budget-vs-actual",
+      "no": 420,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "stock-on-hand",
+      "no": 430,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "users-roles",
+      "no": 500,
+      "auth": "admin-rights",
+      "modal": false
+    },
+    {
+      "alias": "user-role",
+      "no": 501,
+      "auth": "admin-rights",
+      "modal": true
+    },
+    {
+      "alias": "document-types",
+      "no": 510,
+      "auth": "admin-rights",
+      "modal": false
+    },
+    {
+      "alias": "document-type",
+      "no": 511,
+      "auth": "admin-rights",
+      "modal": true
     }
   ]
 }
