@@ -125,7 +125,10 @@
       "alias": "approval",
       "no": 191,
       "auth": "app-users",
-      "modal": true
+      "modal": true,
+      "openers": [
+        190
+      ]
     },
     {
       "alias": "departments",
@@ -137,7 +140,10 @@
       "alias": "department",
       "no": 201,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        200
+      ]
     },
     {
       "alias": "items",
@@ -149,7 +155,10 @@
       "alias": "item",
       "no": 211,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        210
+      ]
     },
     {
       "alias": "requests",
@@ -161,7 +170,11 @@
       "alias": "request",
       "no": 301,
       "auth": "requester",
-      "modal": true
+      "modal": true,
+      "openers": [
+        300,
+        302
+      ]
     },
     {
       "alias": "permintaan-barang-detail",
@@ -179,7 +192,11 @@
       "alias": "request-line",
       "no": 311,
       "auth": "requester",
-      "modal": true
+      "modal": true,
+      "openers": [
+        302,
+        310
+      ]
     },
     {
       "alias": "rekap-permintaan",
@@ -197,7 +214,10 @@
       "alias": "user-role",
       "no": 501,
       "auth": "admin-rights",
-      "modal": true
+      "modal": true,
+      "openers": [
+        500
+      ]
     },
     {
       "alias": "document-types",
@@ -209,7 +229,10 @@
       "alias": "document-type",
       "no": 511,
       "auth": "admin-rights",
-      "modal": true
+      "modal": true,
+      "openers": [
+        510
+      ]
     }
   ]
 }

@@ -88,3 +88,45 @@ export async function navState(page: Page) {
     };
   });
 }
+
+/**
+ * Dialog URL ke halaman modal `alias` yang ditautkan dari halaman saat ini (link Edit, tombol Create, action kartu),
+ * lengkap dengan checksum p_dialog_cs. Halaman modal APEX tidak bisa dibuka langsung tanpa checksum (HTTP 400).
+ */
+export async function dialogUrl(page: Page, alias: string): Promise<string | null> {
+  const html = (await page.content())
+    .replace(/\\u002F/gi, '/')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\\//g, '/')
+    .replace(/&amp;/g, '&');
+  const esc = alias.replace(/[-]/g, '\\-');
+  const re = new RegExp(`(?:https?://[^'"\\s]+)?/ords/r/[^'"\\s?]*/${esc}\\?[^'"\\s]*?p_dialog_cs=[^'"\\s&]+`, 'i');
+  const m = html.match(re);
+  return m ? new URL(m[0], page.url()).toString() : null;
+}
+
+/** Tunggu halaman APEX siap (APEX menjaga koneksi terbuka, jadi bukan 'networkidle'). */
+export async function waitApex(page: Page) {
+  await page.waitForLoadState('load');
+  await page.locator('body').waitFor({ state: 'visible' });
+  await page.waitForTimeout(1000);
+}
+
+/** Cetak kontrol form/facet di halaman ke stdout (log job), untuk diagnosis saat test gagal. */
+export async function dumpControls(page: Page, label: string) {
+  const info = await page
+    .evaluate(() =>
+      Array.from(document.querySelectorAll('input, select, [role="checkbox"], [role="option"], button'))
+        .slice(0, 80)
+        .map((e) => {
+          const el = e as HTMLInputElement;
+          const lbl = (e.getAttribute('aria-label') || (e.id && document.querySelector(`label[for="${e.id}"]`)?.textContent) || e.textContent || '')
+            .trim()
+            .replace(/\s+/g, ' ')
+            .slice(0, 50);
+          return `${e.tagName.toLowerCase()} type=${el.type ?? ''} id=${e.id} name=${el.name ?? ''} role=${e.getAttribute('role') ?? ''} class=${(e.getAttribute('class') ?? '').slice(0, 40)} label="${lbl}"`;
+        }),
+    )
+    .catch((err) => [`(gagal membaca DOM: ${err})`]);
+  console.log(`\n===== DOM ${label} (${page.url()}) =====\n${info.join('\n')}\n`);
+}

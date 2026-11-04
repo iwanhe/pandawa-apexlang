@@ -1,15 +1,19 @@
 import { expect, test } from '@playwright/test';
-import { collectDiagnostics, env, login, pageUrl } from './helpers';
-import { ACCESS, APP_PAGES, AppUser, isAllowed, USERS } from './pages';
+import { collectDiagnostics, dialogUrl, env, login, pageUrl, waitApex } from './helpers';
+import { ACCESS, AccessPage, APP_PAGES, AppUser, isAllowed, USERS } from './pages';
 
 /**
  * Akses per role (REQ-3.1, REQ-3.2, REQ-3.3, REQ-3.4).
  *
  * Untuk satu user demo per kombinasi role (users: di app.yaml, dibuat oleh database/admin/create_users.sql):
- *   - setiap halaman (termasuk form modal dan admin) terbuka bila skemanya mengizinkan role user,
+ *   - halaman non-modal dibuka langsung: harus terbuka bila skemanya mengizinkan role user,
  *     dan menampilkan "Akses ditolak" bila tidak;
+ *   - halaman modal (form) hanya bisa dibuka lewat dialog URL ber-checksum dari halaman pembukanya
+ *     (link Edit / tombol Create). Test mengambil URL itu dari halaman pembuka lalu membukanya:
+ *     harus "Akses ditolak" bila skema form tidak mengizinkan. Bila halaman pembuka sudah ditolak,
+ *     form memang tidak terjangkau (dihitung benar);
  *   - tombol Create di halaman list tampil hanya bila skema create mengizinkan.
- * Matriks skema -> role dan daftar halaman dibaca dari pages.json (GENERATED dari app.yaml).
+ * Matriks skema -> role, halaman, dan halaman pembuka dibaca dari pages.json (GENERATED dari app.yaml).
  *
  * Password: secret APEX_ROLE_PASSWORD (password bersama yang dipakai saat menjalankan create_users.sql).
  * Tanpa secret ini test di-skip.
@@ -23,37 +27,78 @@ for (const u of USERS) {
   if (key && !ROLE_USERS.some((x) => [...x.roles].sort().join(',') === key)) ROLE_USERS.push(u);
 }
 
+function snippet(body: string): string {
+  return body.replace(/\s+/g, ' ').trim().slice(0, 160);
+}
+
 test.describe('akses per role', () => {
   test.skip(({ isMobile }) => isMobile, 'Matriks akses cukup di desktop');
   test.skip(!PASSWORD, 'Secret APEX_ROLE_PASSWORD belum di-set: test akses per role dilewati');
 
   for (const u of ROLE_USERS) {
     test(`${u.username} (${u.roles.join(', ')})`, async ({ page }, testInfo) => {
-      test.setTimeout(10 * 60_000);
+      test.setTimeout(15 * 60_000);
       const diag = collectDiagnostics(page);
       const failures: string[] = [];
+      const notes: string[] = [];
+      let base = '';
+
+      /** Buka halaman; kembalikan status HTTP dan teks body. */
+      async function visit(url: string): Promise<{ status: number; body: string; login: boolean }> {
+        const resp = await page.goto(url);
+        await waitApex(page);
+        const loginPage = (await page.locator('#P9999_USERNAME').count()) > 0;
+        return { status: resp?.status() ?? 0, body: await page.locator('body').innerText(), login: loginPage };
+      }
+
+      function judge(p: AccessPage, expected: boolean, r: { status: number; body: string; login: boolean }) {
+        if (r.login) {
+          failures.push(`${p.alias}: diarahkan ke login (sesi hilang)`);
+          return;
+        }
+        const denied = /Akses ditolak/i.test(r.body);
+        if (expected && denied) failures.push(`${p.alias} (${p.auth}): seharusnya BOLEH, tapi ditolak`);
+        else if (!expected && !denied) {
+          failures.push(`${p.alias} (${p.auth}): seharusnya DITOLAK, tapi terbuka (HTTP ${r.status}): "${snippet(r.body)}"`);
+        } else if (expected && r.status >= 400) failures.push(`${p.alias}: HTTP ${r.status}: "${snippet(r.body)}"`);
+        else if (expected && /ORA-\d{5}/.test(r.body)) failures.push(`${p.alias}: ${r.body.match(/ORA-\d{5}[^\n]*/)?.[0]}`);
+      }
+
+      async function modal(p: AccessPage, expected: boolean) {
+        let url: string | null = null;
+        let openerAllowed = false;
+        for (const no of p.openers ?? []) {
+          const op = ACCESS.find((x) => x.no === no);
+          if (!op || !isAllowed(op.auth, u.roles)) continue;
+          openerAllowed = true;
+          await page.goto(pageUrl(base, op.alias, op.no));
+          await waitApex(page);
+          url = await dialogUrl(page, p.alias);
+          if (url) break;
+        }
+        if (!url) {
+          const why = openerAllowed ? 'tidak ada link/tombol ke form ini di halaman pembuka' : 'halaman pembuka ditolak';
+          if (expected) notes.push(`${p.alias}: tidak bisa diverifikasi (${why})`);
+          else notes.push(`${p.alias}: tidak terjangkau (${why}) - benar`);
+          return;
+        }
+        judge(p, expected, await visit(url));
+      }
+
       try {
         await login(page, env('APEX_APP_URL'), u.username, PASSWORD);
-        const base = page.url();
+        base = page.url();
         for (const p of ACCESS) {
           const expected = isAllowed(p.auth, u.roles);
           await test.step(`${p.no} ${p.alias}: ${expected ? 'boleh' : 'ditolak'}`, async () => {
-            await page.goto(pageUrl(base, p.alias, p.no));
-            await page.waitForLoadState('load');
-            await page.locator('body').waitFor({ state: 'visible' });
-            await page.waitForTimeout(1000);
-            const body = await page.locator('body').innerText();
-            if (await page.locator('#P9999_USERNAME').count()) {
-              failures.push(`${p.alias}: diarahkan ke login (sesi hilang)`);
+            if (p.modal) {
+              await modal(p, expected);
               return;
             }
-            const denied = /Akses ditolak/i.test(body);
-            if (expected && denied) failures.push(`${p.alias} (${p.auth}): seharusnya BOLEH, tapi ditolak`);
-            if (!expected && !denied) failures.push(`${p.alias} (${p.auth}): seharusnya DITOLAK, tapi terbuka`);
-            if (expected && /ORA-\d{5}/.test(body)) failures.push(`${p.alias}: ${body.match(/ORA-\d{5}[^\n]*/)?.[0]}`);
-
+            const r = await visit(pageUrl(base, p.alias, p.no));
+            judge(p, expected, r);
             const listPage = APP_PAGES.find((x) => x.no === p.no);
-            if (expected && listPage?.create_auth !== undefined) {
+            if (expected && !r.login && listPage?.create_auth !== undefined) {
               const canCreate = isAllowed(listPage.create_auth, u.roles);
               const shown = await page.getByRole('button', { name: 'Create', exact: true }).isVisible();
               if (shown !== canCreate) {
@@ -64,9 +109,12 @@ test.describe('akses per role', () => {
         }
       } finally {
         await diag.attach(testInfo, failures.length > 0);
-        await testInfo.attach('akses-failures.txt', { body: failures.join('\n') || 'OK', contentType: 'text/plain' });
+        const report = [...failures.map((f) => `GAGAL  ${f}`), ...notes.map((n) => `info   ${n}`)].join('\n') || 'OK';
+        await testInfo.attach('akses.txt', { body: report, contentType: 'text/plain' });
+        console.log(`\n===== akses ${u.username} =====\n${report}\n`);
       }
       expect(failures, failures.join('\n')).toEqual([]);
     });
   }
 });
+

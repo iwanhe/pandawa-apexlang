@@ -58,4 +58,6 @@ Setiap butir di bawah pernah menyebabkan gagal validasi, gagal import, atau bug 
 | E1 | `waitForLoadState('networkidle')` timeout | APEX menjaga koneksi terbuka. Tunggu `load` + `.t-Body` visible + jeda singkat |
 | E2 | Artifact/CDN tidak bisa diunduh dari sandbox agent | Cetak diagnostik (timeline, log browser) ke stdout job hanya bila test gagal |
 | E3 | Navigasi antar halaman | Friendly URL `/ords/r/<ws>/<app>/<alias>?session=<id>`. Ganti segmen alias, pertahankan `session` |
+| E5 | Halaman modal dibuka langsung lewat URL → HTTP 400, form tidak tampil | Dialog APEX butuh checksum `p_dialog_cs` yang hanya ada di URL dari aplikasi. Ambil URL itu dari halaman pembuka (link Edit, tombol Create) dengan `dialogUrl()` di `tests/e2e/tests/helpers.ts`; daftar halaman pembuka ada di `pages.json` (`access[].openers`) |
+| E6 | Selector facet `input[name=Pnn_KOLOM]` tidak ketemu | Jangan menebak id/name kontrol facet. Pakai ARIA: `page.getByRole('checkbox', { name: /label nilai/ })`. Bila gagal, `dumpControls()` mencetak kontrol DOM ke log job |
 | E4 | Debug event UI | Rekam class body, `theme42layoutchanged`, dan stack trace `$.event.trigger`. Teknik ini menemukan R3 |

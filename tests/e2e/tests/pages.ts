@@ -16,6 +16,8 @@ export interface AccessPage {
   no: number;
   auth: string | null;
   modal: boolean;
+  /** Halaman non-modal yang menautkan ke halaman modal ini (sumber dialog URL). */
+  openers?: number[];
 }
 
 export interface AppUser {
