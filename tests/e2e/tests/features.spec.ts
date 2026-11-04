@@ -1,11 +1,11 @@
-import { expect, Page, test, TestInfo } from '@playwright/test';
-import { collectDiagnostics, dialogUrl, dumpControls, login, pageUrl, waitApex } from './helpers';
+import { expect, Frame, Page, test, TestInfo } from '@playwright/test';
+import { collectDiagnostics, dumpControls, dumpTriggers, login, openDialog, pageUrl, waitApex } from './helpers';
 import { APP_ALIAS } from './pages';
 
 /**
  * Test fungsional aplikasi DEMO (Permintaan Barang), login sebagai akun E2E (role REQUESTER).
  * Semua test read-only: tidak ada data yang tersimpan (validasi sengaja dibuat gagal).
- * Form (halaman modal) dibuka lewat dialog URL ber-checksum dari halaman list, seperti dari aplikasi.
+ * Form (halaman modal) dibuka seperti user: klik tombol Create di halaman list, lalu bekerja di dalam dialog.
  * SESUAIKAN atau hapus file ini bila app.yaml diganti dengan aplikasi Anda.
  */
 test.describe('fitur DEMO', () => {
@@ -17,13 +17,13 @@ test.describe('fitur DEMO', () => {
     await waitApex(page);
   }
 
-  /** Buka form Permintaan Barang (301) lewat tombol Create di halaman 300. */
-  async function openRequestForm(page: Page) {
+  /** Buka form Permintaan Barang (301) lewat tombol Create di halaman 300; kembalikan frame dialog. */
+  async function openRequestForm(page: Page): Promise<Frame> {
     await open(page, 'requests', 300);
-    const url = await dialogUrl(page, 'request');
-    expect(url, 'dialog URL form Permintaan (tombol Create) tidak ditemukan di halaman 300').not.toBeNull();
-    await page.goto(url!);
-    await waitApex(page);
+    const frame = await openDialog(page, 'request');
+    if (!frame) await dumpTriggers(page, 'form Permintaan');
+    expect(frame, 'dialog form Permintaan tidak terbuka dari tombol Create di halaman 300').not.toBeNull();
+    return frame!;
   }
 
   /** Jalankan isi test; bila gagal, cetak kontrol DOM ke log job lalu lempar ulang. */
@@ -45,10 +45,10 @@ test.describe('fitur DEMO', () => {
 
   test('REQ-5.1 tanggal dibutuhkan sebelum tanggal permintaan ditolak', async ({ page }, testInfo) => {
     await run(page, testInfo, async () => {
-      await openRequestForm(page);
-      await expect(page.locator('#P301_DEPARTMENT_ID')).toBeAttached();
+      const form = await openRequestForm(page);
+      await expect(form.locator('#P301_DEPARTMENT_ID')).toBeAttached();
       // Keperluan (wajib) sengaja dikosongkan: walau validasi tanggal tidak jalan, data tetap tidak tersimpan.
-      await page.evaluate(() => {
+      await form.evaluate(() => {
         const apex = (window as any).apex;
         const sel = document.querySelector('#P301_DEPARTMENT_ID') as HTMLSelectElement;
         const first = Array.from(sel.options).find((o) => o.value);
@@ -56,16 +56,16 @@ test.describe('fitur DEMO', () => {
         apex.item('P301_REQUEST_DATE').setValue('10-JAN-2026');
         apex.item('P301_NEED_DATE').setValue('01-JAN-2026');
       });
-      await page.getByRole('button', { name: 'Create', exact: true }).click();
-      await waitApex(page);
-      await expect(page.getByText('Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan').first()).toBeVisible();
+      await form.getByRole('button', { name: 'Create', exact: true }).click();
+      await form.waitForLoadState('load');
+      await expect(form.getByText('Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan').first()).toBeVisible();
     });
   });
 
   test('REQ-4.3 department nonaktif tidak muncul di pilihan form permintaan', async ({ page }, testInfo) => {
     await run(page, testInfo, async () => {
-      await openRequestForm(page);
-      const options = await page.locator('#P301_DEPARTMENT_ID option').allInnerTexts();
+      const form = await openRequestForm(page);
+      const options = await form.locator('#P301_DEPARTMENT_ID option').allInnerTexts();
       const real = options.filter((o) => o.trim() && !o.includes('Pilih'));
       expect(real.length, 'pilihan department kosong').toBeGreaterThan(0);
       // Seed DEMO: HR - Human Resources (nonaktif), ACTIVE_YN = N
@@ -81,8 +81,8 @@ test.describe('fitur DEMO', () => {
       const cards = page.locator('.a-CardView-item');
       await expect(cards.first()).toBeVisible();
       const before = await cards.count();
-      // Facet Kategori memakai LOV statis: label "Alat Tulis Kantor" (ATK)
-      await page.getByRole('checkbox', { name: /Alat Tulis Kantor/ }).first().check();
+      // Facet = elemen role "option" (checkbox aslinya tersembunyi); label berisi jumlah, mis. "Alat Tulis Kantor2"
+      await page.getByRole('option', { name: /^Alat Tulis Kantor/ }).first().click();
       await expect
         .poll(async () => cards.count(), { timeout: 15_000, message: 'filter kategori tidak mempersempit hasil' })
         .toBeLessThan(before);
@@ -95,8 +95,8 @@ test.describe('fitur DEMO', () => {
       await open(page, 'requests', 300);
       await expect(page.getByText('Status', { exact: true }).first()).toBeVisible();
       await expect(page.getByText('Department', { exact: true }).first()).toBeVisible();
-      await expect(page.getByRole('checkbox', { name: /DRAFT/ }).first()).toBeVisible();
-      await expect(page.getByRole('checkbox', { name: /Operations|Finance|Information Technology/ }).first()).toBeVisible();
+      await expect(page.getByRole('option', { name: /^DRAFT/ }).first()).toBeVisible();
+      await expect(page.getByRole('option', { name: /Operations|Finance|Information Technology/ }).first()).toBeVisible();
     });
   });
 

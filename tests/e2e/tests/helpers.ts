@@ -1,4 +1,4 @@
-import { expect, Page, TestInfo } from '@playwright/test';
+import { expect, Frame, Page, TestInfo } from '@playwright/test';
 import { writeFileSync } from 'fs';
 
 export function env(name: string): string {
@@ -90,19 +90,67 @@ export async function navState(page: Page) {
 }
 
 /**
- * Dialog URL ke halaman modal `alias` yang ditautkan dari halaman saat ini (link Edit, tombol Create, action kartu),
- * lengkap dengan checksum p_dialog_cs. Halaman modal APEX tidak bisa dibuka langsung tanpa checksum (HTTP 400).
+ * Buka halaman modal `alias` seperti user: klik pemicunya di halaman saat ini (tombol Create/Edit/Tambah,
+ * link dialog di report atau kartu), lalu kembalikan frame dialog yang terbuka. null bila tidak ada pemicu.
+ * Halaman modal APEX tidak bisa dibuka langsung lewat URL (HTTP 400) — butuh konteks dialog dari aplikasi.
  */
-export async function dialogUrl(page: Page, alias: string): Promise<string | null> {
-  const html = (await page.content())
-    .replace(/\\u002F/gi, '/')
-    .replace(/\\u0026/gi, '&')
-    .replace(/\\\//g, '/')
-    .replace(/&amp;/g, '&');
-  const esc = alias.replace(/[-]/g, '\\-');
-  const re = new RegExp(`(?:https?://[^'"\\s]+)?/ords/r/[^'"\\s?]*/${esc}\\?[^'"\\s]*?p_dialog_cs=[^'"\\s&]+`, 'i');
-  const m = html.match(re);
-  return m ? new URL(m[0], page.url()).toString() : null;
+export async function openDialog(page: Page, alias: string): Promise<Frame | null> {
+  const want = (u: string) => new RegExp(`/${alias.replace(/-/g, '\\-')}\\?`, 'i').test(u);
+  await page.locator('a[href*="navigation.dialog"], .a-CardView-item, table.t-Report-report, .a-IRR-table').first()
+    .waitFor({ state: 'attached', timeout: 5000 }).catch(() => undefined);
+  const triggers = [
+    page.getByRole('button', { name: /^(Create|Edit|Tambah)$/ }),
+    page.locator(`a[href*="navigation.dialog"][href*="${alias}"]`),
+    page.locator('a[href*="navigation.dialog"]'),
+  ];
+  for (const group of triggers) {
+    const n = Math.min(await group.count(), 4);
+    for (let i = 0; i < n; i++) {
+      const el = group.nth(i);
+      if (!(await el.isVisible().catch(() => false))) continue;
+      await el.click().catch(() => undefined);
+      const frame = await waitForFrame(page, want, 10_000);
+      if (frame) {
+        await frame.waitForLoadState('load').catch(() => undefined);
+        await frame.locator('body').waitFor({ state: 'visible' }).catch(() => undefined);
+        await page.waitForTimeout(800);
+        return frame;
+      }
+      await closeDialogs(page);
+    }
+  }
+  return null;
+}
+
+async function waitForFrame(page: Page, want: (u: string) => boolean, timeout: number): Promise<Frame | null> {
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    const f = page.frames().find((fr) => fr !== page.mainFrame() && want(fr.url()));
+    if (f) return f;
+    await page.waitForTimeout(250);
+  }
+  return null;
+}
+
+/** Tutup dialog APEX yang terbuka (tanpa menyimpan). */
+export async function closeDialogs(page: Page) {
+  for (let i = 0; i < 3 && (await page.locator('.ui-dialog:visible').count()) > 0; i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+  }
+}
+
+/** Cetak link dan tombol yang mungkin membuka dialog (untuk diagnosis bila pemicu tidak ditemukan). */
+export async function dumpTriggers(page: Page, label: string) {
+  const info = await page
+    .evaluate(() =>
+      Array.from(document.querySelectorAll('a[href], button'))
+        .filter((e) => /dialog|javascript|Create|Edit|Tambah/i.test((e.getAttribute('href') ?? '') + e.textContent))
+        .slice(0, 25)
+        .map((e) => `${e.tagName.toLowerCase()} text="${(e.textContent ?? '').trim().slice(0, 30)}" href="${(e.getAttribute('href') ?? '').slice(0, 160)}" onclick="${(e.getAttribute('onclick') ?? '').slice(0, 80)}"`),
+    )
+    .catch((err) => [`(gagal membaca DOM: ${err})`]);
+  console.log(`\n===== TRIGGERS ${label} (${page.url()}) =====\n${info.join('\n')}\n`);
 }
 
 /** Tunggu halaman APEX siap (APEX menjaga koneksi terbuka, jadi bukan 'networkidle'). */

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { collectDiagnostics, dialogUrl, env, login, pageUrl, waitApex } from './helpers';
+import { closeDialogs, collectDiagnostics, dumpTriggers, env, login, openDialog, pageUrl, waitApex } from './helpers';
 import { ACCESS, AccessPage, APP_PAGES, AppUser, isAllowed, USERS } from './pages';
 
 /**
@@ -8,10 +8,10 @@ import { ACCESS, AccessPage, APP_PAGES, AppUser, isAllowed, USERS } from './page
  * Untuk satu user demo per kombinasi role (users: di app.yaml, dibuat oleh database/admin/create_users.sql):
  *   - halaman non-modal dibuka langsung: harus terbuka bila skemanya mengizinkan role user,
  *     dan menampilkan "Akses ditolak" bila tidak;
- *   - halaman modal (form) hanya bisa dibuka lewat dialog URL ber-checksum dari halaman pembukanya
- *     (link Edit / tombol Create). Test mengambil URL itu dari halaman pembuka lalu membukanya:
- *     harus "Akses ditolak" bila skema form tidak mengizinkan. Bila halaman pembuka sudah ditolak,
- *     form memang tidak terjangkau (dihitung benar);
+ *   - halaman modal (form) tidak bisa dibuka langsung lewat URL (HTTP 400). Test membukanya seperti user:
+ *     klik pemicunya (tombol Create/Edit/Tambah, link dialog di report/kartu) di halaman pembuka, lalu
+ *     menilai isi dialog: harus "Akses ditolak" bila skema form tidak mengizinkan. Bila halaman pembuka
+ *     ditolak atau tidak punya pemicu, form memang tidak terjangkau dari aplikasi (dicatat sebagai info);
  *   - tombol Create di halaman list tampil hanya bila skema create mengizinkan.
  * Matriks skema -> role, halaman, dan halaman pembuka dibaca dari pages.json (GENERATED dari app.yaml).
  *
@@ -43,9 +43,9 @@ test.describe('akses per role', () => {
       const notes: string[] = [];
       let base = '';
 
-      /** Buka halaman; kembalikan status HTTP dan teks body. */
+      /** Buka halaman (sekali coba ulang bila oracleapex.com lambat); kembalikan status HTTP dan teks body. */
       async function visit(url: string): Promise<{ status: number; body: string; login: boolean }> {
-        const resp = await page.goto(url);
+        const resp = await page.goto(url).catch(async () => page.goto(url));
         await waitApex(page);
         const loginPage = (await page.locator('#P9999_USERNAME').count()) > 0;
         return { status: resp?.status() ?? 0, body: await page.locator('body').innerText(), login: loginPage };
@@ -65,24 +65,25 @@ test.describe('akses per role', () => {
       }
 
       async function modal(p: AccessPage, expected: boolean) {
-        let url: string | null = null;
         let openerAllowed = false;
         for (const no of p.openers ?? []) {
           const op = ACCESS.find((x) => x.no === no);
           if (!op || !isAllowed(op.auth, u.roles)) continue;
           openerAllowed = true;
-          await page.goto(pageUrl(base, op.alias, op.no));
+          await page.goto(pageUrl(base, op.alias, op.no)).catch(async () => page.goto(pageUrl(base, op.alias, op.no)));
           await waitApex(page);
-          url = await dialogUrl(page, p.alias);
-          if (url) break;
-        }
-        if (!url) {
-          const why = openerAllowed ? 'tidak ada link/tombol ke form ini di halaman pembuka' : 'halaman pembuka ditolak';
-          if (expected) notes.push(`${p.alias}: tidak bisa diverifikasi (${why})`);
-          else notes.push(`${p.alias}: tidak terjangkau (${why}) - benar`);
+          const frame = await openDialog(page, p.alias);
+          if (!frame) continue;
+          const body = await frame.locator('body').innerText().catch(() => '');
+          judge(p, expected, { status: 200, body, login: false });
+          if (!expected && !/Akses ditolak/i.test(body)) await dumpTriggers(page, `${u.username} ${p.alias}`);
+          notes.push(`${p.alias}: diuji lewat dialog dari halaman ${no} (${/Akses ditolak/i.test(body) ? 'ditolak' : 'terbuka'})`);
+          await closeDialogs(page);
           return;
         }
-        judge(p, expected, await visit(url));
+        const why = openerAllowed ? 'tidak ada pemicu dialog di halaman pembuka' : 'halaman pembuka ditolak';
+        if (openerAllowed) await dumpTriggers(page, `${u.username} ${p.alias}`);
+        notes.push(`${p.alias}: tidak terjangkau dari aplikasi (${why})${expected ? ' - TIDAK TERVERIFIKASI' : ''}`);
       }
 
       try {
