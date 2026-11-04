@@ -14,6 +14,8 @@ Contoh lengkap ada di `app.yaml` pada template repo (aplikasi DEMO Permintaan Ba
 | `date` | | `lihat git log` | Tanggal di header script. Tetap, supaya output deterministik |
 | `description` | | `name` | Subjudul home |
 | `nav_fix` | | `true` | Muat `js/nav-fix.js` (workaround side menu HP, Universal Theme 26.2.1) |
+| `frs` | | `docs/02-frs.md` | FRS sumber REQ-ID (lihat **Traceability requirement**) |
+| `req` | | | REQ-ID yang direalisasikan di level aplikasi (security core, navigasi, dll.) |
 
 ## `roles`
 
@@ -64,6 +66,7 @@ Satu entitas menghasilkan:
 | `workspace` | | | Halaman master-detail untuk entitas yang punya anak (`parent:`). `{page, label, alias, icon}` atau cukup nomor halaman. Lihat bawah |
 | `form_style` | | `drawer` (non-dokumen), `modal` (dokumen) | `drawer`: panel kanan untuk form pendek, konteks list tetap terlihat. `modal`: dialog tengah untuk dokumen atau form panjang |
 | `document` | | | Jadikan entitas dokumen ber-approval (lihat bawah) |
+| `req` | | | REQ-ID FRS yang direalisasikan entitas ini. Juga tersedia di kolom, item `validations`, `document`, `reports`, `dashboard.kpis`, dan `dashboard.charts` |
 | `columns` | ya | | Daftar kolom |
 
 ### `columns`
@@ -166,6 +169,28 @@ dashboard:
 ```
 
 KPI tampil sebagai **Metric Card** (template component Universal Theme): 1–2 KPI dua kolom, 3 KPI atau lebih empat kolom. `icon` opsional (default `fa-dashboard`). Sebaiknya 2–4 KPI yang sebanding.
+
+## Traceability requirement
+
+FRS (`docs/02-frs.md`) menulis requirement sebagai baris tabel `| REQ-x.y | kalimat EARS |` (template di `assets/templates/docs/02-frs.md`). Telusuri setiap ID:
+
+| Bukti | Di mana | Contoh |
+| --- | --- | --- |
+| Realisasi di spec | field `req:` (string atau list) | `req: [REQ-3.2, REQ-4.1]` di entitas; `req: REQ-5.1` di validasi |
+| Realisasi manual | sebut ID di `database/custom/*.sql` atau `apex-custom/**/*.apx` | `-- REQ-6.1: rekap ...` |
+| Verifikasi | sebut ID di `tests/db/*.sql` atau `tests/e2e/tests/*.ts` | `assert_true(..., 'REQ-5.4 level 2 dibuat')` |
+
+Generator lalu:
+
+- gagal (`SPEC ERROR: req tidak ada di docs/02-frs.md: ...`) bila `app.yaml` merujuk ID yang tidak didefinisikan di FRS;
+- menulis `## Requirements` di `comments` halaman yang merealisasikan ID tersebut;
+- membuat **`docs/traceability.md`** (GENERATED): per REQ-ID, lokasi di spec, halaman, file realisasi, file test, dan status `OK` / `Belum diuji` / `Belum direalisasi` / `Tidak di FRS`.
+
+Fitur ini opsional: tanpa REQ-ID di FRS, `docs/traceability.md` tidak dibuat.
+
+## Halaman manual (`apex-custom/`)
+
+Halaman yang belum didukung generator ditulis di `apex-custom/` dengan struktur sama seperti `apex/<alias>/` (mis. `apex-custom/pages/p00450-xxx.apx`). Generator membuat ulang `apex/<alias>/`, lalu menyalin `apex-custom/` di atasnya, sehingga halaman manual tidak hilang dan ikut masuk zip. Halaman non-modal ikut ke `tests/e2e/pages.json`. Bila sebuah file menimpa hasil generate, generator mencetak `PERINGATAN`. Contoh pola yang valid ada di `references/ux-patterns/`.
 
 ## Ikon
 

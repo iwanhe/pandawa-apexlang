@@ -16,7 +16,7 @@ create or replace package apx_demo_request_pkg as
     * Validasi sebelum submit: permintaan wajib punya minimal satu baris.
     * Dipanggil oleh apx_demo_approval_pkg.submit (doc_types.validate_proc).
     * @param p_doc_id  request_id
-    * @throws -20201  permintaan tanpa baris
+    * @throws -20201  permintaan tanpa baris (REQ-5.2)
     */
    procedure check_submit (
       p_doc_id in number

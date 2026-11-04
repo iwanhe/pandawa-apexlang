@@ -5,6 +5,7 @@
 -- Purpose: View laporan (dipakai halaman report di app.yaml)
 --------------------------------------------------------------------------------
 
+-- REQ-6.1: rekap total nilai dan jumlah baris per permintaan
 create or replace force view apx_demo_request_summary_v as
 select r.request_id
       ,r.request_no

@@ -22,6 +22,7 @@ Asal toolkit ini adalah proyek MBMS (PT. Multisarana Niaga Mandiri). Semua atura
 - **Generator:** `scripts/apexgen/` di folder skill ini.
 - **Wrapper di template repo:** `scripts/generate.sh`, `scripts/validate.sh`, dan `scripts/sync-skill.sh`.
 - **Referensi sintaks APEXlang (skill Oracle):** `.claude/skills/apexlang/26.2/`. Bila tidak ada, install `apex@oracle-skills`.
+- **Contoh pola UX yang valid (Oracle UX Pattern Catalog 26.2):** `references/ux-patterns/` (18 halaman `.apx` + indeks yang memetakan pola ke fitur generator). Rujuk ini sebelum menulis cards, content row, metric card, faceted search, contextual info, atau chart secara manual.
 
 Bila user belum punya repo proyek, sarankan membuat repo dari template dulu. Repo template sudah membawa CI, E2E, `tests/db`, dan skill APEXlang Oracle. Tanpa repo, generator tetap bisa dijalankan langsung:
 
@@ -37,7 +38,7 @@ Generator butuh Python 3 + PyYAML.
 | --- | --- | --- |
 | 0. Setup | Repo dari template, secret CI | `references/deployment-testing.md` §1 |
 | 1. Blueprint | `docs/01-blueprint.md` | Template `assets/templates/docs/01-blueprint.md`. Isi: sasaran, modul, keputusan (D-xx), risiko, platform. |
-| 2. FRS | `docs/02-frs.md` | Template `assets/templates/docs/02-frs.md`. Isi: entitas & kolom, business rule (BR-xx), approval matrix, role × akses, peta halaman (rentang nomor Pandawa). |
+| 2. FRS | `docs/02-frs.md` | Template `assets/templates/docs/02-frs.md`. Isi: entitas & kolom, **requirement ber-ID gaya EARS (`REQ-x.y`)** termasuk business rule, approval matrix, role × akses, peta halaman (rentang nomor Pandawa). |
 | 3. Spec | `app.yaml` | Terjemahkan FRS ke spec (`references/app-spec.md`). Satu tabel FRS = satu `entities:`, approval = `document:`, laporan = `reports:` + view custom. Pilih pola halaman (`list_type`, `workspace`, `form_style`) dengan tabel **Memilih pola halaman**. |
 | 4. Logic custom | `database/custom/*.sql`, `database/seed/*.sql`, `tests/db/test_*.sql` | Package `APX_<APP>_<NAMA>_PKG`, view laporan, validate hook, data dummy, test PL/SQL. Wajib standar Pandawa (`references/pandawa-standards.md`). |
 | 5. Generate & CI | Output generate di-commit; CI hijau | `scripts/generate.sh`, commit, push. CI menjalankan: generate-up-to-date, **SQLcl `apex validate`**, **install + test di Oracle Free**, cek sinkron skill. |
@@ -49,7 +50,8 @@ Detail langkah, checklist, dan contoh prompt per fase ada di `references/workflo
 
 ## Aturan wajib
 
-1. **Jangan edit file hasil generate:** `apex/<alias>/`, `database/generated/`, `database/install.sql`, `database/admin/*_users.sql`, dan `tests/e2e/pages.json`. Ubah `app.yaml` atau `database/custom/`, lalu generate ulang. CI menolak perubahan yang tidak sinkron.
+1. **Jangan edit file hasil generate:** `apex/<alias>/`, `database/generated/`, `database/install.sql`, `database/admin/*_users.sql`, `tests/e2e/pages.json`, dan `docs/traceability.md`. Ubah `app.yaml`, `database/custom/`, atau `apex-custom/` (halaman manual), lalu generate ulang. CI menolak perubahan yang tidak sinkron.
+   - Halaman yang belum didukung generator: tulis di `apex-custom/pages/` dengan contoh dari `references/ux-patterns/`. Generator menyalinnya di atas hasil generate.
    - Pengecualian: setelah aplikasi diubah lewat Page Designer, export APEXlang dari APEX menjadi sumber kebenaran untuk halaman itu. Pindahkan logic-nya ke spec atau custom bila memungkinkan, dan catat di README.
 2. **Standar Pandawa:**
    - Objek DB `APX_<APP>_*` dengan suffix `_PKG`, `_V`, `_TRG`, `_U1`, `_N1`. Lowercase, indentasi 3 spasi, koma di depan, `package_version`, JavaDoc, header script.
@@ -67,8 +69,9 @@ Detail langkah, checklist, dan contoh prompt per fase ada di `references/workflo
    - region: `Intent: / Pattern role: / AI guidance:`.
 
    Baca `comments` ini sebelum mengubah `.apx`. Saat menulis halaman manual, ikuti pola yang sama. Jangan taruh metadata ini di `help` (itu teks untuk user).
-7. **Ikon** harus ada di Font APEX. Generator mengecek `icon:` terhadap `assets/apex-fa-icons-allowlist.txt` dan memberi saran ikon terdekat.
-8. **Jangan klaim selesai sebelum CI hijau.** Klaim "lolos validasi" hanya dari hasil `apex validate` dan test DB. Klaim "berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
+7. **Traceability.** Setiap requirement FRS punya ID `REQ-x.y`. Rujuk ID itu di `req:` (`app.yaml`), komentar SQL custom, dan pesan assert test. `docs/traceability.md` (GENERATED) menunjukkan status tiap ID; laporkan REQ yang masih **Belum diuji** / **Belum direalisasi** ke user.
+8. **Ikon** harus ada di Font APEX. Generator mengecek `icon:` terhadap `assets/apex-fa-icons-allowlist.txt` dan memberi saran ikon terdekat.
+9. **Jangan klaim selesai sebelum CI hijau.** Klaim "lolos validasi" hanya dari hasil `apex validate` dan test DB. Klaim "berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
 
 ## Gotcha APEXlang 26.2 (wajib dibaca sebelum menulis `.apx` manual)
 

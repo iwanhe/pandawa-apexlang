@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { collectDiagnostics, login, pageUrl } from './helpers';
 import { APP_PAGES } from './pages';
 
-/** Smoke test: semua halaman di pages.json terbuka tanpa ORA-, tanpa error JS, tanpa terlempar ke login. */
+/** Smoke test: semua halaman di pages.json terbuka tanpa ORA-, tanpa error JS, tanpa terlempar ke login. REQ-7.5, REQ-3.1 */
 test.describe('smoke', () => {
   test.skip(({ isMobile }) => isMobile, 'Smoke test cukup di desktop');
 

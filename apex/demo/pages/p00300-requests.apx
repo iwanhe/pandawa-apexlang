@@ -28,6 +28,10 @@ page 300 (
             ## Source
             
             Generated dari app.yaml entities.REQUESTS. (list_type: faceted-report) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            
+            ## Requirements
+            
+            REQ-3.3, REQ-4.4, REQ-5.1, REQ-5.2, REQ-5.3, REQ-5.4, REQ-5.5, REQ-5.6, REQ-5.7, REQ-5.8, REQ-5.9, REQ-7.2, REQ-7.3 (lihat docs/02-frs.md dan docs/traceability.md).
             ```
     }
 
