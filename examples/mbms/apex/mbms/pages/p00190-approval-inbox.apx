@@ -13,6 +13,26 @@ page 190 (
     help {
         helpText: Pengaju tidak dapat menyetujui dokumennya sendiri (maker-checker).
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Kotak masuk approval semua jenis dokumen.
+            
+            ## When to Use
+            
+            Approver mencari dokumen PENDING yang bisa diproses (Bisa Saya Proses? = Y).
+            
+            ## AI Guidance
+            
+            Data dari apx_mbms_approvals_v; can_act_yn menegakkan role approver dan maker-checker. Jangan menambah logika approval di halaman.
+            
+            ## Source
+            
+            Halaman inti template (core module), bukan dari entities. Approval engine: apx_mbms_approval_pkg. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -57,6 +77,13 @@ page 190 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Daftar langkah approval.
+                Pattern role: Work queue (Interactive Report).
+                ```
         }
         link {
             linkColumn: customTarget

@@ -1497,11 +1497,34 @@ select t.txn_id
   from apx_mbms_stock_txns t;
 
 create or replace force view apx_mbms_dash_kpi_v as
-select (select count(*) from apx_mbms_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1
-      ,(select count(*) from apx_mbms_job_orders where status in ('APPROVED', 'IN_PROGRESS')) kpi_2
-      ,(select count(*) from apx_mbms_projects where status in ('APPROVED', 'IN_PROGRESS')) kpi_3
-      ,(select count(*) from apx_mbms_purchase_reqs where status = 'SUBMITTED') kpi_4
-      ,(select count(*) from apx_mbms_stock_on_hand_v where below_min_yn = 'Y') kpi_5
+select 1 seq
+      ,'fa-check-square-o' icon
+      ,'Approval Menunggu Anda' label
+      ,(select count(*) from apx_mbms_approvals_v where status = 'PENDING' and can_act_yn = 'Y') metric_value
+  from dual
+union all
+select 2 seq
+      ,'fa-briefcase' icon
+      ,'Job Order Aktif' label
+      ,(select count(*) from apx_mbms_job_orders where status in ('APPROVED', 'IN_PROGRESS')) metric_value
+  from dual
+union all
+select 3 seq
+      ,'fa-sitemap' icon
+      ,'Proyek Aktif' label
+      ,(select count(*) from apx_mbms_projects where status in ('APPROVED', 'IN_PROGRESS')) metric_value
+  from dual
+union all
+select 4 seq
+      ,'fa-shopping-cart' icon
+      ,'PR Menunggu Approval' label
+      ,(select count(*) from apx_mbms_purchase_reqs where status = 'SUBMITTED') metric_value
+  from dual
+union all
+select 5 seq
+      ,'fa-warning' icon
+      ,'Item di Bawah Min. Stok' label
+      ,(select count(*) from apx_mbms_stock_on_hand_v where below_min_yn = 'Y') metric_value
   from dual;
 
 create or replace force view apx_mbms_dash_c1_s1_v as

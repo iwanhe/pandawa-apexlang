@@ -10,6 +10,26 @@ page 430 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Laporan Stock On Hand.
+            
+            ## When to Use
+            
+            Analisis read-only; export lewat menu Actions Interactive Report.
+            
+            ## AI Guidance
+            
+            Query ada di view apx_mbms_stock_on_hand_v (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml.
+            
+            ## Source
+            
+            Generated dari app.yaml reports (page 430). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,13 @@ page 430 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Stock On Hand.
+                Pattern role: Read-only report (Interactive Report).
+                ```
         }
         pagination {
             type: rowRangesXToY

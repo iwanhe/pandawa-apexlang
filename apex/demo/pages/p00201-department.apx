@@ -5,15 +5,37 @@ page 201 (
     pageGroup: @master-data
     appearance {
         pageMode: modalDialog
-        dialogTemplate: @/modal-dialog
-        templateOptions: #DEFAULT#
+        dialogTemplate: @/drawer
+        templateOptions: [
+            #DEFAULT#
+            js-dialog-class-t-Drawer--pullOutEnd
+        ]
     }
     dialog {
         chained: false
-        resizable: true
     }
     security {
         authorizationScheme: @master-data
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form Department.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 200 (departments) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Form pendek; simpan dengan Create/Apply Changes. Logika validasi di database (trigger/constraint).
+            
+            ## Source
+            
+            Generated dari app.yaml entities.DEPARTMENTS (form_style: drawer). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
     }
 
     region buttons (
@@ -46,6 +68,14 @@ page 201 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record Department.
+                Pattern role: Single-record form (drawer).
+                AI guidance: Validasi bisnis ada di trigger apx_demo_departments_trg dan package; item ini hanya UI.
+                ```
         }
         edit {
             enabled: true

@@ -13,6 +13,26 @@ page 400 (
     help {
         helpText: Total nilai per permintaan dan status approval.
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Total nilai per permintaan dan status approval.
+            
+            ## When to Use
+            
+            Analisis read-only; export lewat menu Actions Interactive Report.
+            
+            ## AI Guidance
+            
+            Query ada di view apx_demo_request_summary_v (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml.
+            
+            ## Source
+            
+            Generated dari app.yaml reports (page 400). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -56,6 +76,13 @@ page 400 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Rekap Permintaan.
+                Pattern role: Read-only report (Interactive Report).
+                ```
         }
         pagination {
             type: rowRangesXToY

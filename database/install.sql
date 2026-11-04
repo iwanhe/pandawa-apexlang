@@ -942,9 +942,22 @@ select t.line_id
   from apx_demo_request_lines t;
 
 create or replace force view apx_demo_dash_kpi_v as
-select (select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') kpi_1
-      ,(select count(*) from apx_demo_requests where status = 'DRAFT') kpi_2
-      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') kpi_3
+select 1 seq
+      ,'fa-check-square-o' icon
+      ,'Approval Menunggu Anda' label
+      ,(select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y') metric_value
+  from dual
+union all
+select 2 seq
+      ,'fa-file-o' icon
+      ,'Permintaan Draft' label
+      ,(select count(*) from apx_demo_requests where status = 'DRAFT') metric_value
+  from dual
+union all
+select 3 seq
+      ,'fa-clock-o' icon
+      ,'Menunggu Approval' label
+      ,(select count(*) from apx_demo_requests where status = 'SUBMITTED') metric_value
   from dual;
 
 create or replace force view apx_demo_dash_c1_s1_v as

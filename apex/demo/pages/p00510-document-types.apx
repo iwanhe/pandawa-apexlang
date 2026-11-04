@@ -10,6 +10,26 @@ page 510 (
     security {
         authorizationScheme: @admin-rights
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Konfigurasi approver dan limit per jenis dokumen.
+            
+            ## When to Use
+            
+            Admin mengubah approver level 1/2 dan limit level 2 tanpa deploy ulang.
+            
+            ## AI Guidance
+            
+            Nilai awal dari document di app.yaml (config seed); perubahan di sini disimpan di apx_demo_doc_types.
+            
+            ## Source
+            
+            Halaman inti template (core module), bukan dari entities. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,13 @@ page 510 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Daftar jenis dokumen.
+                Pattern role: Admin list (Interactive Report).
+                ```
         }
         link {
             linkColumn: customTarget

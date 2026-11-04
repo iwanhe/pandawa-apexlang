@@ -4,6 +4,7 @@ The spec format is documented in references/app-spec.md. Everything the
 generators need is resolved here, so gen_sql.py and gen_apex.py never have
 to guess defaults.
 """
+import difflib
 import os
 import re
 
@@ -14,12 +15,34 @@ COLUMN_TYPES = {"text", "code", "textarea", "number", "int", "money", "qty", "pc
                 "date", "yn", "enum", "ref"}
 
 
+FORM_STYLES = ("modal", "drawer")
+ICON_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "apex-fa-icons-allowlist.txt")
+_icons = None
+
+
 class SpecError(Exception):
     pass
 
 
 def _err(msg):
     raise SpecError(msg)
+
+
+def icons():
+    """Font APEX icon allowlist (oracle/apex blueprints, APEX 26.2)."""
+    global _icons
+    if _icons is None:
+        with open(ICON_ALLOWLIST, encoding="utf-8") as f:
+            _icons = {l.strip() for l in f if l.strip() and not l.startswith("#")}
+    return _icons
+
+
+def check_icon(icon, where):
+    """The first class must be a Font APEX icon; modifiers (fa-lg, u-...) may follow."""
+    first = str(icon).split()[0] if str(icon).strip() else ""
+    if first not in icons():
+        near = difflib.get_close_matches(first, sorted(icons()), n=3)
+        _err("%s: icon %r tidak ada di Font APEX%s" % (where, first, " (mungkin: %s)" % ", ".join(near) if near else ""))
 
 
 def kebab(s):
@@ -145,6 +168,7 @@ class Entity:
         self.immutable = bool(raw.get("immutable", False)) # block update/delete in DB
         self.nav = raw.get("nav", True)
         self.help = raw.get("help")
+        self.purpose = raw.get("purpose")                  # 1 kalimat tujuan bisnis (metadata AI di comments)
         self.validations = raw.get("validations", [])
         self.columns = [Column(c, self) for c in raw.get("columns", [])]
         names = [c.name for c in self.columns]
@@ -156,6 +180,10 @@ class Entity:
         if p:
             self.parent = {"entity": ident(p["entity"]), "column": ident(p["column"]),
                            "lock_unless": [ident(s) for s in p.get("lock_unless", ["DRAFT", "REJECTED"])]}
+        # drawer: form pendek di panel samping; modal: dokumen/form panjang (UX Pattern Catalog p420)
+        self.form_style = raw.get("form_style", "modal" if self.document else "drawer")
+        if self.form_style not in FORM_STYLES:
+            _err("%s: form_style harus %s" % (self.name, " | ".join(FORM_STYLES)))
         if not self.display:
             first = next((c for c in self.columns if c.type in ("code", "text")), None)
             self.display = first.name.lower() if first else self.pk.lower()
@@ -225,6 +253,10 @@ class App:
         self.entities = [Entity(e, self) for e in raw.get("entities", [])]
         self.reports = [Report(r, self) for r in raw.get("reports", [])]
         self.dashboard = raw.get("dashboard") or {}
+        for i, k in enumerate(self.dashboard.get("kpis", []), 1):
+            if not k.get("label") or not k.get("sql"):
+                _err("dashboard.kpis[%d]: label dan sql wajib" % i)
+            k.setdefault("icon", "fa-dashboard")
         self.users = raw.get("users", [])
         self.custom_sql = raw.get("custom_sql", [])
         self.seed_sql = raw.get("seed_sql", [])
@@ -255,7 +287,12 @@ class App:
                 _err("page alias %r used twice (%s)" % (a, what))
             aliases.add(a)
 
+        for g, v in self.groups.items():
+            check_icon(v["icon"], "groups.%s" % g)
+        for i, k in enumerate(self.dashboard.get("kpis", []), 1):
+            check_icon(k["icon"], "dashboard.kpis[%d] %s" % (i, k["label"]))
         for e in self.entities:
+            check_icon(e.icon, e.name)
             take(e.list_page, e.name)
             take(e.form_page, e.name)
             take_alias(e.list_alias, e.name)
@@ -284,6 +321,7 @@ class App:
         for r in self.reports:
             take(r.page, r.title)
             take_alias(r.alias, r.title)
+            check_icon(r.icon, "report %s" % r.title)
             if r.group not in self.groups:
                 _err("report %s: unknown group %s" % (r.title, r.group))
         types = [d.document.type for d in self.documents]

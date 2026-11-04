@@ -13,6 +13,26 @@ page 350 (
     help {
         helpText: Stock ledger. Transaksi yang sudah diposting tidak dapat diubah/dihapus; koreksi dengan ADJ_IN/ADJ_OUT/RETURN.
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Daftar Stock Transactions (master data).
+            
+            ## When to Use
+            
+            Mencari, memfilter, dan membuka Stock Transactions. Create/Edit membuka form drawer di halaman 351 (stock-transaction).
+            
+            ## AI Guidance
+            
+            Pola list: Interactive Report dari view apx_mbms_stock_txns_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit warehouse.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.STOCK_TXNS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -56,6 +76,14 @@ page 350 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Stock Transactions yang bisa dicari dan difilter.
+                Pattern role: Browse list (Interactive Report).
+                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                ```
         }
         link {
             linkColumn: customTarget

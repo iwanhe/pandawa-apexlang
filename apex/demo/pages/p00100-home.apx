@@ -15,6 +15,26 @@ page 100 (
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Ringkasan kondisi aplikasi: KPI dan chart utama.
+            
+            ## When to Use
+            
+            Halaman pertama setelah login; titik awal navigasi.
+            
+            ## AI Guidance
+            
+            Pola dashboard: metric card di atas (2-4 KPI sebanding), chart dua kolom di bawah. KPI dari view apx_demo_dash_kpi_v (satu baris per KPI).
+            
+            ## Source
+            
+            Generated dari app.yaml dashboard. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region app-name (
         name: Home
@@ -34,73 +54,110 @@ page 100 (
         image {
             fileUrl: #APP_FILES#icons/app-icon-512.png
         }
+        comments {
+            comments:
+                ```
+                Intent: Judul dan konteks singkat aplikasi.
+                Pattern role: Dashboard header.
+                AI guidance: Ringkas; jangan dipakai untuk instruksi panjang.
+                ```
+        }
     )
 
     region kpi (
         name: Ringkasan
-        type: classicReport
+        type: themeTemplateComponent/metricCard
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select kpi_1, kpi_2, kpi_3
+                select seq, icon, label, metric_value
                   from apx_demo_dash_kpi_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: SEQ
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/standard
-            templateOptions: #DEFAULT#
-        }
-        componentAppearance {
-            template: @/standard
+            template: @/blank-with-attributes-no-grid
             templateOptions: [
                 #DEFAULT#
-                t-Report--stretch
-                t-Report--hideNoPagination
+                margin-bottom-md
             ]
         }
+        accessibility {
+            landmarkType: region
+        }
+        comments {
+            comments:
+                ```
+                Intent: KPI utama untuk dipindai cepat.
+                Pattern role: KPI summary (Metric Card).
+                AI guidance: Pakai 2-4 KPI yang sebanding; ubah lewat dashboard.kpis (label, sql, icon) di app.yaml.
+                ```
+        }
+        componentAppearance {
+            display: report
+        }
+        settings {
+            metric: &METRIC_VALUE.
+            metricCssClasses: u-text-subheading-md
+            meta: &LABEL.
+            layout: 4Columns
+        }
+        plugin-avatar {
+            displayAvatar: true
+            icon: &ICON.
+            style: subtle
+            position: inline
+        }
 
-        column KPI_1 (
-            reportColumnQueryId: 1
-            derivedColumn: N
-            heading {
-                heading: Approval Menunggu Anda
-                alignment: center
-            }
+        column SEQ (
             layout {
-                sequence: 1
-                columnAlignment: center
+                sequence: 10
+            }
+            source {
+                databaseColumn: SEQ
+                dataType: number
             }
         )
 
-        column KPI_2 (
-            reportColumnQueryId: 2
-            derivedColumn: N
-            heading {
-                heading: Permintaan Draft
-                alignment: center
-            }
+        column ICON (
             layout {
-                sequence: 2
-                columnAlignment: center
+                sequence: 20
+            }
+            source {
+                databaseColumn: ICON
+                dataType: varchar2
             }
         )
 
-        column KPI_3 (
-            reportColumnQueryId: 3
-            derivedColumn: N
-            heading {
-                heading: Menunggu Approval
-                alignment: center
-            }
+        column LABEL (
             layout {
-                sequence: 3
-                columnAlignment: center
+                sequence: 30
+            }
+            source {
+                databaseColumn: LABEL
+                dataType: varchar2
+            }
+        )
+
+        column METRIC_VALUE (
+            layout {
+                sequence: 40
+            }
+            source {
+                databaseColumn: METRIC_VALUE
+                dataType: number
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
             }
         )
 
@@ -119,6 +176,14 @@ page 100 (
                 #DEFAULT#
                 t-Region--scrollBody
             ]
+        }
+        comments {
+            comments:
+                ```
+                Intent: Visualisasi Permintaan per Status.
+                Pattern role: Dashboard chart (pie).
+                AI guidance: Data dari view apx_demo_dash_c1_s*_v (kolom LABEL, VALUE); ubah sql-nya di dashboard.charts app.yaml.
+                ```
         }
         chart {
             type: pie
@@ -175,6 +240,14 @@ page 100 (
                 #DEFAULT#
                 t-Region--scrollBody
             ]
+        }
+        comments {
+            comments:
+                ```
+                Intent: Visualisasi Nilai per Department.
+                Pattern role: Dashboard chart (bar).
+                AI guidance: Data dari view apx_demo_dash_c2_s*_v (kolom LABEL, VALUE); ubah sql-nya di dashboard.charts app.yaml.
+                ```
         }
         performance {
             lazyLoading: false

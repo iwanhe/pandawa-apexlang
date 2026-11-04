@@ -15,6 +15,26 @@ page 501 (
     security {
         authorizationScheme: @admin-rights
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form admin User Role.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list administrasi.
+            
+            ## AI Guidance
+            
+            Form tabel langsung; hanya untuk role ADMIN.
+            
+            ## Source
+            
+            Halaman inti template (core module), bukan dari entities. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region buttons (
         name: Buttons

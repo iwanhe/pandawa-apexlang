@@ -15,6 +15,26 @@ page 311 (
     security {
         authorizationScheme: @engineering
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Form Project.
+            
+            ## When to Use
+            
+            Dibuka dari halaman list 310 (projects) untuk create/edit satu record.
+            
+            ## AI Guidance
+            
+            Dokumen ber-approval PRJ: DRAFT -> Submit for Approval -> APPROVED/REJECTED. Kolom CUSTOMER_ID, CONTRACT_VALUE terkunci setelah approval. Logika ada di apx_mbms_approval_pkg dan trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PROJECTS (form_style: modal). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region buttons (
         name: Buttons
@@ -46,6 +66,14 @@ page 311 (
         appearance {
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Membuat dan mengubah satu record Project.
+                Pattern role: Single-record form (modal).
+                AI guidance: Validasi bisnis ada di trigger apx_mbms_projects_trg dan package; item ini hanya UI. Status hanya berubah lewat approval engine.
+                ```
         }
         edit {
             enabled: true

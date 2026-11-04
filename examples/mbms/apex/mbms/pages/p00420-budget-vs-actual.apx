@@ -10,6 +10,26 @@ page 420 (
     security {
         authorizationScheme: @app-users
     }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Laporan Budget vs Actual.
+            
+            ## When to Use
+            
+            Analisis read-only; export lewat menu Actions Interactive Report.
+            
+            ## AI Guidance
+            
+            Query ada di view apx_mbms_wbs_budget_v (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml.
+            
+            ## Source
+            
+            Generated dari app.yaml reports (page 420). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
 
     region breadcrumb (
         name: Breadcrumb
@@ -53,6 +73,13 @@ page 420 (
         appearance {
             template: @/interactive-report
             templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Menampilkan Budget vs Actual.
+                Pattern role: Read-only report (Interactive Report).
+                ```
         }
         pagination {
             type: rowRangesXToY

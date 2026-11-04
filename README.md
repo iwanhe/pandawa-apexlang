@@ -103,3 +103,4 @@ Ganti isinya dengan aplikasi Anda.
 4. Naikkan `version` di `plugins/pandawa-apexlang/.claude-plugin/plugin.json` untuk rilis plugin.
 
 Lisensi skill APEXlang Oracle: UPL 1.0 (`.claude/skills/apexlang/LICENSE.txt`).
+Icon allowlist Font APEX dan konvensi metadata AI (`comments`) diambil dari [oracle/apex](https://github.com/oracle/apex/tree/26.2) (`blueprints`, `sample-apps/ux-pattern-catalog`), UPL 1.0 (`assets/LICENSE-oracle-apex.txt` di folder skill).
