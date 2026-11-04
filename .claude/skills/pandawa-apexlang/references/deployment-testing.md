@@ -9,6 +9,20 @@
 
 Secret untuk E2E: `APEX_APP_URL` (mis. `https://oracleapex.com/ords/r/<ws>/<alias>`), `APEX_USERNAME`, `APEX_PASSWORD`. Gunakan akun khusus test, mis. `<APP>_E2E`. Beri role yang cukup agar semua halaman di smoke test terbuka. Halaman list default memakai `app-users` = minimal 1 role.
 
+Secret opsional `APEX_ROLE_PASSWORD`: password bersama (`c_password`) yang dipakai saat menjalankan `create_users.sql`. Dengan secret ini, `tests/e2e/tests/roles.spec.ts` login sebagai satu user demo per kombinasi role (`users:` di `app.yaml`) dan mengecek matriks akses dari `tests/e2e/pages.json` (GENERATED):
+
+- setiap halaman, termasuk form modal dan admin, terbuka bila skemanya mengizinkan role user, dan menampilkan "Akses ditolak" bila tidak (ADMIN lolos semua);
+- tombol **Create** di halaman list tampil hanya bila skema create mengizinkan.
+
+Tanpa secret ini test akses per role di-skip (workflow memberi warning). Test fungsional khusus aplikasi ada di `tests/e2e/tests/features.spec.ts` (contoh DEMO, read-only). Sebut REQ-ID di judul test agar tercatat di `docs/traceability.md`.
+
+| File test | Isi | Akun |
+| --- | --- | --- |
+| `smoke.spec.ts` | Semua halaman non-modal terbuka tanpa error | `APEX_USERNAME` |
+| `nav-menu.spec.ts` | Side menu di HP (regression UT 26.2.1) | `APEX_USERNAME` |
+| `roles.spec.ts` | Matriks akses per role (halaman + tombol Create) | user demo + `APEX_ROLE_PASSWORD` |
+| `features.spec.ts` | Fungsi spesifik aplikasi (DEMO: validasi, LOV aktif, facet, master-detail) | `APEX_USERNAME` |
+
 ## 2. Deploy ke oracleapex.com
 
 1. **Database:** SQL Workshop → SQL Scripts → Upload `database/install.sql` → Run, pastikan 0 error.
@@ -30,7 +44,7 @@ scripts/generate.sh                                  # generate + cek struktur
 SQLCL_BIN=~/sqlcl/bin/sql scripts/validate.sh        # apex validate (SQLcl 26.2+, Java 17/21)
 DB_CONN=apx/pwd@localhost:1521/FREEPDB1 SQLCL_BIN=~/sqlcl/bin/sql tests/db/run.sh
 cd tests/e2e && npm install && npx playwright install chromium
-APEX_APP_URL=... APEX_USERNAME=... APEX_PASSWORD=... npx playwright test --project=mobile-chrome
+APEX_APP_URL=... APEX_USERNAME=... APEX_PASSWORD=... APEX_ROLE_PASSWORD=... npx playwright test --project=desktop-chrome
 ```
 
 Oracle Free lokal:

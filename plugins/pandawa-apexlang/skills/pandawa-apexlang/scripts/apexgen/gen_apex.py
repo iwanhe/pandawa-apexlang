@@ -19,6 +19,7 @@ class Ctx:
         self.app = app
         self.files = {}
         self.e2e_pages = []
+        self.access = []      # semua halaman: alias, no, auth, modal (E2E per role)
 
     def put(self, rel, content):
         self.files[rel] = content
@@ -30,8 +31,25 @@ class Ctx:
                 n += 1
                 m.members.append(("advanced", G(("executionMappingIdentifier", "9%05d%03d" % (num, n)))))
         self.put("pages/p%05d-%s.apx" % (num, alias), render(comp))
+        modal = any(isinstance(m, tuple) and m[0] == "appearance" and isinstance(m[1], G)
+                    and ("pageMode", "modalDialog") in m[1].members for m in comp.members)
+        self.access.append({"alias": alias, "no": num, "auth": _scheme(comp), "modal": modal})
         if e2e_title:
-            self.e2e_pages.append({"alias": alias, "no": num, "title": e2e_title})
+            entry = {"alias": alias, "no": num, "title": e2e_title, "auth": _scheme(comp)}
+            create = next((m for m in comp.members if isinstance(m, Comp) and m.kind == "button" and m.ident == "create"), None)
+            if create:
+                entry["create_auth"] = _scheme(create)
+            self.e2e_pages.append(entry)
+
+
+def _scheme(comp):
+    """Nama authorization scheme (kebab) dari properti security komponen, atau None."""
+    for m in comp.members:
+        if isinstance(m, tuple) and m[0] == "security" and isinstance(m[1], G):
+            for k, v in m[1].members:
+                if k == "authorizationScheme":
+                    return str(v).lstrip("@")
+    return None
 
 
 # ----------------------------------------------------------------------------- helpers

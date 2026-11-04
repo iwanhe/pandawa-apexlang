@@ -1,45 +1,215 @@
 {
   "app": "DEMO",
+  "schemes": {
+    "app-users": null,
+    "admin-rights": [
+      "ADMIN"
+    ],
+    "master-data": [
+      "WAREHOUSE"
+    ],
+    "requester": [
+      "REQUESTER",
+      "MANAGER"
+    ],
+    "warehouse": [
+      "WAREHOUSE"
+    ]
+  },
+  "users": [
+    {
+      "username": "DEMO_ADMIN",
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "DEMO_REQ",
+      "roles": [
+        "REQUESTER"
+      ]
+    },
+    {
+      "username": "DEMO_MGR",
+      "roles": [
+        "MANAGER"
+      ]
+    },
+    {
+      "username": "DEMO_DIR",
+      "roles": [
+        "DIRECTOR"
+      ]
+    },
+    {
+      "username": "DEMO_WH",
+      "roles": [
+        "WAREHOUSE"
+      ]
+    },
+    {
+      "username": "DEMO_E2E",
+      "roles": [
+        "REQUESTER"
+      ]
+    }
+  ],
   "pages": [
     {
       "alias": "home",
       "no": 100,
-      "title": "Home"
+      "title": "Home",
+      "auth": "app-users"
     },
     {
       "alias": "approval-inbox",
       "no": 190,
-      "title": "Approval Inbox"
+      "title": "Approval Inbox",
+      "auth": "app-users"
     },
     {
       "alias": "departments",
       "no": 200,
-      "title": "Departments"
+      "title": "Departments",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "items",
       "no": 210,
-      "title": "Items"
+      "title": "Items",
+      "auth": "app-users",
+      "create_auth": "master-data"
     },
     {
       "alias": "requests",
       "no": 300,
-      "title": "Permintaan Barang"
+      "title": "Permintaan Barang",
+      "auth": "app-users",
+      "create_auth": "requester"
     },
     {
       "alias": "permintaan-barang-detail",
       "no": 302,
-      "title": "Detail Permintaan"
+      "title": "Detail Permintaan",
+      "auth": "app-users"
     },
     {
       "alias": "request-lines",
       "no": 310,
-      "title": "Baris Permintaan"
+      "title": "Baris Permintaan",
+      "auth": "app-users",
+      "create_auth": "requester"
     },
     {
       "alias": "rekap-permintaan",
       "no": 400,
-      "title": "Rekap Permintaan"
+      "title": "Rekap Permintaan",
+      "auth": "app-users"
+    }
+  ],
+  "access": [
+    {
+      "alias": "home",
+      "no": 100,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "approval-inbox",
+      "no": 190,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "approval",
+      "no": 191,
+      "auth": "app-users",
+      "modal": true
+    },
+    {
+      "alias": "departments",
+      "no": 200,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "department",
+      "no": 201,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "items",
+      "no": 210,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "item",
+      "no": 211,
+      "auth": "master-data",
+      "modal": true
+    },
+    {
+      "alias": "requests",
+      "no": 300,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "request",
+      "no": 301,
+      "auth": "requester",
+      "modal": true
+    },
+    {
+      "alias": "permintaan-barang-detail",
+      "no": 302,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "request-lines",
+      "no": 310,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "request-line",
+      "no": 311,
+      "auth": "requester",
+      "modal": true
+    },
+    {
+      "alias": "rekap-permintaan",
+      "no": 400,
+      "auth": "app-users",
+      "modal": false
+    },
+    {
+      "alias": "users-roles",
+      "no": 500,
+      "auth": "admin-rights",
+      "modal": false
+    },
+    {
+      "alias": "user-role",
+      "no": 501,
+      "auth": "admin-rights",
+      "modal": true
+    },
+    {
+      "alias": "document-types",
+      "no": 510,
+      "auth": "admin-rights",
+      "modal": false
+    },
+    {
+      "alias": "document-type",
+      "no": 511,
+      "auth": "admin-rights",
+      "modal": true
     }
   ]
 }

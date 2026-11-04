@@ -34,6 +34,8 @@ jobs:
       APEX_APP_URL: ${{ secrets.APEX_APP_URL }}
       APEX_USERNAME: ${{ secrets.APEX_USERNAME }}
       APEX_PASSWORD: ${{ secrets.APEX_PASSWORD }}
+      # opsional: password bersama user demo (create_users.sql) untuk test akses per role
+      APEX_ROLE_PASSWORD: ${{ secrets.APEX_ROLE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +48,9 @@ jobs:
           if [ -n "$missing" ]; then
             echo "::error::Secret belum di-set:$missing (Settings > Secrets and variables > Actions)"
             exit 1
+          fi
+          if [ -z "$APEX_ROLE_PASSWORD" ]; then
+            echo "::warning::Secret APEX_ROLE_PASSWORD belum di-set: test akses per role (roles.spec.ts) dilewati."
           fi
 
       - uses: actions/setup-node@v4

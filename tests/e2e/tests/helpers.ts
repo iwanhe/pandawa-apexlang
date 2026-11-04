@@ -31,13 +31,13 @@ export function collectDiagnostics(page: Page) {
   };
 }
 
-/** Login lewat halaman login APEX (P9999_USERNAME / P9999_PASSWORD). */
-export async function login(page: Page, url = env('APEX_APP_URL')) {
+/** Login lewat halaman login APEX (P9999_USERNAME / P9999_PASSWORD). Default: akun E2E dari secret. */
+export async function login(page: Page, url = env('APEX_APP_URL'), username?: string, password?: string) {
   await page.goto(url);
   const user = page.locator('#P9999_USERNAME');
   if (await user.isVisible().catch(() => false)) {
-    await user.fill(env('APEX_USERNAME'));
-    await page.locator('#P9999_PASSWORD').fill(env('APEX_PASSWORD'));
+    await user.fill(username ?? env('APEX_USERNAME'));
+    await page.locator('#P9999_PASSWORD').fill(password ?? env('APEX_PASSWORD'));
     // Tunggu sampai benar-benar pindah dari halaman login. waitForLoadState('load') saja
     // langsung selesai karena halaman login sudah 'load'; bila oracleapex.com lambat
     // membuka Home, assert berikutnya gagal padahal login sukses.

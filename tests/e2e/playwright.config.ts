@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   APEX_APP_URL   URL aplikasi / halaman login, mis. https://oracleapex.com/ords/r/<workspace>/<alias>
  *   APEX_USERNAME  akun khusus testing di workspace sandbox
  *   APEX_PASSWORD
+ *   APEX_ROLE_PASSWORD  (opsional) password bersama user demo dari create_users.sql, untuk roles.spec.ts
  */
 export default defineConfig({
   testDir: './tests',

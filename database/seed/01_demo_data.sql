@@ -8,6 +8,8 @@
 insert into apx_demo_departments (dept_code, dept_name) values ('FIN', 'Finance');
 insert into apx_demo_departments (dept_code, dept_name) values ('OPS', 'Operations');
 insert into apx_demo_departments (dept_code, dept_name) values ('IT', 'Information Technology');
+-- department nonaktif: tidak boleh muncul di pilihan form permintaan (REQ-4.3, tests/e2e)
+insert into apx_demo_departments (dept_code, dept_name, active_yn) values ('HR', 'Human Resources (nonaktif)', 'N');
 
 insert into apx_demo_items (item_code, item_name, category, uom, std_price) values ('ATK-001', 'Kertas A4 80gsm', 'ATK', 'RIM', 55000);
 insert into apx_demo_items (item_code, item_name, category, uom, std_price) values ('ATK-002', 'Pulpen Hitam', 'ATK', 'BOX', 30000);

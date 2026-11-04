@@ -43,7 +43,7 @@ Generator butuh Python 3 + PyYAML.
 | 4. Logic custom | `database/custom/*.sql`, `database/seed/*.sql`, `tests/db/test_*.sql` | Package `APX_<APP>_<NAMA>_PKG`, view laporan, validate hook, data dummy, test PL/SQL. Wajib standar Pandawa (`references/pandawa-standards.md`). |
 | 5. Generate & CI | Output generate di-commit; CI hijau | `scripts/generate.sh`, commit, push. CI menjalankan: generate-up-to-date, **SQLcl `apex validate`**, **install + test di Oracle Free**, cek sinkron skill. |
 | 6. Deploy sandbox | Aplikasi jalan di oracleapex.com | `database/install.sql` di SQL Workshop → import `dist/<alias>-apexlang.zip` → `database/admin/create_users.sql` (`references/deployment-testing.md` §2) |
-| 7. Simulasi & E2E | Skenario demo per role, E2E hijau | README bagian Simulasi. Workflow **E2E Playwright** (manual) dengan secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD`. |
+| 7. Simulasi & E2E | Skenario demo per role, E2E hijau | README bagian Simulasi. Workflow **E2E Playwright** (manual) dengan secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD`, dan `APEX_ROLE_PASSWORD` (akses per role). Tulis test fungsional di `features.spec.ts` dengan REQ-ID di judulnya. |
 | 8. Dokumentasi | `README.md` aplikasi, `docs/03-mvp.md` | Template `assets/templates/docs/03-app-readme.md`: install, user & role, simulasi, known issue |
 
 Detail langkah, checklist, dan contoh prompt per fase ada di `references/workflow.md`.

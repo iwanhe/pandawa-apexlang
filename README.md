@@ -80,6 +80,7 @@ Ganti isinya dengan aplikasi Anda.
 | --- | --- |
 | `app.yaml` | **Spesifikasi aplikasi Anda** (format: [app-spec.md](plugins/pandawa-apexlang/skills/pandawa-apexlang/references/app-spec.md)) |
 | `docs/` | Blueprint & FRS proyek (template: `assets/templates/docs/` di skill) |
+| `docs/wiki/` | Halaman [Wiki](https://github.com/iwanhe/pandawa-apexlang/wiki); disinkronkan otomatis oleh workflow **Sinkron Wiki** saat push ke `main` |
 | `database/custom/`, `database/seed/` | Logic bisnis manual (package, view laporan, validate hook) & data dummy |
 | `database/generated/`, `database/install.sql`, `database/admin/` | **Generated.** Jangan diedit |
 | `apex/<alias>/` | **Generated** source APEXlang |
@@ -97,7 +98,8 @@ Ganti isinya dengan aplikasi Anda.
 | Workflow | Isi |
 | --- | --- |
 | **CI** (`ci.yml`, push/PR) | Untuk setiap `app.yaml`: generate → output sudah di-commit → SQLcl `apex validate` → artifact zip. Install di **Oracle Free** + compile + `tests/db/test_*.sql`. Skill sinkron + artifact zip skill |
-| **E2E Playwright** (manual) | Butuh secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD` |
+| **Sinkron Wiki** (`wiki-sync.yml`, push ke `main`) | Menyalin `docs/wiki/` ke GitHub Wiki |
+| **E2E Playwright** (manual) | Butuh secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD`. Opsional `APEX_ROLE_PASSWORD` (password bersama dari `create_users.sql`) untuk test akses per role |
 
 ## Mengembangkan toolkit ini
 
