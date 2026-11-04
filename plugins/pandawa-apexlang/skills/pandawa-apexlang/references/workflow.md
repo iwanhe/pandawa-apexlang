@@ -65,9 +65,11 @@ Setiap fase punya input, langkah, deliverable, dan **gate**. Jangan lanjut ke fa
   | Role dan akses | `roles` + `authorizations` |
   | User demo | `users` |
   | REQ-ID | `req:` di elemen yang merealisasikannya |
+  | Pola halaman (list, form, detail, dashboard) | `list_type`, `form_style`, `workspace` (tabel keputusan: `references/page-patterns.md`) |
+  | Kolom email/telepon/URL/NPWP | `semantic:` |
   | Halaman di luar kemampuan generator | `apex-custom/` (contoh di `references/ux-patterns/`) |
 
-- Jalankan `scripts/generate.sh`. Perbaiki `SPEC ERROR` sampai lolos.
+- Jalankan `scripts/generate.sh`. Perbaiki `SPEC ERROR` sampai lolos. Tindak lanjuti setiap `SARAN:`: ikuti, atau catat alasan menyimpang di FRS.
 - Periksa `docs/traceability.md`: setiap REQ MUST harus berstatus minimal **Belum diuji** setelah fase ini (tidak ada **Belum direalisasi**).
 
 **Gate:** generate dan pemeriksaan struktur OK.

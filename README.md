@@ -15,6 +15,7 @@ Spesifikasi aplikasi ditulis sekali di [`app.yaml`](app.yaml). Generator membuat
 - aplikasi APEXlang: home/dashboard (metric card), list (Interactive Report atau faceted search), form (drawer/modal), halaman master-detail, approval inbox, admin. Pola UI mengikuti Oracle APEX UX Pattern Catalog dan setiap halaman membawa metadata AI di `comments`;
 - script user;
 - konfigurasi E2E;
+- validasi format kolom (`semantic`: email, telepon, URL, NPWP) di database dan form, serta `SARAN:` pola halaman saat generate (tabel keputusan di skill: `references/page-patterns.md`);
 - matriks traceability `docs/traceability.md`: requirement FRS ber-ID gaya EARS (`REQ-x.y`) → `app.yaml`, halaman, SQL custom, dan test (contoh: [`docs/02-frs.md`](docs/02-frs.md)).
 
 Halaman yang belum didukung generator ditulis di `apex-custom/` (tidak ditimpa saat generate ulang), dengan contoh pola UX Oracle yang valid di skill (`references/ux-patterns/`).

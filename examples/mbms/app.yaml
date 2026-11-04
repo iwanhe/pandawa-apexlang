@@ -60,17 +60,18 @@ entities:
     pages: [210, 211]
     auth: master-data
     icon: fa-users
+    form_style: modal              # 11 field + textarea (SARAN generator)
     display: "customer_code || ' - ' || customer_name"
     columns:
       - {name: CUSTOMER_CODE, type: code, label: Kode, required: true, unique: true}
       - {name: CUSTOMER_NAME, type: text, label: Nama Customer, required: true}
-      - {name: NPWP, type: text, label: NPWP, size: 30}
+      - {name: NPWP, type: text, label: NPWP, size: 30, semantic: npwp}
       - {name: NITKU, type: text, label: NITKU, size: 30}
       - {name: ADDRESS, type: textarea, label: Alamat, size: 500, list: false}
       - {name: CITY, type: text, label: Kota, size: 100}
       - {name: CONTACT_PERSON, type: text, label: Contact Person, size: 100}
-      - {name: PHONE, type: text, label: Telepon, size: 50}
-      - {name: EMAIL, type: text, label: Email}
+      - {name: PHONE, type: text, label: Telepon, size: 50, semantic: phone}
+      - {name: EMAIL, type: text, label: Email, semantic: email}
       - {name: PAYMENT_TERM_DAYS, type: int, label: TOP (hari), required: true, default: 30, min: 0}
       - {name: ACTIVE_YN, type: yn, label: Aktif}
 
@@ -87,9 +88,9 @@ entities:
       - {name: VENDOR_CODE, type: code, label: Kode, required: true, unique: true}
       - {name: VENDOR_NAME, type: text, label: Nama Vendor, required: true}
       - {name: VENDOR_TYPE, type: enum, label: Tipe, required: true, default: GOODS, values: {GOODS: Barang, SUBCON: Subkontraktor, SERVICE: Jasa}}
-      - {name: NPWP, type: text, label: NPWP, size: 30}
+      - {name: NPWP, type: text, label: NPWP, size: 30, semantic: npwp}
       - {name: CITY, type: text, label: Kota, size: 100}
-      - {name: PHONE, type: text, label: Telepon, size: 50}
+      - {name: PHONE, type: text, label: Telepon, size: 50, semantic: phone}
       - {name: PAYMENT_TERM_DAYS, type: int, label: TOP (hari), required: true, default: 30, min: 0}
       - {name: ACTIVE_YN, type: yn, label: Aktif}
 
@@ -120,6 +121,7 @@ entities:
     pk: WAREHOUSE_ID
     group: master-data
     pages: [240, 241]
+    list_type: faceted-cards       # facet: BU, tipe lokasi, aktif
     auth: master-data
     icon: fa-home
     display: "wh_code || ' - ' || wh_name"
@@ -293,6 +295,8 @@ entities:
     pages: [350, 351]
     auth: warehouse
     icon: fa-exchange
+    list_type: faceted-report      # ledger: facet tipe transaksi, gudang, item, job, proyek
+    form_style: modal
     display: "txn_no"
     immutable: true
     operations: [add]

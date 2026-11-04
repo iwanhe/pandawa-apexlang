@@ -17,6 +17,21 @@ COLUMN_TYPES = {"text", "code", "textarea", "number", "int", "money", "qty", "pc
 
 FORM_STYLES = ("modal", "drawer")
 LIST_TYPES = ("ir", "faceted-cards", "faceted-report")
+# semantic kolom text: ukuran default, pola (check constraint + validasi halaman), subtype item, normalisasi
+SEMANTICS = {
+    "email": {"size": 255, "subtype": "email", "case": "lower",
+              "regex": r"^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$",
+              "msg": "Format email tidak valid (contoh: nama@domain.co.id)."},
+    "phone": {"size": 30, "subtype": "phone",
+              "regex": r"^\+?[0-9(][0-9 ().-]{5,29}$",
+              "msg": "Nomor telepon hanya boleh berisi angka, spasi, +, -, titik, dan tanda kurung (min. 6 karakter)."},
+    "url": {"size": 500, "subtype": "url",
+            "regex": r"^https?://[^[:space:]]+$",
+            "msg": "URL harus diawali http:// atau https://."},
+    "npwp": {"size": 20,
+             "regex": r"^([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\.?[0-9]-?[0-9]{3}\.?[0-9]{3}|[0-9]{16})$",
+             "msg": "NPWP harus 15 digit (format 99.999.999.9-999.999) atau 16 digit."},
+}
 REQ_RE = re.compile(r"\bREQ-\d+(?:\.\d+)*[a-z]?\b")
 ICON_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "apex-fa-icons-allowlist.txt")
 _icons = None
@@ -113,6 +128,15 @@ class Column:
         self.min = raw.get("min")
         self.max = raw.get("max")
         self.req = reqs(raw, "%s.%s" % (entity.name, self.name))
+        # semantic: email | phone | url | npwp (hanya type text/code)
+        self.semantic = raw.get("semantic")
+        if self.semantic:
+            if self.semantic not in SEMANTICS:
+                _err("%s.%s: semantic harus %s" % (entity.name, self.name, " | ".join(SEMANTICS)))
+            if self.type not in ("text", "code"):
+                _err("%s.%s: semantic %s hanya untuk type text/code" % (entity.name, self.name, self.semantic))
+            if self.size is None:
+                self.size = SEMANTICS[self.semantic]["size"]
         # facet di halaman faceted search (default: enum, yn, ref)
         self.facet = bool(raw.get("facet", self.type in ("enum", "yn", "ref")))
         if self.virtual:
@@ -150,6 +174,10 @@ class Column:
         if t == "enum":
             return "varchar2(%d)" % max(20, max(len(k) for k in self.values))
         _err("type %s" % t)
+
+    @property
+    def sem(self):
+        return SEMANTICS.get(self.semantic) if self.semantic else None
 
     @property
     def apex_dtype(self):
@@ -289,6 +317,7 @@ class App:
         self.date = str(a.get("date", "lihat git log"))  # tanggal di header script (deterministik)
         self.description = a.get("description", self.name)
         self.nav_fix = a.get("nav_fix", True)
+        self.advice_on = a.get("advice", True)              # SARAN pola halaman saat generate
         self.req = reqs(a, "app")
         self.frs_path = os.path.join(base_dir, a.get("frs", "docs/02-frs.md"))
         self.base_dir = base_dir
@@ -325,6 +354,41 @@ class App:
             if e.name == ident(name):
                 return e
         _err("unknown entity %s" % name)
+
+    def advice(self):
+        """Saran pola halaman (tidak menggagalkan generate). Aturan: references/page-patterns.md."""
+        if not self.advice_on:
+            return []
+        out = []
+        sem_hint = {"EMAIL": "email", "PHONE": "phone", "TELP": "phone", "HP": "phone", "NPWP": "npwp",
+                    "URL": "url", "WEBSITE": "url"}
+        for e in self.entities:
+            facetable = [c for c in e.columns if c.facet and not c.virtual]
+            editable = [c for c in e.columns if c.form == "edit" and not c.virtual]
+            if e.list_type != "ir" and not facetable and not e.document:
+                out.append("%s: list_type %s tanpa kolom facet (hanya pencarian). Pakai list_type: ir, "
+                           "atau tandai kolom dengan facet: true." % (e.name, e.list_type))
+            if e.list_type == "ir" and not e.document and not e.parent and len(facetable) >= 2:
+                txn = e.immutable or any(c.type == "date" for c in e.columns)
+                out.append("%s: %s dengan %d kolom facet (%s); pertimbangkan list_type: %s."
+                           % (e.name, "data transaksi" if txn else "master data", len(facetable),
+                              ", ".join(c.name for c in facetable), "faceted-report" if txn else "faceted-cards"))
+            if e.form_style == "drawer" and (len(editable) > 8 or any(c.type == "textarea" for c in editable)):
+                out.append("%s: form drawer dengan %d field%s; form panjang lebih nyaman dengan form_style: modal."
+                           % (e.name, len(editable), " termasuk textarea" if any(c.type == "textarea" for c in editable) else ""))
+            if e.document and self.children(e) and not e.workspace:
+                out.append("%s: dokumen dengan baris detail (%s); pertimbangkan workspace: {page: ...} (master-detail)."
+                           % (e.name, ", ".join(c.name for c in self.children(e))))
+            for c in e.columns:
+                if c.type in ("text", "code") and not c.semantic:
+                    hit = next((v for k, v in sem_hint.items() if k in c.name.split("_")), None)
+                    if hit:
+                        out.append("%s.%s: tambahkan semantic: %s (validasi format + jenis input)." % (e.name, c.name, hit))
+        n = len(self.dashboard.get("kpis", []))
+        if n > 4:
+            out.append("dashboard: %d KPI; metric card paling efektif 2-4 KPI. Pindahkan sisanya ke laporan "
+                       "atau buat dashboard advanced manual (references/ux-patterns p00120)." % n)
+        return out
 
     def entity_reqs(self, e):
         """Semua REQ-ID entitas: entitas, kolom, validasi, dokumen (urut, unik)."""

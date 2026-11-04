@@ -108,7 +108,7 @@ create table apx_mbms_customers (
   ,city varchar2(100)
   ,contact_person varchar2(100)
   ,phone varchar2(50)
-  ,email varchar2(200)
+  ,email varchar2(255)
   ,payment_term_days number(10) default 30 not null
   ,active_yn varchar2(1) default 'Y'
   ,created_by varchar2(255)
@@ -117,8 +117,11 @@ create table apx_mbms_customers (
   ,updated_on date
   ,constraint apx_mbms_customers_pk primary key (customer_id)
   ,constraint apx_mbms_customers_u1 unique (customer_code)
-  ,constraint apx_mbms_customers_ck1 check (payment_term_days >= 0)
-  ,constraint apx_mbms_customers_ck2 check (active_yn in ('Y', 'N'))
+  ,constraint apx_mbms_customers_ck1 check (regexp_like(npwp, '^([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\.?[0-9]-?[0-9]{3}\.?[0-9]{3}|[0-9]{16})$'))
+  ,constraint apx_mbms_customers_ck2 check (regexp_like(phone, '^\+?[0-9(][0-9 ().-]{5,29}$'))
+  ,constraint apx_mbms_customers_ck3 check (regexp_like(email, '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'))
+  ,constraint apx_mbms_customers_ck4 check (payment_term_days >= 0)
+  ,constraint apx_mbms_customers_ck5 check (active_yn in ('Y', 'N'))
 );
 
 create table apx_mbms_vendors (
@@ -138,8 +141,10 @@ create table apx_mbms_vendors (
   ,constraint apx_mbms_vendors_pk primary key (vendor_id)
   ,constraint apx_mbms_vendors_u1 unique (vendor_code)
   ,constraint apx_mbms_vendors_ck1 check (vendor_type in ('GOODS', 'SUBCON', 'SERVICE'))
-  ,constraint apx_mbms_vendors_ck2 check (payment_term_days >= 0)
-  ,constraint apx_mbms_vendors_ck3 check (active_yn in ('Y', 'N'))
+  ,constraint apx_mbms_vendors_ck2 check (regexp_like(npwp, '^([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\.?[0-9]-?[0-9]{3}\.?[0-9]{3}|[0-9]{16})$'))
+  ,constraint apx_mbms_vendors_ck3 check (regexp_like(phone, '^\+?[0-9(][0-9 ().-]{5,29}$'))
+  ,constraint apx_mbms_vendors_ck4 check (payment_term_days >= 0)
+  ,constraint apx_mbms_vendors_ck5 check (active_yn in ('Y', 'N'))
 );
 
 create table apx_mbms_items (
@@ -985,6 +990,9 @@ before insert or update on apx_mbms_customers
 for each row
 begin
    :new.customer_code := upper(:new.customer_code);
+   :new.npwp := trim(:new.npwp);
+   :new.phone := trim(:new.phone);
+   :new.email := lower(trim(:new.email));
    if inserting then
       :new.created_by := apx_mbms_sec_pkg.app_user;
       :new.created_on := sysdate;
@@ -999,6 +1007,8 @@ before insert or update on apx_mbms_vendors
 for each row
 begin
    :new.vendor_code := upper(:new.vendor_code);
+   :new.npwp := trim(:new.npwp);
+   :new.phone := trim(:new.phone);
    if inserting then
       :new.created_by := apx_mbms_sec_pkg.app_user;
       :new.created_on := sysdate;

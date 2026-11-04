@@ -5,14 +5,12 @@ page 211 (
     pageGroup: @master-data
     appearance {
         pageMode: modalDialog
-        dialogTemplate: @/drawer
-        templateOptions: [
-            #DEFAULT#
-            js-dialog-class-t-Drawer--pullOutEnd
-        ]
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
     }
     dialog {
         chained: false
+        resizable: true
     }
     security {
         authorizationScheme: @master-data
@@ -34,7 +32,7 @@ page 211 (
             
             ## Source
             
-            Generated dari app.yaml entities.CUSTOMERS (form_style: drawer). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.CUSTOMERS (form_style: modal). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
@@ -73,7 +71,7 @@ page 211 (
             comments:
                 ```
                 Intent: Membuat dan mengubah satu record Customer.
-                Pattern role: Single-record form (drawer).
+                Pattern role: Single-record form (modal).
                 AI guidance: Validasi bisnis ada di trigger apx_mbms_customers_trg dan package; item ini hanya UI.
                 ```
         }
@@ -303,6 +301,9 @@ page 211 (
             label: Telepon
             alignment: right
         }
+        settings {
+            subtype: phone
+        }
         layout {
             sequence: 85
             region: @customers
@@ -330,6 +331,10 @@ page 211 (
             label: Email
             alignment: right
         }
+        settings {
+            subtype: email
+            textCase: lower
+        }
         layout {
             sequence: 95
             region: @customers
@@ -339,10 +344,10 @@ page 211 (
         appearance {
             template: @/optional-floating
             templateOptions: #DEFAULT#
-            width: 32
+            width: 60
         }
         validation {
-            maxLength: 200
+            maxLength: 255
         }
         source {
             formRegion: @customers
@@ -536,6 +541,66 @@ page 211 (
             }
         )
 
+    )
+
+    validation format-npwp (
+        name: FORMAT_NPWP
+        execution {
+            sequence: 510
+        }
+        validation {
+            type: expression
+            plsqlExpression: :P211_NPWP is null or regexp_like(trim(:P211_NPWP), '^([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\.?[0-9]-?[0-9]{3}\.?[0-9]{3}|[0-9]{16})$')
+        }
+        error {
+            errorMessage: NPWP harus 15 digit (format 99.999.999.9-999.999) atau 16 digit.
+            displayLocation: inlineWithFieldAndInNotification
+            associatedItem: @P211_NPWP
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SAVE,CREATE
+        }
+    )
+
+    validation format-phone (
+        name: FORMAT_PHONE
+        execution {
+            sequence: 520
+        }
+        validation {
+            type: expression
+            plsqlExpression: :P211_PHONE is null or regexp_like(trim(:P211_PHONE), '^\+?[0-9(][0-9 ().-]{5,29}$')
+        }
+        error {
+            errorMessage: Nomor telepon hanya boleh berisi angka, spasi, +, -, titik, dan tanda kurung (min. 6 karakter).
+            displayLocation: inlineWithFieldAndInNotification
+            associatedItem: @P211_PHONE
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SAVE,CREATE
+        }
+    )
+
+    validation format-email (
+        name: FORMAT_EMAIL
+        execution {
+            sequence: 530
+        }
+        validation {
+            type: expression
+            plsqlExpression: :P211_EMAIL is null or regexp_like(lower(trim(:P211_EMAIL)), '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$')
+        }
+        error {
+            errorMessage: Format email tidak valid (contoh: nama@domain.co.id).
+            displayLocation: inlineWithFieldAndInNotification
+            associatedItem: @P211_EMAIL
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SAVE,CREATE
+        }
     )
 
     process init-customers-form (

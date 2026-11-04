@@ -109,6 +109,8 @@ def main():
         print("SPEC ERROR: %s" % ex, file=sys.stderr)
         sys.exit(2)
     root = app.base_dir
+    for tip in app.advice():
+        print("SARAN: %s" % tip, file=sys.stderr)
 
     def read_rel(rel):
         with open(os.path.join(root, rel), encoding="utf-8") as f:
