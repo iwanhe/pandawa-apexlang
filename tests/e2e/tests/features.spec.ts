@@ -4,7 +4,8 @@ import { APP_ALIAS } from './pages';
 
 /**
  * Test fungsional aplikasi DEMO (Permintaan Barang), login sebagai akun E2E (role REQUESTER).
- * Semua test read-only: tidak ada data yang tersimpan (validasi sengaja dibuat gagal).
+ * Test tidak menyimpan data: setiap submit sengaja dibuat gagal oleh validasi yang sedang diuji.
+ * Bila validasi itu rusak, data uji bisa tersimpan dengan Keperluan berawalan "E2E" (hapus manual).
  * Form (halaman modal) dibuka seperti user: klik tombol Create di halaman list, lalu bekerja di dalam dialog.
  * SESUAIKAN atau hapus file ini bila app.yaml diganti dengan aplikasi Anda.
  */
@@ -26,13 +27,16 @@ test.describe('fitur DEMO', () => {
     return frame!;
   }
 
-  /** Jalankan isi test; bila gagal, cetak kontrol DOM ke log job lalu lempar ulang. */
+  /** Jalankan isi test; bila gagal, cetak kontrol DOM (halaman + dialog) ke log job lalu lempar ulang. */
   async function run(page: Page, testInfo: TestInfo, body: () => Promise<void>) {
     const diag = collectDiagnostics(page);
     try {
       await body();
     } catch (err) {
       await dumpControls(page, testInfo.title);
+      for (const f of page.frames().filter((fr) => fr !== page.mainFrame() && /\/ords\//.test(fr.url()))) {
+        await dumpControls(f, `${testInfo.title} [dialog]`);
+      }
       throw err;
     } finally {
       await diag.attach(testInfo, testInfo.status !== testInfo.expectedStatus);
@@ -47,12 +51,14 @@ test.describe('fitur DEMO', () => {
     await run(page, testInfo, async () => {
       const form = await openRequestForm(page);
       await expect(form.locator('#P301_DEPARTMENT_ID')).toBeAttached();
-      // Keperluan (wajib) sengaja dikosongkan: walau validasi tanggal tidak jalan, data tetap tidak tersimpan.
+      // Semua field wajib diisi (field kosong ditolak di browser sebelum validasi server berjalan);
+      // yang membuat submit gagal adalah validasi tanggal yang diuji.
       await form.evaluate(() => {
         const apex = (window as any).apex;
         const sel = document.querySelector('#P301_DEPARTMENT_ID') as HTMLSelectElement;
         const first = Array.from(sel.options).find((o) => o.value);
         apex.item('P301_DEPARTMENT_ID').setValue(first?.value);
+        apex.item('P301_PURPOSE').setValue('E2E validasi tanggal (tidak boleh tersimpan)');
         apex.item('P301_REQUEST_DATE').setValue('10-JAN-2026');
         apex.item('P301_NEED_DATE').setValue('01-JAN-2026');
       });

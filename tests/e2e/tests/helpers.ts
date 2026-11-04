@@ -96,12 +96,13 @@ export async function navState(page: Page) {
  */
 export async function openDialog(page: Page, alias: string): Promise<Frame | null> {
   const want = (u: string) => new RegExp(`/${alias.replace(/-/g, '\\-')}\\?`, 'i').test(u);
-  await page.locator('a[href*="navigation.dialog"], .a-CardView-item, table.t-Report-report, .a-IRR-table').first()
+  await page.locator('a[href*="a-dialog-open"], a[href*="navigation.dialog"], .a-CardView-item, table.t-Report-report, .a-IRR-table').first()
     .waitFor({ state: 'attached', timeout: 5000 }).catch(() => undefined);
+  // APEX 26: link ke halaman modal berbentuk href="#action$a-dialog-open?url=%2Fords%2Fr%2F...%2F<alias>%3F..."
   const triggers = [
+    page.locator(`a[href*="a-dialog-open"][href*="%2F${alias}%3F"]`),
+    page.locator(`a[href*="navigation.dialog"][href*="/${alias}?"]`),
     page.getByRole('button', { name: /^(Create|Edit|Tambah)$/ }),
-    page.locator(`a[href*="navigation.dialog"][href*="${alias}"]`),
-    page.locator('a[href*="navigation.dialog"]'),
   ];
   for (const group of triggers) {
     const n = Math.min(await group.count(), 4);
@@ -160,8 +161,8 @@ export async function waitApex(page: Page) {
   await page.waitForTimeout(1000);
 }
 
-/** Cetak kontrol form/facet di halaman ke stdout (log job), untuk diagnosis saat test gagal. */
-export async function dumpControls(page: Page, label: string) {
+/** Cetak kontrol form/facet di halaman atau frame dialog ke stdout (log job), untuk diagnosis saat test gagal. */
+export async function dumpControls(page: Page | Frame, label: string) {
   const info = await page
     .evaluate(() =>
       Array.from(document.querySelectorAll('input, select, [role="checkbox"], [role="option"], button'))
@@ -176,5 +177,6 @@ export async function dumpControls(page: Page, label: string) {
         }),
     )
     .catch((err) => [`(gagal membaca DOM: ${err})`]);
-  console.log(`\n===== DOM ${label} (${page.url()}) =====\n${info.join('\n')}\n`);
+  const text = await page.locator('body').innerText().catch(() => '');
+  console.log(`\n===== DOM ${label} (${page.url()}) =====\n${info.join('\n')}\n--- teks ---\n${text.replace(/\s+/g, ' ').slice(0, 800)}\n`);
 }
