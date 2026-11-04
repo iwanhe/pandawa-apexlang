@@ -94,16 +94,19 @@ export async function navState(page: Page) {
  * link dialog di report atau kartu), lalu kembalikan frame dialog yang terbuka. null bila tidak ada pemicu.
  * Halaman modal APEX tidak bisa dibuka langsung lewat URL (HTTP 400) — butuh konteks dialog dari aplikasi.
  */
-export async function openDialog(page: Page, alias: string): Promise<Frame | null> {
+export async function openDialog(page: Page, alias: string, opts: { createOnly?: boolean } = {}): Promise<Frame | null> {
   const want = (u: string) => new RegExp(`/${alias.replace(/-/g, '\\-')}\\?`, 'i').test(u);
   await page.locator('a[href*="a-dialog-open"], a[href*="navigation.dialog"], .a-CardView-item, table.t-Report-report, .a-IRR-table').first()
     .waitFor({ state: 'attached', timeout: 5000 }).catch(() => undefined);
   // APEX 26: link ke halaman modal berbentuk href="#action$a-dialog-open?url=%2Fords%2Fr%2F...%2F<alias>%3F..."
-  const triggers = [
-    page.locator(`a[href*="a-dialog-open"][href*="%2F${alias}%3F"]`),
-    page.locator(`a[href*="navigation.dialog"][href*="/${alias}?"]`),
-    page.getByRole('button', { name: /^(Create|Edit|Tambah)$/ }),
-  ];
+  // createOnly: hanya tombol Create (form kosong untuk record baru), bukan link Edit record yang ada
+  const triggers = opts.createOnly
+    ? [page.getByRole('button', { name: 'Create', exact: true })]
+    : [
+        page.locator(`a[href*="a-dialog-open"][href*="%2F${alias}%3F"]`),
+        page.locator(`a[href*="navigation.dialog"][href*="/${alias}?"]`),
+        page.getByRole('button', { name: /^(Create|Edit|Tambah)$/ }),
+      ];
   for (const group of triggers) {
     const n = Math.min(await group.count(), 4);
     for (let i = 0; i < n; i++) {

@@ -21,7 +21,7 @@ test.describe('fitur DEMO', () => {
   /** Buka form Permintaan Barang (301) lewat tombol Create di halaman 300; kembalikan frame dialog. */
   async function openRequestForm(page: Page): Promise<Frame> {
     await open(page, 'requests', 300);
-    const frame = await openDialog(page, 'request');
+    const frame = await openDialog(page, 'request', { createOnly: true });
     if (!frame) await dumpTriggers(page, 'form Permintaan');
     expect(frame, 'dialog form Permintaan tidak terbuka dari tombol Create di halaman 300').not.toBeNull();
     return frame!;
