@@ -230,7 +230,10 @@
       "alias": "approval",
       "no": 191,
       "auth": "app-users",
-      "modal": true
+      "modal": true,
+      "openers": [
+        190
+      ]
     },
     {
       "alias": "business-units",
@@ -242,7 +245,10 @@
       "alias": "business-unit",
       "no": 201,
       "auth": "admin-rights",
-      "modal": true
+      "modal": true,
+      "openers": [
+        200
+      ]
     },
     {
       "alias": "customers",
@@ -254,7 +260,10 @@
       "alias": "customer",
       "no": 211,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        210
+      ]
     },
     {
       "alias": "vendors",
@@ -266,7 +275,10 @@
       "alias": "vendor",
       "no": 221,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        220
+      ]
     },
     {
       "alias": "items",
@@ -278,7 +290,10 @@
       "alias": "item",
       "no": 231,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        230
+      ]
     },
     {
       "alias": "warehouses",
@@ -290,7 +305,10 @@
       "alias": "warehouse",
       "no": 241,
       "auth": "master-data",
-      "modal": true
+      "modal": true,
+      "openers": [
+        240
+      ]
     },
     {
       "alias": "job-orders",
@@ -302,7 +320,10 @@
       "alias": "job-order",
       "no": 301,
       "auth": "printing",
-      "modal": true
+      "modal": true,
+      "openers": [
+        300
+      ]
     },
     {
       "alias": "projects",
@@ -314,7 +335,11 @@
       "alias": "project",
       "no": 311,
       "auth": "engineering",
-      "modal": true
+      "modal": true,
+      "openers": [
+        310,
+        312
+      ]
     },
     {
       "alias": "projects-detail",
@@ -332,7 +357,11 @@
       "alias": "wbs",
       "no": 321,
       "auth": "engineering",
-      "modal": true
+      "modal": true,
+      "openers": [
+        312,
+        320
+      ]
     },
     {
       "alias": "purchase-requisitions",
@@ -344,7 +373,11 @@
       "alias": "purchase-requisition",
       "no": 331,
       "auth": "app-users",
-      "modal": true
+      "modal": true,
+      "openers": [
+        330,
+        332
+      ]
     },
     {
       "alias": "purchase-requisitions-detail",
@@ -362,7 +395,11 @@
       "alias": "pr-line",
       "no": 341,
       "auth": "app-users",
-      "modal": true
+      "modal": true,
+      "openers": [
+        332,
+        340
+      ]
     },
     {
       "alias": "stock-transactions",
@@ -374,7 +411,10 @@
       "alias": "stock-transaction",
       "no": 351,
       "auth": "warehouse",
-      "modal": true
+      "modal": true,
+      "openers": [
+        350
+      ]
     },
     {
       "alias": "job-costing",
@@ -410,7 +450,10 @@
       "alias": "user-role",
       "no": 501,
       "auth": "admin-rights",
-      "modal": true
+      "modal": true,
+      "openers": [
+        500
+      ]
     },
     {
       "alias": "document-types",
@@ -422,7 +465,10 @@
       "alias": "document-type",
       "no": 511,
       "auth": "admin-rights",
-      "modal": true
+      "modal": true,
+      "openers": [
+        510
+      ]
     }
   ]
 }

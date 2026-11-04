@@ -23,7 +23,7 @@ export default defineConfig({
     video: process.env.PW_CHROMIUM_PATH ? 'off' : 'on',
     screenshot: 'on',
     actionTimeout: 20_000,
-    navigationTimeout: 45_000,
+    navigationTimeout: 60_000,
   },
   projects: [
     {

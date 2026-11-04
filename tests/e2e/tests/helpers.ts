@@ -1,4 +1,4 @@
-import { expect, Page, TestInfo } from '@playwright/test';
+import { expect, Frame, Page, TestInfo } from '@playwright/test';
 import { writeFileSync } from 'fs';
 
 export function env(name: string): string {
@@ -87,4 +87,99 @@ export async function navState(page: Page) {
       viewport: { w: window.innerWidth, h: window.innerHeight },
     };
   });
+}
+
+/**
+ * Buka halaman modal `alias` seperti user: klik pemicunya di halaman saat ini (tombol Create/Edit/Tambah,
+ * link dialog di report atau kartu), lalu kembalikan frame dialog yang terbuka. null bila tidak ada pemicu.
+ * Halaman modal APEX tidak bisa dibuka langsung lewat URL (HTTP 400) — butuh konteks dialog dari aplikasi.
+ */
+export async function openDialog(page: Page, alias: string, opts: { createOnly?: boolean } = {}): Promise<Frame | null> {
+  const want = (u: string) => new RegExp(`/${alias.replace(/-/g, '\\-')}\\?`, 'i').test(u);
+  await page.locator('a[href*="a-dialog-open"], a[href*="navigation.dialog"], .a-CardView-item, table.t-Report-report, .a-IRR-table').first()
+    .waitFor({ state: 'attached', timeout: 5000 }).catch(() => undefined);
+  // APEX 26: link ke halaman modal berbentuk href="#action$a-dialog-open?url=%2Fords%2Fr%2F...%2F<alias>%3F..."
+  // createOnly: hanya tombol Create (form kosong untuk record baru), bukan link Edit record yang ada
+  const triggers = opts.createOnly
+    ? [page.getByRole('button', { name: 'Create', exact: true })]
+    : [
+        page.locator(`a[href*="a-dialog-open"][href*="%2F${alias}%3F"]`),
+        page.locator(`a[href*="navigation.dialog"][href*="/${alias}?"]`),
+        page.getByRole('button', { name: /^(Create|Edit|Tambah)$/ }),
+      ];
+  for (const group of triggers) {
+    const n = Math.min(await group.count(), 4);
+    for (let i = 0; i < n; i++) {
+      const el = group.nth(i);
+      if (!(await el.isVisible().catch(() => false))) continue;
+      await el.click().catch(() => undefined);
+      const frame = await waitForFrame(page, want, 10_000);
+      if (frame) {
+        await frame.waitForLoadState('load').catch(() => undefined);
+        await frame.locator('body').waitFor({ state: 'visible' }).catch(() => undefined);
+        await page.waitForTimeout(800);
+        return frame;
+      }
+      await closeDialogs(page);
+    }
+  }
+  return null;
+}
+
+async function waitForFrame(page: Page, want: (u: string) => boolean, timeout: number): Promise<Frame | null> {
+  const end = Date.now() + timeout;
+  while (Date.now() < end) {
+    const f = page.frames().find((fr) => fr !== page.mainFrame() && want(fr.url()));
+    if (f) return f;
+    await page.waitForTimeout(250);
+  }
+  return null;
+}
+
+/** Tutup dialog APEX yang terbuka (tanpa menyimpan). */
+export async function closeDialogs(page: Page) {
+  for (let i = 0; i < 3 && (await page.locator('.ui-dialog:visible').count()) > 0; i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+  }
+}
+
+/** Cetak link dan tombol yang mungkin membuka dialog (untuk diagnosis bila pemicu tidak ditemukan). */
+export async function dumpTriggers(page: Page, label: string) {
+  const info = await page
+    .evaluate(() =>
+      Array.from(document.querySelectorAll('a[href], button'))
+        .filter((e) => /dialog|javascript|Create|Edit|Tambah/i.test((e.getAttribute('href') ?? '') + e.textContent))
+        .slice(0, 25)
+        .map((e) => `${e.tagName.toLowerCase()} text="${(e.textContent ?? '').trim().slice(0, 30)}" href="${(e.getAttribute('href') ?? '').slice(0, 160)}" onclick="${(e.getAttribute('onclick') ?? '').slice(0, 80)}"`),
+    )
+    .catch((err) => [`(gagal membaca DOM: ${err})`]);
+  console.log(`\n===== TRIGGERS ${label} (${page.url()}) =====\n${info.join('\n')}\n`);
+}
+
+/** Tunggu halaman APEX siap (APEX menjaga koneksi terbuka, jadi bukan 'networkidle'). */
+export async function waitApex(page: Page) {
+  await page.waitForLoadState('load');
+  await page.locator('body').waitFor({ state: 'visible' });
+  await page.waitForTimeout(1000);
+}
+
+/** Cetak kontrol form/facet di halaman atau frame dialog ke stdout (log job), untuk diagnosis saat test gagal. */
+export async function dumpControls(page: Page | Frame, label: string) {
+  const info = await page
+    .evaluate(() =>
+      Array.from(document.querySelectorAll('input, select, [role="checkbox"], [role="option"], button'))
+        .slice(0, 80)
+        .map((e) => {
+          const el = e as HTMLInputElement;
+          const lbl = (e.getAttribute('aria-label') || (e.id && document.querySelector(`label[for="${e.id}"]`)?.textContent) || e.textContent || '')
+            .trim()
+            .replace(/\s+/g, ' ')
+            .slice(0, 50);
+          return `${e.tagName.toLowerCase()} type=${el.type ?? ''} id=${e.id} name=${el.name ?? ''} role=${e.getAttribute('role') ?? ''} class=${(e.getAttribute('class') ?? '').slice(0, 40)} label="${lbl}"`;
+        }),
+    )
+    .catch((err) => [`(gagal membaca DOM: ${err})`]);
+  const text = await page.locator('body').innerText().catch(() => '');
+  console.log(`\n===== DOM ${label} (${page.url()}) =====\n${info.join('\n')}\n--- teks ---\n${text.replace(/\s+/g, ' ').slice(0, 800)}\n`);
 }

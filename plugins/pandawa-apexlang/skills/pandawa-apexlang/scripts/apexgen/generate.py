@@ -91,6 +91,23 @@ def overlay_custom(app, root, out, ctx):
                     ctx.e2e_pages.append({"alias": alias.group(1).lower(), "no": no, "title": name.group(1).strip()})
 
 
+def add_openers(out, access):
+    """Halaman modal hanya bisa dibuka lewat dialog URL (dengan checksum p_dialog_cs) dari halaman lain.
+    Catat halaman non-modal yang menautkan ke tiap modal (target page: N) untuk E2E per role."""
+    texts = {}
+    pdir = os.path.join(out, "pages")
+    for fn in os.listdir(pdir):
+        m = re.match(r"p(\d+)-.*\.apx$", fn)
+        if m:
+            with open(os.path.join(pdir, fn), encoding="utf-8") as f:
+                texts[int(m.group(1))] = f.read()
+    modal = {a["no"] for a in access if a["modal"]}
+    for a in access:
+        if a["modal"]:
+            pat = re.compile(r"^\s+page: %d$" % a["no"], re.M)
+            a["openers"] = sorted(no for no, t in texts.items() if no not in modal and no != a["no"] and pat.search(t))
+
+
 def zip_dir(src, dst):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     if os.path.exists(dst):
@@ -132,6 +149,7 @@ def main():
     write(os.path.join(root, "database", "admin", "remove_users.sql"), gen_sql.remove_users_script(app))
 
     out, ctx = build_apex(app, root)
+    add_openers(out, ctx.access)
     # akses per role untuk E2E: skema -> role (None = semua role terdaftar), user demo per role
     schemes = {k: v for k, v in app.authorizations.items()}
     users = [{"username": u["username"].upper(), "roles": [r.upper() for r in u.get("roles", [])]} for u in app.users]
