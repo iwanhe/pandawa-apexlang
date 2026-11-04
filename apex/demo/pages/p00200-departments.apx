@@ -28,6 +28,10 @@ page 200 (
             ## Source
             
             Generated dari app.yaml entities.DEPARTMENTS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            
+            ## Requirements
+            
+            REQ-3.2, REQ-4.1, REQ-4.3 (lihat docs/02-frs.md dan docs/traceability.md).
             ```
     }
 

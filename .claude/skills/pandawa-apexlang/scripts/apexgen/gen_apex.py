@@ -47,10 +47,14 @@ def region_comments(intent, role, guidance=None):
     return ("comments", G(("comments", ML("", "\n".join(lines)))))
 
 
-def page_comments(purpose, when_use, guidance, source):
-    """Metadata AI per halaman: Purpose / When to Use / AI Guidance / Source (bukan help user)."""
-    text = "\n\n".join(["## Purpose", purpose, "## When to Use", when_use, "## AI Guidance", guidance,
-                         "## Source", source + " Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini."])
+def page_comments(purpose, when_use, guidance, source, reqs=None):
+    """Metadata AI per halaman: Purpose / When to Use / AI Guidance / Source / Requirements (bukan help user)."""
+    parts = ["## Purpose", purpose, "## When to Use", when_use, "## AI Guidance", guidance,
+             "## Source", source + " Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini."]
+    if reqs:
+        key = lambda r: [int(x) if x.isdigit() else x for x in r[4:].split(".")]  # noqa: E731
+        parts += ["## Requirements", ", ".join(sorted(set(reqs), key=key)) + " (lihat docs/02-frs.md dan docs/traceability.md)."]
+    text = "\n\n".join(parts)
     return ("comments", G(("comments", ML("", text))))
 
 
@@ -299,7 +303,7 @@ def entity_list_page(ctx, e):
             "Mencari, memfilter, dan membuka %s. Create/Edit membuka form %s di halaman %d (%s)." % (e.label_plural, e.form_style, e.form_page, e.form_alias),
             "Pola list: Interactive Report dari view %s_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. "
             "Hak akses list %s, create/edit %s." % (e.table, e.view_auth, e.auth),
-            "Generated dari app.yaml entities.%s." % e.name)
+            "Generated dari app.yaml entities.%s." % e.name, app.entity_reqs(e))
     region_meta = ("Menampilkan %s yang bisa dicari dan difilter." % e.label_plural, "Browse list (Interactive Report).",
                    "Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.")
     if e.list_type != "ir":
@@ -428,7 +432,7 @@ def faceted_page(ctx, e, cols, sort, meta):
                auth(e.auth)]
         comps.append(Comp("button", "create", *btn))
     comps.append(refresh_on_dialog_close(rid))
-    purpose, when_use, guidance, source = meta
+    purpose, when_use, guidance, source, reqs = meta
     guidance = ("Pola faceted search (%s): facet di kolom kiri, hasil di body, dari view %s_v (MVC). Hak akses list %s, create/edit %s."
                 % (e.list_type, e.table, e.view_auth, e.auth))
     page = Comp("page", str(num), ("name", e.label_plural), ("alias", e.list_alias.upper()), ("title", e.label_plural),
@@ -436,7 +440,7 @@ def faceted_page(ctx, e, cols, sort, meta):
                 ("appearance", G(("pageTemplate", "@/left-side-column"), ("templateOptions", "#DEFAULT#"))),
                 auth(e.view_auth),
                 ("help", G(("helpText", e.help))) if e.help else None,
-                page_comments(purpose, when_use, guidance, source + " (list_type: %s)" % e.list_type),
+                page_comments(purpose, when_use, guidance, source + " (list_type: %s)" % e.list_type, reqs),
                 *comps)
     ctx.page(num, e.list_alias, page, e2e_title=e.label_plural)
 
@@ -605,7 +609,8 @@ def workspace_page(ctx, e):
             "Pola parent-child: daftar induk 4 kolom (kiri), header (Contextual Info) dan detail 8 kolom (kanan), difilter %s. "
             "Edit header membuka form %d; tambah/edit detail membuka form detail. Aturan kunci ada di trigger, bukan di halaman."
             % (pk_item, e.form_page),
-            "Generated dari app.yaml entities.%s.workspace." % e.name)
+            "Generated dari app.yaml entities.%s.workspace." % e.name,
+            list(dict.fromkeys(app.entity_reqs(e) + [r for c in app.children(e) for r in app.entity_reqs(c)])))
     page = Comp("page", str(num), ("name", w["label"]), ("alias", w["alias"].upper()), ("title", w["label"]),
                 ("pageGroup", "@" + e.group),
                 ("appearance", G(("pageTemplate", "@/standard"), ("templateOptions", "#DEFAULT#"))),
@@ -734,7 +739,7 @@ def entity_form_page(ctx, e):
         guidance = "Form pendek; simpan dengan Create/Apply Changes. Logika validasi di database (trigger/constraint)."
     meta = (e.purpose or "Form %s." % e.label,
             "Dibuka dari halaman list %d (%s) untuk create/edit satu record." % (e.list_page, e.list_alias),
-            guidance, "Generated dari app.yaml entities.%s (form_style: %s)." % (e.name, e.form_style))
+            guidance, "Generated dari app.yaml entities.%s (form_style: %s)." % (e.name, e.form_style), app.entity_reqs(e))
     page = Comp("page", str(num), ("name", e.label), ("alias", e.form_alias.upper()), ("title", e.label),
                 ("pageGroup", "@" + e.group),
                 *dialog_appearance(e.form_style),
@@ -747,7 +752,7 @@ def report_page(ctx, r):
     sql = "select %s\n  from %s" % (", ".join(c[0].lower() for c in cols), r.view)
     meta = (r.help or "Laporan %s." % r.title, "Analisis read-only; export lewat menu Actions Interactive Report.",
             "Query ada di view %s (database/custom). Ubah view-nya, lalu sesuaikan reports.columns di app.yaml." % r.view,
-            "Generated dari app.yaml reports (page %d)." % r.page)
+            "Generated dari app.yaml reports (page %d)." % r.page, r.req)
     ctx.page(r.page, r.alias, ir_page(ctx, r.page, r.title, r.alias, r.group, r.alias, sql, cols, r.auth,
                                       sort_col=r.sort or cols[0][0], help_text=r.help, meta=meta,
                                       region_meta=("Menampilkan %s." % r.title, "Read-only report (Interactive Report).")),
@@ -802,7 +807,9 @@ def home_page(ctx):
                               "Halaman pertama setelah login; titik awal navigasi.",
                               "Pola dashboard: metric card di atas (2-4 KPI sebanding), chart dua kolom di bawah. "
                               "KPI dari view %s_dash_kpi_v (satu baris per KPI)." % app.prefix,
-                              "Generated dari app.yaml dashboard."),
+                              "Generated dari app.yaml dashboard.",
+                              list(dict.fromkeys([q for k in dash.get("kpis", []) for q in k["req"]]
+                                                 + [q for c in dash.get("charts", []) for q in c["req"]]))),
                 *comps)
     ctx.page(100, "home", page, e2e_title="Home")
 

@@ -31,6 +31,10 @@ page 400 (
             ## Source
             
             Generated dari app.yaml reports (page 400). Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            
+            ## Requirements
+            
+            REQ-6.1 (lihat docs/02-frs.md dan docs/traceability.md).
             ```
     }
 

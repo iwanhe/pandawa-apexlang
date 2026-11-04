@@ -37,15 +37,19 @@ Setiap fase punya input, langkah, deliverable, dan **gate**. Jangan lanjut ke fa
 
 - **Langkah:** salin `assets/templates/docs/02-frs.md` ke `docs/02-frs.md`. Untuk **lingkup MVP**, isi:
   - daftar entitas, kolom, dan tipe datanya;
-  - business rule (BR-xx) beserta lokasi penegakannya: constraint, trigger, package, atau validasi halaman;
+  - **requirement ber-ID dengan kalimat EARS** (`REQ-<bagian>.<nomor>`; pola Umum / Ketika / Selama / Jika ... maka / Di mana). Satu baris tabel per requirement, termasuk business rule beserta lokasi penegakannya: constraint, trigger, package, atau validasi halaman;
   - approval matrix: dokumen, approver 1, approver 2, dan limit;
   - matriks role × area;
   - peta halaman (nomor mengikuti rentang Pandawa);
   - laporan dan dashboard (KPI, chart);
   - user demo dan skenario simulasi.
 - Tandai yang **di luar MVP** secara eksplisit.
+- ID requirement tidak diubah setelah disepakati; requirement batal ditandai "(dibatalkan)". Contoh FRS terisi: `docs/02-frs.md` di template repo (aplikasi DEMO).
 
-**Gate:** user menyetujui lingkup MVP.
+**Gate:** user menyetujui lingkup MVP dan daftar REQ-ID.
+
+> Prompt: "Susun FRS dari blueprint ini memakai template Pandawa. Tulis setiap requirement dengan ID REQ-x.y dan pola EARS."
+
 
 ## Fase 3: Spec (`app.yaml`)
 
@@ -60,8 +64,11 @@ Setiap fase punya input, langkah, deliverable, dan **gate**. Jangan lanjut ke fa
   | Laporan | `reports[]` + view di custom SQL |
   | Role dan akses | `roles` + `authorizations` |
   | User demo | `users` |
+  | REQ-ID | `req:` di elemen yang merealisasikannya |
+  | Halaman di luar kemampuan generator | `apex-custom/` (contoh di `references/ux-patterns/`) |
 
 - Jalankan `scripts/generate.sh`. Perbaiki `SPEC ERROR` sampai lolos.
+- Periksa `docs/traceability.md`: setiap REQ MUST harus berstatus minimal **Belum diuji** setelah fase ini (tidak ada **Belum direalisasi**).
 
 **Gate:** generate dan pemeriksaan struktur OK.
 
@@ -73,9 +80,10 @@ Logic custom yang **tidak bisa** diekspresikan spec ditulis di `database/custom/
 - **View laporan & costing:** `APX_<APP>_<NAMA>_V`.
 - **Trigger tambahan:** mis. posting stok. Gunakan `follows apx_<app>_<tabel>_trg`.
 - **Data dummy:** `database/seed/*.sql`. Bila memasukkan dokumen berstatus APPROVED, gunakan `apx_<app>_approval_pkg.set_bypass(true)`, lalu kembalikan ke false.
-- **Test:** `tests/db/test_*.sql` menguji rule dengan `apx_<app>_sec_pkg.set_test_user`. Contoh: `tests/db/test_approval.sql`.
+- **Test:** `tests/db/test_*.sql` menguji rule dengan `apx_<app>_sec_pkg.set_test_user`. Sebut REQ-ID di pesan assert (`'REQ-5.4 level 2 dibuat'`) agar tercatat di traceability. Contoh: `tests/db/test_approval.sql`, `tests/db/test_master_reports.sql`.
+- Sebut REQ-ID juga di komentar SQL custom yang merealisasikannya (`-- REQ-6.1: ...`).
 
-**Gate:** CI `database-test` hijau.
+**Gate:** CI `database-test` hijau; di `docs/traceability.md` REQ MUST yang bisa diuji di database berstatus **OK**.
 
 ## Fase 5: Generate & CI
 

@@ -17,6 +17,7 @@ COLUMN_TYPES = {"text", "code", "textarea", "number", "int", "money", "qty", "pc
 
 FORM_STYLES = ("modal", "drawer")
 LIST_TYPES = ("ir", "faceted-cards", "faceted-report")
+REQ_RE = re.compile(r"\bREQ-\d+(?:\.\d+)*[a-z]?\b")
 ICON_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "apex-fa-icons-allowlist.txt")
 _icons = None
 
@@ -44,6 +45,34 @@ def check_icon(icon, where):
     if first not in icons():
         near = difflib.get_close_matches(first, sorted(icons()), n=3)
         _err("%s: icon %r tidak ada di Font APEX%s" % (where, first, " (mungkin: %s)" % ", ".join(near) if near else ""))
+
+
+def reqs(raw, where):
+    """Field req: (string atau list) -> list REQ-ID."""
+    v = (raw or {}).get("req") if isinstance(raw, dict) else None
+    if v is None:
+        return []
+    items = [v] if isinstance(v, str) else list(v)
+    out = []
+    for r in items:
+        r = str(r).strip()
+        if not REQ_RE.fullmatch(r):
+            _err("%s: req %r bukan format REQ-<n>[.<n>] (mis. REQ-5.2)" % (where, r))
+        out.append(r)
+    return out
+
+
+def parse_frs(path):
+    """REQ-ID yang didefinisikan di FRS: baris tabel yang diawali '| REQ-x.y |'. -> {id: teks}."""
+    found = {}
+    if not os.path.isfile(path):
+        return found
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) >= 2 and REQ_RE.fullmatch(cells[0]):
+                found[cells[0]] = cells[1]
+    return found
 
 
 def kebab(s):
@@ -83,6 +112,7 @@ class Column:
         self.on_delete = raw.get("on_delete")              # cascade | None (for ref)
         self.min = raw.get("min")
         self.max = raw.get("max")
+        self.req = reqs(raw, "%s.%s" % (entity.name, self.name))
         # facet di halaman faceted search (default: enum, yn, ref)
         self.facet = bool(raw.get("facet", self.type in ("enum", "yn", "ref")))
         if self.virtual:
@@ -145,6 +175,7 @@ class Document:
         self.operational = [ident(s) for s in raw.get("operational", [])]
         self.lock = [ident(c) for c in raw.get("lock", [])]  # columns frozen after approval
         self.statuses = STATUS_BASE + [s for s in self.operational if s not in STATUS_BASE]
+        self.req = reqs(raw, "%s.document" % entity.name)
 
 
 class Entity:
@@ -173,6 +204,9 @@ class Entity:
         self.help = raw.get("help")
         self.purpose = raw.get("purpose")                  # 1 kalimat tujuan bisnis (metadata AI di comments)
         self.validations = raw.get("validations", [])
+        self.req = reqs(raw, self.name)
+        for i, v in enumerate(self.validations, 1):
+            v["req"] = reqs(v, "%s.validations[%d]" % (self.name, i))
         self.columns = [Column(c, self) for c in raw.get("columns", [])]
         names = [c.name for c in self.columns]
         if len(set(names)) != len(names):
@@ -234,6 +268,7 @@ class Report:
         self.icon = raw.get("icon", "fa-bar-chart")
         self.help = raw.get("help")
         self.sort = raw.get("sort")
+        self.req = reqs(raw, "report %s" % self.title)
         self.columns = []
         for c in raw.get("columns") or _err("report %s: columns required" % self.title):
             self.columns.append({"name": ident(c["name"]), "label": c.get("label", c["name"].replace("_", " ").title()),
@@ -254,6 +289,8 @@ class App:
         self.date = str(a.get("date", "lihat git log"))  # tanggal di header script (deterministik)
         self.description = a.get("description", self.name)
         self.nav_fix = a.get("nav_fix", True)
+        self.req = reqs(a, "app")
+        self.frs_path = os.path.join(base_dir, a.get("frs", "docs/02-frs.md"))
         self.base_dir = base_dir
         self.roles = {ident(k): v for k, v in (raw.get("roles") or {}).items()}
         self.roles.setdefault("ADMIN", "Administrator")
@@ -275,6 +312,9 @@ class App:
             if not k.get("label") or not k.get("sql"):
                 _err("dashboard.kpis[%d]: label dan sql wajib" % i)
             k.setdefault("icon", "fa-dashboard")
+            k["req"] = reqs(k, "dashboard.kpis[%d]" % i)
+        for i, c in enumerate(self.dashboard.get("charts", []), 1):
+            c["req"] = reqs(c, "dashboard.charts[%d]" % i)
         self.users = raw.get("users", [])
         self.custom_sql = raw.get("custom_sql", [])
         self.seed_sql = raw.get("seed_sql", [])
@@ -285,6 +325,37 @@ class App:
             if e.name == ident(name):
                 return e
         _err("unknown entity %s" % name)
+
+    def entity_reqs(self, e):
+        """Semua REQ-ID entitas: entitas, kolom, validasi, dokumen (urut, unik)."""
+        out = list(e.req)
+        for c in e.columns:
+            out += c.req
+        for v in e.validations:
+            out += v["req"]
+        if e.document:
+            out += e.document.req
+        return list(dict.fromkeys(out))
+
+    def trace(self):
+        """[(req, lokasi di app.yaml, [halaman])] untuk matriks traceability."""
+        rows = [(r, "app", []) for r in self.req]
+        for e in self.entities:
+            pages = [e.list_page, e.form_page] + ([e.workspace["page"]] if e.workspace else [])
+            rows += [(r, "entities.%s" % e.name, pages) for r in e.req]
+            for c in e.columns:
+                rows += [(r, "entities.%s.columns.%s" % (e.name, c.name), [e.list_page, e.form_page]) for r in c.req]
+            for i, v in enumerate(e.validations, 1):
+                rows += [(r, "entities.%s.validations.%s" % (e.name, v.get("name", i)), [e.form_page]) for r in v["req"]]
+            if e.document:
+                rows += [(r, "entities.%s.document" % e.name, [e.form_page, 190, 191]) for r in e.document.req]
+        for r in self.reports:
+            rows += [(q, "reports.%s" % r.alias, [r.page]) for q in r.req]
+        for i, k in enumerate(self.dashboard.get("kpis", []), 1):
+            rows += [(q, "dashboard.kpis.%s" % k["label"], [100]) for q in k["req"]]
+        for i, c in enumerate(self.dashboard.get("charts", []), 1):
+            rows += [(q, "dashboard.charts.%s" % c.get("title", i), [100]) for q in c["req"]]
+        return rows
 
     def children(self, e):
         return [c for c in self.entities if c.parent and c.parent["entity"] == e.name]
@@ -354,6 +425,11 @@ class App:
         types = [d.document.type for d in self.documents]
         if len(set(types)) != len(types):
             _err("document types must be unique")
+        self.frs = parse_frs(self.frs_path)
+        if self.frs:
+            unknown = sorted({r for r, _, _ in self.trace()} - set(self.frs))
+            if unknown:
+                _err("req tidak ada di %s: %s" % (os.path.relpath(self.frs_path, self.base_dir), ", ".join(unknown)))
         for f in self.custom_sql + self.seed_sql:
             if not os.path.isfile(os.path.join(self.base_dir, f)):
                 _err("file not found: %s" % f)

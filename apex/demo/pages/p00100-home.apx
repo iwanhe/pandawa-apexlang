@@ -33,6 +33,10 @@ page 100 (
             ## Source
             
             Generated dari app.yaml dashboard. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            
+            ## Requirements
+            
+            REQ-6.2, REQ-6.3 (lihat docs/02-frs.md dan docs/traceability.md).
             ```
     }
 

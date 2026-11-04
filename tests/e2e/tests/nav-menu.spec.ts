@@ -39,6 +39,7 @@ async function openNav(page: Page, method: 'click' | 'tap') {
   else await toggle.click();
 }
 
+// REQ-7.4: side menu di HP tetap terbuka setelah dibuka (regression Universal Theme 26.2.1)
 for (const p of PAGES) for (const method of METHODS) {
   test(`side menu tetap terbuka setelah dibuka (${method}) - ${p.label}`, async ({ page, hasTouch }, testInfo) => {
     test.skip(method === 'tap' && !hasTouch, 'tap hanya untuk device dengan touch');

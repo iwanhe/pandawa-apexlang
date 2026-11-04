@@ -14,6 +14,8 @@ app:
   author: Tim PANDAWA
   date: 2026-11-01               # tanggal di header script hasil generate
   description: Contoh aplikasi dari template pandawa-apexlang. Data dummy.
+  frs: docs/02-frs.md            # sumber REQ-ID (default); traceability -> docs/traceability.md
+  req: [REQ-3.1, REQ-3.4, REQ-7.4, REQ-7.5]   # security core, nav-fix HP, semua halaman
 
 roles:                           # ADMIN otomatis ditambahkan
   REQUESTER: Requester
@@ -40,11 +42,12 @@ entities:
     auth: master-data
     icon: fa-building-o
     form_style: drawer             # drawer (default non-dokumen) | modal
+    req: [REQ-3.2, REQ-4.1]        # ID requirement di docs/02-frs.md
     display: "dept_code || ' - ' || dept_name"
     columns:
       - {name: DEPT_CODE, type: code, label: Kode, required: true, unique: true, size: 20}
       - {name: DEPT_NAME, type: text, label: Nama Department, required: true, size: 100}
-      - {name: ACTIVE_YN, type: yn, label: Aktif}
+      - {name: ACTIVE_YN, type: yn, label: Aktif, req: REQ-4.3}
 
   - name: ITEMS
     label: Item
@@ -54,6 +57,7 @@ entities:
     auth: master-data
     icon: fa-tag
     list_type: faceted-cards       # ir (default) | faceted-cards | faceted-report
+    req: [REQ-3.2, REQ-4.2, REQ-7.1]
     display: "item_code || ' - ' || item_name || ' (' || uom || ')'"
     columns:
       - {name: ITEM_CODE, type: code, label: Kode Item, required: true, unique: true}
@@ -61,7 +65,7 @@ entities:
       - {name: CATEGORY, type: enum, label: Kategori, required: true, values: {ATK: Alat Tulis Kantor, IT: Perangkat IT, CONSUMABLE: Consumables}}
       - {name: UOM, type: code, label: Satuan, required: true, size: 10}
       - {name: STD_PRICE, type: money, label: Harga Standar, required: true, default: 0, min: 0}
-      - {name: ACTIVE_YN, type: yn, label: Aktif}
+      - {name: ACTIVE_YN, type: yn, label: Aktif, req: REQ-4.3}
 
   - name: REQUESTS
     label: Permintaan Barang
@@ -74,6 +78,7 @@ entities:
     auth: requester
     icon: fa-file-text-o
     list_type: faceted-report
+    req: [REQ-3.3, REQ-7.2, REQ-7.3]
     workspace: {page: 302, label: Detail Permintaan}   # master-detail: header + Baris Permintaan
     purpose: Permintaan barang dari department ke gudang, disetujui Manager (dan Director bila > 10 jt).
     display: "request_no || ' - ' || purpose"
@@ -90,6 +95,7 @@ entities:
       validate: apx_demo_request_pkg.check_submit
       operational: [FULFILLED, CLOSED]
       lock: [DEPARTMENT_ID, PURPOSE, NEED_DATE]
+      req: [REQ-4.4, REQ-5.2, REQ-5.3, REQ-5.4, REQ-5.5, REQ-5.6, REQ-5.7, REQ-5.8, REQ-5.9]
     columns:
       - {name: DEPARTMENT_ID, type: ref, ref: DEPARTMENTS, label: Department, required: true}
       - {name: REQUEST_DATE, type: date, label: Tanggal, required: true, default: trunc(sysdate), default_sql: "select trunc(sysdate) from dual"}
@@ -101,6 +107,7 @@ entities:
         expr: ":P_NEED_DATE is null or :P_NEED_DATE >= :P_REQUEST_DATE"
         message: Tanggal dibutuhkan tidak boleh sebelum tanggal permintaan.
         item: NEED_DATE
+        req: REQ-5.1
 
   - name: REQUEST_LINES
     label: Baris Permintaan
@@ -114,12 +121,13 @@ entities:
     icon: fa-list
     display: "line_id"
     parent: {entity: REQUESTS, column: REQUEST_ID, lock_unless: [DRAFT, REJECTED]}
+    req: [REQ-3.3, REQ-5.6]
     columns:
       - {name: REQUEST_ID, type: ref, ref: REQUESTS, label: No. Permintaan, required: true}
       - {name: ITEM_ID, type: ref, ref: ITEMS, label: Item, required: true}
       - {name: QTY, type: qty, label: Qty, required: true, min: 0}
       - {name: UNIT_PRICE, type: money, label: Harga Satuan, required: true, default: 0, min: 0}
-      - {name: LINE_AMOUNT, type: money, label: Jumlah, virtual: "qty * unit_price"}
+      - {name: LINE_AMOUNT, type: money, label: Jumlah, virtual: "qty * unit_price", req: REQ-4.5}
 
 reports:
   - page: 400
@@ -128,6 +136,7 @@ reports:
     view: REQUEST_SUMMARY_V          # dibuat di database/custom/
     sort: REQUEST_NO
     help: Total nilai per permintaan dan status approval.
+    req: REQ-6.1
     columns:
       - {name: REQUEST_NO, label: No. Permintaan}
       - {name: DEPT_NAME, label: Department}
@@ -141,16 +150,18 @@ dashboard:
   title: Demo Permintaan Barang
   subtitle: Template Pandawa APEXlang - data dummy.
   kpis:
-    - {label: Approval Menunggu Anda, icon: fa-check-square-o, sql: "select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
-    - {label: Permintaan Draft, icon: fa-file-o, sql: "select count(*) from apx_demo_requests where status = 'DRAFT'"}
-    - {label: Menunggu Approval, icon: fa-clock-o, sql: "select count(*) from apx_demo_requests where status = 'SUBMITTED'"}
+    - {label: Approval Menunggu Anda, icon: fa-check-square-o, req: REQ-6.2, sql: "select count(*) from apx_demo_approvals_v where status = 'PENDING' and can_act_yn = 'Y'"}
+    - {label: Permintaan Draft, icon: fa-file-o, req: REQ-6.2, sql: "select count(*) from apx_demo_requests where status = 'DRAFT'"}
+    - {label: Menunggu Approval, icon: fa-clock-o, req: REQ-6.2, sql: "select count(*) from apx_demo_requests where status = 'SUBMITTED'"}
   charts:
     - title: Permintaan per Status
       type: pie
+      req: REQ-6.3
       series:
         - {name: Permintaan, sql: "select status label, count(*) value from apx_demo_requests group by status"}
     - title: Nilai per Department
       type: bar
+      req: REQ-6.3
       series:
         - {name: Total, sql: "select dept_name label, sum(total_amount) value from apx_demo_request_summary_v group by dept_name"}
 
