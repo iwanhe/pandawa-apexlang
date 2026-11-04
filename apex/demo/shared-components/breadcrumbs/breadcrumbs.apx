@@ -78,11 +78,27 @@ breadcrumb breadcrumb (
         }
     )
 
+    entry permintaan-barang-detail (
+        name: Detail Permintaan
+        pageNumber: 302
+        execution {
+            sequence: 60
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 302
+            }
+        }
+    )
+
     entry request-lines (
         name: Baris Permintaan
         pageNumber: 310
         execution {
-            sequence: 60
+            sequence: 70
         }
         appearance {
             parentEntry: @home
@@ -98,7 +114,7 @@ breadcrumb breadcrumb (
         name: Rekap Permintaan
         pageNumber: 400
         execution {
-            sequence: 70
+            sequence: 80
         }
         appearance {
             parentEntry: @home
@@ -114,7 +130,7 @@ breadcrumb breadcrumb (
         name: Users & Roles
         pageNumber: 500
         execution {
-            sequence: 80
+            sequence: 90
         }
         appearance {
             parentEntry: @home
@@ -130,7 +146,7 @@ breadcrumb breadcrumb (
         name: Document Types & Approval
         pageNumber: 510
         execution {
-            sequence: 90
+            sequence: 100
         }
         appearance {
             parentEntry: @home

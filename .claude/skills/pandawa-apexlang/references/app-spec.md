@@ -60,6 +60,8 @@ Satu entitas menghasilkan:
 | `nav` | | `true` | Tampilkan di menu |
 | `help` | | | Teks bantuan halaman list (tampil ke user) |
 | `purpose` | | otomatis | Satu kalimat tujuan bisnis. Masuk ke `comments` halaman (metadata AI, tidak tampil ke user) |
+| `list_type` | | `ir` | Halaman list: `ir` (Interactive Report), `faceted-cards` (faceted search + cards), `faceted-report` (faceted search + classic report). Lihat **Memilih pola halaman** |
+| `workspace` | | | Halaman master-detail untuk entitas yang punya anak (`parent:`). `{page, label, alias, icon}` atau cukup nomor halaman. Lihat bawah |
 | `form_style` | | `drawer` (non-dokumen), `modal` (dokumen) | `drawer`: panel kanan untuk form pendek, konteks list tetap terlihat. `modal`: dialog tengah untuk dokumen atau form panjang |
 | `document` | | | Jadikan entitas dokumen ber-approval (lihat bawah) |
 | `columns` | ya | | Daftar kolom |
@@ -86,6 +88,33 @@ Satu entitas menghasilkan:
 | `readonly_when` | Ekspresi PL/SQL read-only item |
 | `on_delete` | `cascade` untuk FK ref |
 | `help` | Inline help item |
+| `facet` | Jadikan facet di halaman faceted search. Default `true` untuk `enum`, `yn`, `ref` (plus `STATUS` dokumen); `false` untuk lainnya |
+
+### `workspace` (master-detail)
+
+```yaml
+- name: REQUESTS
+  pages: [300, 301]
+  workspace: {page: 302, label: Detail Permintaan}   # alias default: <label_plural>-detail
+```
+
+Halaman 302 berisi:
+
+- kiri (4 kolom): daftar induk; klik judul memilih baris (`P302_<PK>`);
+- kanan (8 kolom): header (template Contextual Info) dengan tombol **Edit** (form induk), lalu satu region per entitas anak (`parent.entity = REQUESTS`) dengan tombol **Tambah** dan link edit ke form anak.
+
+Tombol **Tambah** hanya tampil bila status induk ada di `lock_unless` (untuk dokumen). Penguncian tetap ditegakkan trigger. Halaman masuk menu di grup yang sama dan ke `tests/e2e/pages.json`. Pola ini deklaratif: memilih baris me-reload halaman, tanpa JavaScript custom.
+
+### Memilih pola halaman
+
+| Kebutuhan user | Pakai |
+| --- | --- |
+| Data banyak, user butuh sort/filter bebas, export, kolom bisa diatur | `list_type: ir` (default) |
+| Master data yang dicari lewat beberapa dimensi (kategori, status, aktif) dan dikenali dari nama | `faceted-cards` |
+| Dokumen/transaksi yang disaring per status/department lalu dibuka satu per satu | `faceted-report` |
+| Dokumen dengan baris detail yang ditinjau atau diisi bersama header | `workspace` (sebagai tambahan halaman list) |
+| Form pendek master data | `form_style: drawer` (default non-dokumen) |
+| Form dokumen atau form panjang | `form_style: modal` (default dokumen) |
 
 ### `document` (approval)
 
@@ -176,5 +205,6 @@ Custom SQL boleh membuat view/package/trigger tambahan dengan prefix yang sama. 
 | 190/191 | Approval inbox / aksi (bila ada dokumen) |
 | 500/501 | Users & Roles |
 | 510/511 | Document Types & Approval (bila ada dokumen) |
+| `workspace.page` | Master-detail per entitas yang punya `workspace` |
 | 9999 | Login |
 | 0 | Global page |

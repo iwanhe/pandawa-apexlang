@@ -1,0 +1,708 @@
+page 312 (
+    name: Detail Project
+    alias: PROJECTS-DETAIL
+    title: Detail Project
+    pageGroup: @engineering
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Master-detail Projects dengan WBS Budget dalam satu halaman.
+            
+            ## When to Use
+            
+            Meninjau Projects satu per satu sambil melihat dan mengubah WBS Budget-nya, tanpa pindah halaman.
+            
+            ## AI Guidance
+            
+            Pola parent-child: daftar induk 4 kolom (kiri), header (Contextual Info) dan detail 8 kolom (kanan), difilter P312_PROJECT_ID. Edit header membuka form 311; tambah/edit detail membuka form detail. Aturan kunci ada di trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PROJECTS.workspace. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region list (
+        name: Daftar Projects
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select project_id
+                      ,project_no
+                      ,project_name
+                      ,status
+                  from apx_mbms_projects_v
+                ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: PROJECT_NO DESC
+        }
+        layout {
+            sequence: 10
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Intent: Memilih satu Project; pilihan disimpan di P312_PROJECT_ID.
+                Pattern role: Parent list (master).
+                AI guidance: Link judul me-reload halaman ini dengan P312_PROJECT_ID. Jangan menambah JavaScript seleksi; pola ini sengaja deklaratif.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: rowRangesXToYOfZWithPagination
+        }
+        messages {
+            whenNoDataFound: Belum ada Project.
+        }
+
+        column PROJECT_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PROJECT_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Project
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 312
+                    items: {
+                        P312_PROJECT_ID: #PROJECT_ID#
+                    }
+                }
+                linkText: #PROJECT_NO#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column PROJECT_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Nama Proyek
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+    )
+
+    pageItem P312_PROJECT_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @list
+            slot: regionBody
+        }
+    )
+
+    region no-selection (
+        name: Belum dipilih
+        type: staticContent
+        source {
+            htmlCode: <p class="u-text-muted-color">Pilih Project di daftar kiri untuk melihat detailnya.</p>
+        }
+        layout {
+            sequence: 20
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Empty state saat belum ada Project dipilih.
+                Pattern role: Empty state.
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P312_PROJECT_ID
+        }
+    )
+
+    region detail (
+        name: Project
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Wadah header dan baris detail untuk Project terpilih.
+                Pattern role: Detail container (child).
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P312_PROJECT_ID
+        }
+    )
+
+    region header (
+        name: Project
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select project_id
+                      ,project_no
+                      ,project_name
+                      ,project_type
+                      ,customer_id_dsp
+                      ,contract_value
+                      ,retention_pct
+                      ,start_date
+                      ,end_date
+                      ,progress_pct
+                      ,project_manager
+                      ,status
+                  from apx_mbms_projects_v
+                 where project_id = to_number(:P312_PROJECT_ID)
+                ```
+            pageItemsToSubmit: P312_PROJECT_ID
+        }
+        layout {
+            sequence: 10
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Ringkasan Project terpilih.
+                Pattern role: Parent context (Contextual Info).
+                AI guidance: Ubah data lewat tombol Edit (form 311), bukan di region ini.
+                ```
+        }
+        componentAppearance {
+            template: @/contextual-info
+            templateOptions: [
+                #DEFAULT#
+                t-ContextualInfo--hideNulls
+                t-ContextualInfo-label--stacked
+                t-Report--hideNoPagination
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+
+        column PROJECT_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PROJECT_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: No. Project Budget
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column PROJECT_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Nama Proyek
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column PROJECT_TYPE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Tipe
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column CUSTOMER_ID_DSP (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Customer
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column CONTRACT_VALUE (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Nilai Kontrak
+                alignment: end
+            }
+            layout {
+                sequence: 60
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+        column RETENTION_PCT (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Retensi (%)
+                alignment: end
+            }
+            layout {
+                sequence: 70
+                columnAlignment: end
+            }
+        )
+
+        column START_DATE (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Mulai
+            }
+            layout {
+                sequence: 80
+            }
+        )
+
+        column END_DATE (
+            reportColumnQueryId: 9
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Target Selesai
+            }
+            layout {
+                sequence: 90
+            }
+        )
+
+        column PROGRESS_PCT (
+            reportColumnQueryId: 10
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Progres (%)
+                alignment: end
+            }
+            layout {
+                sequence: 100
+                columnAlignment: end
+            }
+        )
+
+        column PROJECT_MANAGER (
+            reportColumnQueryId: 11
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Project Manager
+            }
+            layout {
+                sequence: 110
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 12
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 120
+            }
+        )
+
+    )
+
+    button edit-header (
+        buttonName: EDIT_HEADER
+        label: Edit
+        layout {
+            sequence: 10
+            region: @header
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 311
+                items: {
+                    P311_PROJECT_ID: &P312_PROJECT_ID.
+                }
+                clearCache: 311
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @engineering
+        }
+    )
+
+    dynamicAction on-dialog-closed-header (
+        name: ON_DIALOG_CLOSED_REFRESH_HEADER
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @edit-header
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @header
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    region child-wbs (
+        name: WBS Budget
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select wbs_id
+                      ,wbs_code
+                      ,wbs_name
+                      ,cost_category
+                      ,budget_amount
+                  from apx_mbms_wbs_v
+                 where project_id = to_number(:P312_PROJECT_ID)
+                ```
+            pageItemsToSubmit: P312_PROJECT_ID
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: WBS_ID
+        }
+        layout {
+            sequence: 20
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: WBS Budget milik Project terpilih.
+                Pattern role: Child records (WBS.PROJECT_ID = P312_PROJECT_ID).
+                AI guidance: Kunci baris detail ditegakkan trigger apx_mbms_wbs_trg (lock_unless: DRAFT, REJECTED); tombol Create hanya penanda UI.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+        messages {
+            whenNoDataFound: Belum ada WBS Budget.
+        }
+
+        column WBS_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column WBS_CODE (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Kode WBS
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 321
+                    items: {
+                        P321_WBS_ID: #WBS_ID#
+                    }
+                    clearCache: 321
+                }
+                linkText: #WBS_CODE#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column WBS_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Aktivitas
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column COST_CATEGORY (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Kategori Biaya
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column BUDGET_AMOUNT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Budget
+                alignment: end
+            }
+            layout {
+                sequence: 50
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+    )
+
+    button create-wbs (
+        buttonName: CREATE_WBS
+        label: Tambah
+        layout {
+            sequence: 10
+            region: @child-wbs
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 321
+                items: {
+                    P321_PROJECT_ID: &P312_PROJECT_ID.
+                }
+                clearCache: 321
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @engineering
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery:
+                ```sql
+                select 1
+                  from apx_mbms_projects
+                 where project_id = to_number(:P312_PROJECT_ID)
+                   and status in ('DRAFT', 'REJECTED')
+                ```
+        }
+    )
+
+    dynamicAction on-dialog-closed-create-wbs (
+        name: ON_DIALOG_CLOSED_REFRESH_WBS
+        execution {
+            sequence: 30
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @create-wbs
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-wbs
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction on-dialog-closed-wbs (
+        name: ON_DIALOG_CLOSED_WBS
+        execution {
+            sequence: 35
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @child-wbs
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-wbs
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+)

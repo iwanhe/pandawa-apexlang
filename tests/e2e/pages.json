@@ -27,6 +27,11 @@
       "title": "Permintaan Barang"
     },
     {
+      "alias": "permintaan-barang-detail",
+      "no": 302,
+      "title": "Detail Permintaan"
+    },
+    {
       "alias": "request-lines",
       "no": 310,
       "title": "Baris Permintaan"

@@ -4,7 +4,7 @@ page 330 (
     title: Purchase Requisitions
     pageGroup: @procurement
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -23,356 +23,423 @@ page 330 (
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_mbms_purchase_reqs_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit app-users.
+            Pola faceted search (faceted-report): facet di kolom kiri, hasil di body, dari view apx_mbms_purchase_reqs_v (MVC). Hak akses list app-users, create/edit app-users.
             
             ## Source
             
-            Generated dari app.yaml entities.PURCHASE_REQS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.PURCHASE_REQS. (list_type: faceted-report) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Purchase Requisitions
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region purchase-reqs (
-        name: Purchase Requisitions
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Purchase Requisitions berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P330_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P330_STATUS (
+            type: checkboxGroup
+            label {
+                label: Status
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: STATUS
+            }
+        )
+
+        facet P330_BU_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Business Unit
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: BU_ID_DSP
+            }
+        )
+
+        facet P330_PURPOSE (
+            type: checkboxGroup
+            label {
+                label: Tujuan
+            }
+            lov {
+                type: sharedComponent
+                lov: @purchase-reqs-purpose
+            }
+            layout {
+                sequence: 40
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: PURPOSE
+            }
+        )
+
+        facet P330_JOB_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Job Order
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 50
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: JOB_ID_DSP
+            }
+        )
+
+        facet P330_PROJECT_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Proyek
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 60
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: PROJECT_ID_DSP
+            }
+        )
+
+        facet P330_WBS_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: WBS
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 70
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: WBS_ID_DSP
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Purchase Requisitions
+        type: classicReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select pr_id, pr_no, bu_id_dsp, pr_date, purpose, job_id_dsp, project_id_dsp, wbs_id_dsp, need_date, description, status, updated_by, updated_on
+                select pr_id
+                      ,pr_no
+                      ,bu_id_dsp
+                      ,pr_date
+                      ,purpose
+                      ,job_id_dsp
+                      ,project_id_dsp
+                      ,wbs_id_dsp
+                      ,need_date
+                      ,description
+                      ,status
+                      ,updated_by
+                      ,updated_on
                   from apx_mbms_purchase_reqs_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: PR_NO DESC
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Purchase Requisitions yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Purchase Requisitions yang sudah difilter facet.
+                Pattern role: Faceted search results (Classic Report).
+                AI guidance: Klik kolom judul untuk membuka form. Kolom diambil dari columns di app.yaml.
                 ```
         }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 331
-                items: {
-                    P331_PR_ID: \#PR_ID#\
-                }
-                clearCache: 331
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
         }
         pagination {
-            type: rowRangesXToY
+            type: rowRangesXToYOfZWithPagination
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
-        }
 
         column PR_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
             type: hidden
-            heading {
-                heading: ID
-            }
             layout {
-                sequence: 1
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
+                sequence: 10
             }
         )
 
         column PR_NO (
-            type: plainText
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
             heading {
                 heading: No. Purchase Requisition
             }
             layout {
-                sequence: 2
+                sequence: 20
             }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
+            link {
+                target: {
+                    page: 331
+                    items: {
+                        P331_PR_ID: #PR_ID#
+                    }
+                    clearCache: 331
+                }
+                linkText: #PR_NO#
+                linkAttributes: class="u-text-bold"
             }
         )
 
         column BU_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Business Unit
             }
             layout {
-                sequence: 3
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: C
+                sequence: 30
             }
         )
 
         column PR_DATE (
+            reportColumnQueryId: 4
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tanggal
             }
             layout {
-                sequence: 4
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: D
+                sequence: 40
             }
         )
 
         column PURPOSE (
+            reportColumnQueryId: 5
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tujuan
             }
             layout {
-                sequence: 5
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: E
+                sequence: 50
             }
         )
 
         column JOB_ID_DSP (
+            reportColumnQueryId: 6
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Job Order
             }
             layout {
-                sequence: 6
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: F
+                sequence: 60
             }
         )
 
         column PROJECT_ID_DSP (
+            reportColumnQueryId: 7
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Proyek
             }
             layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
+                sequence: 70
             }
         )
 
         column WBS_ID_DSP (
+            reportColumnQueryId: 8
+            derivedColumn: N
             type: plainText
             heading {
                 heading: WBS
             }
             layout {
-                sequence: 8
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: H
+                sequence: 80
             }
         )
 
         column NEED_DATE (
+            reportColumnQueryId: 9
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Dibutuhkan
             }
             layout {
-                sequence: 9
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: I
+                sequence: 90
             }
         )
 
         column DESCRIPTION (
+            reportColumnQueryId: 10
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Keterangan
             }
             layout {
-                sequence: 10
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: J
+                sequence: 100
             }
         )
 
         column STATUS (
+            reportColumnQueryId: 11
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Status
             }
             layout {
-                sequence: 11
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: K
+                sequence: 110
             }
         )
 
         column UPDATED_BY (
+            reportColumnQueryId: 12
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah Oleh
             }
             layout {
-                sequence: 12
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: L
+                sequence: 120
             }
         )
 
         column UPDATED_ON (
+            reportColumnQueryId: 13
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah
             }
             layout {
-                sequence: 13
+                sequence: 130
             }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: M
-            }
-        )
-
-        savedReport 330001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn PR_NO (
-                sequence: 1
-            )
-
-            displayColumn BU_ID_DSP (
-                sequence: 2
-            )
-
-            displayColumn PR_DATE (
-                sequence: 3
-            )
-
-            displayColumn PURPOSE (
-                sequence: 4
-            )
-
-            displayColumn JOB_ID_DSP (
-                sequence: 5
-            )
-
-            displayColumn PROJECT_ID_DSP (
-                sequence: 6
-            )
-
-            displayColumn WBS_ID_DSP (
-                sequence: 7
-            )
-
-            displayColumn NEED_DATE (
-                sequence: 8
-            )
-
-            displayColumn DESCRIPTION (
-                sequence: 9
-            )
-
-            displayColumn STATUS (
-                sequence: 10
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 11
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 12
-            )
-
-            sort (
-                column: PR_NO
-                sort {
-                    sequence: 1
-                    direction: desc
-                }
-            )
-
         )
 
     )
@@ -382,8 +449,8 @@ page 330 (
         label: Create
         layout {
             sequence: 10
-            region: @purchase-reqs
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -411,14 +478,14 @@ page 330 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @purchase-reqs
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @purchase-reqs
+                region: @results
             }
             execution {
                 sequence: 10

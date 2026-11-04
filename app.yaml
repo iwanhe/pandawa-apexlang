@@ -53,6 +53,7 @@ entities:
     pages: [210, 211]
     auth: master-data
     icon: fa-tag
+    list_type: faceted-cards       # ir (default) | faceted-cards | faceted-report
     display: "item_code || ' - ' || item_name || ' (' || uom || ')'"
     columns:
       - {name: ITEM_CODE, type: code, label: Kode Item, required: true, unique: true}
@@ -72,6 +73,8 @@ entities:
     pages: [300, 301]
     auth: requester
     icon: fa-file-text-o
+    list_type: faceted-report
+    workspace: {page: 302, label: Detail Permintaan}   # master-detail: header + Baris Permintaan
     purpose: Permintaan barang dari department ke gudang, disetujui Manager (dan Director bila > 10 jt).
     display: "request_no || ' - ' || purpose"
     lov_where: "status in ('DRAFT', 'REJECTED')"

@@ -24,6 +24,11 @@ Setiap butir di bawah pernah menyebabkan gagal validasi, gagal import, atau bug 
 | R4 | Template option `#DEFAULT#` side nav | Untuk Side Navigation Menu, `#DEFAULT#` = `js-defaultCollapsed`. Bukan penyebab R3 |
 | R5 | Display-only item ikut tersubmit | `settings { sendOnPageSubmit: false }` + `source { queryOnly: true }` |
 | R6 | Metric card (`themeTemplateComponent/metricCard`) | Atribut khusus template ada di `settings { metric, meta, layout }` dan `plugin-avatar { ... }`, tidak tercantum di inventaris APEXlang. Nilai `layout` yang terbukti (UX Pattern Catalog): `2Columns`, `4Columns`. Urutan pakai `orderBy { type: staticValue  orderByClause: SEQ }`, bukan `order by` di SQL |
+| R8 | Faceted search | Halaman `pageTemplate: @/left-side-column`; region `facetedSearch` di slot `leftColumn` dengan `source { filteredRegion: @<region> }`. Target cards/classic report (bukan Interactive Report). Facet LOV `sharedComponent` atau `distinctValues`; kolom facet harus ada di query target |
+| R9 | Urutan di region yang dibungkus (cards, classic report target facet, metric card) | Pakai `orderBy { type: staticValue  orderByClause: KOLOM [DESC] }`, bukan `order by` di SQL |
+| R10 | Substitusi link | Classic report/IR: `#KOLOM#`. Cards action dan tombol: `&KOLOM.` / `&P1_ITEM.` |
+| R11 | Pagination classic report | Nilai valid antara lain `rowRangesXToYOfZWithPagination`, `showAll` (bukan `rowRangesXToY` milik IR) |
+| R12 | Slot tombol per template region | `@/standard` → `edit`; `@/hero` → `next`; `@/buttons-container` (dialog) → `next`/`close`/`delete` |
 | R7 | Drawer | `dialogTemplate: @/drawer` + template option `js-dialog-class-t-Drawer--pullOutEnd` (panel dari kanan). Untuk form pendek; form panjang/dokumen tetap `@/modal-dialog` |
 
 ## Import & instance oracleapex.com

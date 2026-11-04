@@ -47,6 +47,11 @@
       "title": "Projects"
     },
     {
+      "alias": "projects-detail",
+      "no": 312,
+      "title": "Detail Project"
+    },
+    {
       "alias": "wbs-budget",
       "no": 320,
       "title": "WBS Budget"
@@ -55,6 +60,11 @@
       "alias": "purchase-requisitions",
       "no": 330,
       "title": "Purchase Requisitions"
+    },
+    {
+      "alias": "purchase-requisitions-detail",
+      "no": 332,
+      "title": "Detail PR"
     },
     {
       "alias": "pr-lines",

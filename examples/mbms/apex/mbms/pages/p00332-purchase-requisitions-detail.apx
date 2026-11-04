@@ -1,0 +1,709 @@
+page 332 (
+    name: Detail PR
+    alias: PURCHASE-REQUISITIONS-DETAIL
+    title: Detail PR
+    pageGroup: @procurement
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Master-detail Purchase Requisitions dengan PR Lines dalam satu halaman.
+            
+            ## When to Use
+            
+            Meninjau Purchase Requisitions satu per satu sambil melihat dan mengubah PR Lines-nya, tanpa pindah halaman.
+            
+            ## AI Guidance
+            
+            Pola parent-child: daftar induk 4 kolom (kiri), header (Contextual Info) dan detail 8 kolom (kanan), difilter P332_PR_ID. Edit header membuka form 331; tambah/edit detail membuka form detail. Aturan kunci ada di trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.PURCHASE_REQS.workspace. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region list (
+        name: Daftar Purchase Requisitions
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select pr_id
+                      ,pr_no
+                      ,bu_id_dsp
+                      ,status
+                  from apx_mbms_purchase_reqs_v
+                ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: PR_NO DESC
+        }
+        layout {
+            sequence: 10
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Intent: Memilih satu Purchase Requisition; pilihan disimpan di P332_PR_ID.
+                Pattern role: Parent list (master).
+                AI guidance: Link judul me-reload halaman ini dengan P332_PR_ID. Jangan menambah JavaScript seleksi; pola ini sengaja deklaratif.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: rowRangesXToYOfZWithPagination
+        }
+        messages {
+            whenNoDataFound: Belum ada Purchase Requisition.
+        }
+
+        column PR_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PR_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Purchase Requisition
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 332
+                    items: {
+                        P332_PR_ID: #PR_ID#
+                    }
+                }
+                linkText: #PR_NO#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column BU_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Business Unit
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+    )
+
+    pageItem P332_PR_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @list
+            slot: regionBody
+        }
+    )
+
+    region no-selection (
+        name: Belum dipilih
+        type: staticContent
+        source {
+            htmlCode: <p class="u-text-muted-color">Pilih Purchase Requisition di daftar kiri untuk melihat detailnya.</p>
+        }
+        layout {
+            sequence: 20
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Empty state saat belum ada Purchase Requisition dipilih.
+                Pattern role: Empty state.
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P332_PR_ID
+        }
+    )
+
+    region detail (
+        name: Purchase Requisition
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Wadah header dan baris detail untuk Purchase Requisition terpilih.
+                Pattern role: Detail container (child).
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P332_PR_ID
+        }
+    )
+
+    region header (
+        name: Purchase Requisition
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select pr_id
+                      ,pr_no
+                      ,bu_id_dsp
+                      ,pr_date
+                      ,purpose
+                      ,job_id_dsp
+                      ,project_id_dsp
+                      ,wbs_id_dsp
+                      ,need_date
+                      ,description
+                      ,status
+                  from apx_mbms_purchase_reqs_v
+                 where pr_id = to_number(:P332_PR_ID)
+                ```
+            pageItemsToSubmit: P332_PR_ID
+        }
+        layout {
+            sequence: 10
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Ringkasan Purchase Requisition terpilih.
+                Pattern role: Parent context (Contextual Info).
+                AI guidance: Ubah data lewat tombol Edit (form 331), bukan di region ini.
+                ```
+        }
+        componentAppearance {
+            template: @/contextual-info
+            templateOptions: [
+                #DEFAULT#
+                t-ContextualInfo--hideNulls
+                t-ContextualInfo-label--stacked
+                t-Report--hideNoPagination
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+
+        column PR_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PR_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: No. Purchase Requisition
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column BU_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Business Unit
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column PR_DATE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Tanggal
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column PURPOSE (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Tujuan
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column JOB_ID_DSP (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Job Order
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+        column PROJECT_ID_DSP (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Proyek
+            }
+            layout {
+                sequence: 70
+            }
+        )
+
+        column WBS_ID_DSP (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: WBS
+            }
+            layout {
+                sequence: 80
+            }
+        )
+
+        column NEED_DATE (
+            reportColumnQueryId: 9
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Dibutuhkan
+            }
+            layout {
+                sequence: 90
+            }
+        )
+
+        column DESCRIPTION (
+            reportColumnQueryId: 10
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Keterangan
+            }
+            layout {
+                sequence: 100
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 11
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 110
+            }
+        )
+
+    )
+
+    button edit-header (
+        buttonName: EDIT_HEADER
+        label: Edit
+        layout {
+            sequence: 10
+            region: @header
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 331
+                items: {
+                    P331_PR_ID: &P332_PR_ID.
+                }
+                clearCache: 331
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @app-users
+        }
+    )
+
+    dynamicAction on-dialog-closed-header (
+        name: ON_DIALOG_CLOSED_REFRESH_HEADER
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @edit-header
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @header
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    region child-pr-lines (
+        name: PR Lines
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select line_id
+                      ,item_id_dsp
+                      ,qty
+                      ,unit_price
+                      ,line_amount
+                      ,notes
+                  from apx_mbms_pr_lines_v
+                 where pr_id = to_number(:P332_PR_ID)
+                ```
+            pageItemsToSubmit: P332_PR_ID
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: LINE_ID
+        }
+        layout {
+            sequence: 20
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: PR Lines milik Purchase Requisition terpilih.
+                Pattern role: Child records (PR_LINES.PR_ID = P332_PR_ID).
+                AI guidance: Kunci baris detail ditegakkan trigger apx_mbms_pr_lines_trg (lock_unless: DRAFT, REJECTED); tombol Create hanya penanda UI.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+        messages {
+            whenNoDataFound: Belum ada PR Lines.
+        }
+
+        column LINE_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column ITEM_ID_DSP (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Item
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 341
+                    items: {
+                        P341_LINE_ID: #LINE_ID#
+                    }
+                    clearCache: 341
+                }
+                linkText: #ITEM_ID_DSP#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column QTY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Qty
+                alignment: end
+            }
+            layout {
+                sequence: 30
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G990D99
+            }
+        )
+
+        column UNIT_PRICE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Harga Satuan
+                alignment: end
+            }
+            layout {
+                sequence: 40
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+        column LINE_AMOUNT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Jumlah
+                alignment: end
+            }
+            layout {
+                sequence: 50
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+        column NOTES (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Catatan
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+    )
+
+    button create-pr-lines (
+        buttonName: CREATE_PR_LINES
+        label: Tambah
+        layout {
+            sequence: 10
+            region: @child-pr-lines
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 341
+                items: {
+                    P341_PR_ID: &P332_PR_ID.
+                }
+                clearCache: 341
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @app-users
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery:
+                ```sql
+                select 1
+                  from apx_mbms_purchase_reqs
+                 where pr_id = to_number(:P332_PR_ID)
+                   and status in ('DRAFT', 'REJECTED')
+                ```
+        }
+    )
+
+    dynamicAction on-dialog-closed-create-pr-lines (
+        name: ON_DIALOG_CLOSED_REFRESH_PR_LINES
+        execution {
+            sequence: 30
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @create-pr-lines
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-pr-lines
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction on-dialog-closed-pr-lines (
+        name: ON_DIALOG_CLOSED_PR_LINES
+        execution {
+            sequence: 35
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @child-pr-lines
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-pr-lines
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+)

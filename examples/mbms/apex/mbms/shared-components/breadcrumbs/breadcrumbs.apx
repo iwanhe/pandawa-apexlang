@@ -142,11 +142,27 @@ breadcrumb breadcrumb (
         }
     )
 
+    entry projects-detail (
+        name: Detail Project
+        pageNumber: 312
+        execution {
+            sequence: 100
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 312
+            }
+        }
+    )
+
     entry wbs-budget (
         name: WBS Budget
         pageNumber: 320
         execution {
-            sequence: 100
+            sequence: 110
         }
         appearance {
             parentEntry: @home
@@ -162,7 +178,7 @@ breadcrumb breadcrumb (
         name: Purchase Requisitions
         pageNumber: 330
         execution {
-            sequence: 110
+            sequence: 120
         }
         appearance {
             parentEntry: @home
@@ -174,11 +190,27 @@ breadcrumb breadcrumb (
         }
     )
 
+    entry purchase-requisitions-detail (
+        name: Detail PR
+        pageNumber: 332
+        execution {
+            sequence: 130
+        }
+        appearance {
+            parentEntry: @home
+        }
+        link {
+            target: {
+                page: 332
+            }
+        }
+    )
+
     entry pr-lines (
         name: PR Lines
         pageNumber: 340
         execution {
-            sequence: 120
+            sequence: 140
         }
         appearance {
             parentEntry: @home
@@ -194,7 +226,7 @@ breadcrumb breadcrumb (
         name: Stock Transactions
         pageNumber: 350
         execution {
-            sequence: 130
+            sequence: 150
         }
         appearance {
             parentEntry: @home
@@ -210,7 +242,7 @@ breadcrumb breadcrumb (
         name: Stock On Hand
         pageNumber: 430
         execution {
-            sequence: 140
+            sequence: 160
         }
         appearance {
             parentEntry: @home
@@ -226,7 +258,7 @@ breadcrumb breadcrumb (
         name: Job Costing
         pageNumber: 400
         execution {
-            sequence: 150
+            sequence: 170
         }
         appearance {
             parentEntry: @home
@@ -242,7 +274,7 @@ breadcrumb breadcrumb (
         name: Project Summary
         pageNumber: 410
         execution {
-            sequence: 160
+            sequence: 180
         }
         appearance {
             parentEntry: @home
@@ -258,7 +290,7 @@ breadcrumb breadcrumb (
         name: Budget vs Actual
         pageNumber: 420
         execution {
-            sequence: 170
+            sequence: 190
         }
         appearance {
             parentEntry: @home
@@ -274,7 +306,7 @@ breadcrumb breadcrumb (
         name: Users & Roles
         pageNumber: 500
         execution {
-            sequence: 180
+            sequence: 200
         }
         appearance {
             parentEntry: @home
@@ -290,7 +322,7 @@ breadcrumb breadcrumb (
         name: Document Types & Approval
         pageNumber: 510
         execution {
-            sequence: 190
+            sequence: 210
         }
         appearance {
             parentEntry: @home

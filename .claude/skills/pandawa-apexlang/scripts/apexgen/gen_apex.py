@@ -302,11 +302,315 @@ def entity_list_page(ctx, e):
             "Generated dari app.yaml entities.%s." % e.name)
     region_meta = ("Menampilkan %s yang bisa dicari dan difilter." % e.label_plural, "Browse list (Interactive Report).",
                    "Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.")
+    if e.list_type != "ir":
+        return faceted_page(ctx, e, cols, sort, meta)
     ctx.page(e.list_page, e.list_alias,
              ir_page(ctx, e.list_page, e.label_plural, e.list_alias, e.group, kebab(e.name), sql, cols, e.view_auth,
                      form_page=e.form_page, pk=e.pk, create="add" in e.operations, create_auth=e.auth,
                      sort_col=sort, sort_desc=bool(e.document), help_text=e.help, meta=meta, region_meta=region_meta),
              e2e_title=e.label_plural)
+
+
+def title_column(e):
+    """Kolom judul baris: nomor dokumen, atau kolom text/code pertama."""
+    if e.document:
+        return e.document.number
+    return next((c.name for c in e.columns if c.type in ("code", "text") and not c.virtual), e.pk)
+
+
+def facet_comps(app, e, num):
+    out = [Comp("facet", "P%d_SEARCH" % num, ("type", "search"), ("label", G(("label", "Cari"))),
+                ("layout", G(("sequence", 10))))]
+    seq = 20
+
+    def checkbox_facet(col, label, lov):
+        lg = G(("type", "sharedComponent"), ("lov", "@" + lov)) if lov else G(("type", "distinctValues"))
+        return Comp("facet", "P%d_%s" % (num, col), ("type", "checkboxGroup"), ("label", G(("label", label))),
+                    ("lov", lg), ("layout", G(("sequence", seq))),
+                    ("listEntries", G(("maxDisplayedEntries", 7), ("allowToExclude", False))),
+                    ("source", G(("databaseColumn", col))))
+    if e.document:
+        out.append(checkbox_facet("STATUS", "Status", None))
+        seq += 10
+    for c in e.columns:
+        if not c.facet or c.virtual:
+            continue
+        if c.type == "enum":
+            out.append(checkbox_facet(c.name, c.label, "%s-%s" % (kebab(e.name), kebab(c.name))))
+        elif c.type == "yn":
+            out.append(checkbox_facet(c.name, c.label, "yes-no"))
+        elif c.type == "ref":
+            # _DSP + distinct values: LOV entitas bisa terfilter (active_yn, lov_where) sehingga hitungan facet tidak lengkap
+            out.append(checkbox_facet(c.name + "_DSP", c.label, None))
+        else:
+            out.append(checkbox_facet(c.name, c.label, None))
+        seq += 10
+    return out
+
+
+def faceted_page(ctx, e, cols, sort, meta):
+    """Faceted search: facet di kolom kiri, hasil cards/classic report (UX Pattern Catalog p210/p220)."""
+    app, num = ctx.app, e.list_page
+    rid = "results"
+    view_names = {a for _, a in gen_sql.entity_view_columns(app, e)}
+    facet_cols = []
+    for c in e.columns:
+        if c.facet and not c.virtual:
+            facet_cols.append(c.name + "_DSP" if c.type == "ref" else c.name)
+    if e.document:
+        facet_cols.append("STATUS")
+    names = [c for c, _, _ in cols] + [f for f in facet_cols if f not in [c for c, _, _ in cols]]
+    sel = "\n      ,".join(n.lower() for n in names if n in view_names)
+    sql = "select %s\n  from %s_v" % (sel, e.table)
+    order_by = ("orderBy", G(("type", "staticValue"), ("orderByClause", sort + (" DESC" if e.document else ""))))
+    target = O(("page", e.form_page), ("items", O(("P%d_%s" % (e.form_page, e.pk), "&%s." % e.pk))), ("clearCache", e.form_page))
+    title = title_column(e)
+    shown = [(c, h, k) for c, h, k in cols if k != "hidden" and c not in ("UPDATED_BY",)]
+    if e.list_type == "faceted-cards":
+        sub = next((c for c, _, _ in shown if c != title and c not in ("STATUS", "UPDATED_ON")), None)
+        body = next((c for c, _, _ in shown if c not in (title, sub, "STATUS", "UPDATED_ON")), None)
+        results = Comp("region", rid, ("name", "Hasil " + e.label_plural), ("type", "cards"),
+                       ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", sql)))),
+                       order_by,
+                       ("layout", G(("sequence", 20), ("slot", "body"))),
+                       ("appearance", G(("template", "@/cards-container"),
+                                        ("templateOptions", A(["#DEFAULT#", "t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc",
+                                                               "t-CardsRegion--styleC"])))),
+                       region_comments("Hasil pencarian %s yang sudah difilter facet." % e.label_plural, "Faceted search results (Cards).",
+                                       "Klik judul kartu untuk membuka form. Kolom kartu diambil dari columns di app.yaml."),
+                       ("messages", G(("whenNoDataFound", "Tidak ada data."))),
+                       ("title", G(("column", title))),
+                       ("subtitle", G(("column", sub))) if sub else None,
+                       ("body", G(("column", body))) if body else None,
+                       ("iconAndBadge", G(("iconSource", "iconClass"), ("iconCssClasses", "fa " + e.icon),
+                                          ("badgeColumn", "STATUS") if e.document else None,
+                                          ("badgeLabel", "Status") if e.document else None)),
+                       Comp("action", "open", ("type", "title"), ("layout", G(("sequence", 10))),
+                            ("behavior", G(("type", "redirectThisApp"), ("target", target)))))
+    else:
+        rtarget = O(("page", e.form_page), ("items", O(("P%d_%s" % (e.form_page, e.pk), "#%s#" % e.pk))), ("clearCache", e.form_page))
+        rcols = classic_cols(cols, title, rtarget)
+        n = len(cols)
+        for j, f in enumerate([f for f in facet_cols if f not in [c for c, _, _ in cols]], 1):
+            rcols.append(Comp("column", f, ("reportColumnQueryId", n + j), ("derivedColumn", "N"), ("type", "hidden"),
+                              ("layout", G(("sequence", (n + j) * 10)))))
+        results = Comp("region", rid, ("name", "Hasil " + e.label_plural), ("type", "classicReport"),
+                       ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", sql)))),
+                       order_by,
+                       ("layout", G(("sequence", 20), ("slot", "body"))),
+                       ("appearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Region--noUI"])))),
+                       region_comments("Hasil pencarian %s yang sudah difilter facet." % e.label_plural, "Faceted search results (Classic Report).",
+                                       "Klik kolom judul untuk membuka form. Kolom diambil dari columns di app.yaml."),
+                       ("componentAppearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Report--stretch"])))),
+                       ("pagination", G(("type", "rowRangesXToYOfZWithPagination"))),
+                       ("messages", G(("whenNoDataFound", "Tidak ada data."))),
+                       *rcols)
+    hero = Comp("region", "button-bar", ("name", e.label_plural), ("type", "staticContent"),
+                ("source", G(("htmlCode", '<span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>'))),
+                ("layout", G(("sequence", 10), ("slot", "breadcrumbBar"))),
+                ("appearance", G(("template", "@/hero"), ("templateOptions", A(["#DEFAULT#", "t-HeroRegion--hideIcon"])))),
+                region_comments("Judul halaman, jumlah hasil, dan tombol Create.", "Page header with primary action."))
+    search = Comp("region", "search", ("name", "Filter"), ("type", "facetedSearch"),
+                  ("source", G(("filteredRegion", "@" + rid))),
+                  ("layout", G(("sequence", 10), ("slot", "leftColumn"))),
+                  ("appearance", G(("template", "@/blank-with-attributes-no-grid"), ("templateOptions", "#DEFAULT#"))),
+                  region_comments("Mempersempit %s berdasarkan dimensi yang bermakna." % e.label_plural, "Facets (Faceted Search).",
+                                  "Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml."),
+                  ("settings", G(("showTotalRowCount", "selector"), ("totalRowCountSelector", "#total_row_count"))),
+                  *facet_comps(app, e, num))
+    comps = [hero, search, results]
+    if "add" in e.operations:
+        btn = [("buttonName", "CREATE"), ("label", "Create"),
+               ("layout", G(("sequence", 10), ("region", "@button-bar"), ("slot", "next"))),
+               ("appearance", G(("buttonTemplate", "@/text"), ("hot", True), ("templateOptions", "#DEFAULT#"))),
+               ("behavior", G(("action", "redirectThisApp"), ("target", O(("page", e.form_page), ("clearCache", e.form_page))),
+                              ("warnOnUnsavedChanges", "doNotCheck"))),
+               auth(e.auth)]
+        comps.append(Comp("button", "create", *btn))
+    comps.append(refresh_on_dialog_close(rid))
+    purpose, when_use, guidance, source = meta
+    guidance = ("Pola faceted search (%s): facet di kolom kiri, hasil di body, dari view %s_v (MVC). Hak akses list %s, create/edit %s."
+                % (e.list_type, e.table, e.view_auth, e.auth))
+    page = Comp("page", str(num), ("name", e.label_plural), ("alias", e.list_alias.upper()), ("title", e.label_plural),
+                ("pageGroup", "@" + e.group),
+                ("appearance", G(("pageTemplate", "@/left-side-column"), ("templateOptions", "#DEFAULT#"))),
+                auth(e.view_auth),
+                ("help", G(("helpText", e.help))) if e.help else None,
+                page_comments(purpose, when_use, guidance, source + " (list_type: %s)" % e.list_type),
+                *comps)
+    ctx.page(num, e.list_alias, page, e2e_title=e.label_plural)
+
+
+def classic_cols(cols, link_col=None, target=None):
+    """Kolom classic report: (nama, heading, kind). kind hidden | money | qty | number | ... | text."""
+    out = []
+    for i, (c, h, k) in enumerate(cols, 1):
+        m = [("reportColumnQueryId", i), ("derivedColumn", "N")]
+        if k == "hidden":
+            m += [("type", "hidden"), ("layout", G(("sequence", i * 10)))]
+        elif c == link_col:
+            m += [("type", "link"), ("heading", G(("heading", h))), ("layout", G(("sequence", i * 10))),
+                  ("link", G(("target", target), ("linkText", "#%s#" % c), ("linkAttributes", 'class="u-text-bold"')))]
+        else:
+            hd, lay = [("heading", h)], [("sequence", i * 10)]
+            if k in ("money", "qty", "number", "int", "pct"):
+                hd.append(("alignment", "end"))
+                lay.append(("columnAlignment", "end"))
+            m += [("type", "plainText"), ("heading", G(*hd)), ("layout", G(*lay))]
+            if k in ("money", "qty"):
+                m.append(("appearance", G(("formatMask", MONEY if k == "money" else QTY))))
+        out.append(Comp("column", c, *m))
+    return out
+
+
+def display_cols(app, e, skip=()):
+    """Kolom tampilan entitas (list: true), ref -> _DSP."""
+    cols = []
+    for c in e.columns:
+        if not c.list or c.name in skip:
+            continue
+        if c.type == "ref":
+            cols.append((c.name + "_DSP", c.label, "text"))
+        else:
+            cols.append((c.name, c.label, "text" if c.type == "textarea" else ir_kind(c)))
+    return cols
+
+
+def workspace_page(ctx, e):
+    """Master-detail: daftar induk (kiri, 4 kolom) + header & baris detail (kanan, 8 kolom).
+    Pola parent-child dari Oracle APEX blueprints / UX Pattern Catalog (item selection), tanpa JavaScript custom:
+    pilih induk = link ke halaman yang sama dengan P<page>_<PK>."""
+    app, w = ctx.app, e.workspace
+    num, d = w["page"], e.document
+    pk_item = "P%d_%s" % (num, e.pk)
+    title = title_column(e)
+    view = {a for _, a in gen_sql.entity_view_columns(app, e)}
+    # --- kiri: daftar induk
+    sub = next(((c, h) for c, h, _ in display_cols(app, e) if c != title), None)
+    lcols = [(e.pk, "ID", "hidden"), (title, e.label, "text")] + ([(sub[0], sub[1], "text")] if sub else []) + \
+            ([("STATUS", "Status", "text")] if d else [])
+    lsql = "select %s\n  from %s_v" % ("\n      ,".join(c.lower() for c, _, _ in lcols if c in view), e.table)
+    sort = title + (" DESC" if d else "")
+    self_target = O(("page", num), ("items", O((pk_item, "#%s#" % e.pk))))
+    comps = [breadcrumb_region(),
+             Comp("region", "list", ("name", "Daftar " + e.label_plural), ("type", "classicReport"),
+                  ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", lsql)))),
+                  ("orderBy", G(("type", "staticValue"), ("orderByClause", sort))),
+                  ("layout", G(("sequence", 10), ("slot", "body"), ("columnSpan", 4))),
+                  ("appearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Region--scrollBody"])))),
+                  region_comments("Memilih satu %s; pilihan disimpan di %s." % (e.label, pk_item), "Parent list (master).",
+                                  "Link judul me-reload halaman ini dengan %s. Jangan menambah JavaScript seleksi; pola ini sengaja deklaratif."
+                                  % pk_item),
+                  ("componentAppearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Report--stretch"])))),
+                  ("pagination", G(("type", "rowRangesXToYOfZWithPagination"))),
+                  ("messages", G(("whenNoDataFound", "Belum ada %s." % e.label))),
+                  *classic_cols(lcols, title, self_target)),
+             page_item(num, e.pk, e.pk, "hidden", "list", 5, dtype="number", form=False)]
+    # --- kanan: kosong / header + detail
+    sel_null = ("serverSideCondition", G(("type", "itemIsNull"), ("item", pk_item)))
+    sel_set = ("serverSideCondition", G(("type", "itemIsNotNull"), ("item", pk_item)))
+    comps.append(Comp("region", "no-selection", ("name", "Belum dipilih"), ("type", "staticContent"),
+                      ("source", G(("htmlCode", '<p class="u-text-muted-color">Pilih %s di daftar kiri untuk melihat detailnya.</p>' % e.label))),
+                      ("layout", G(("sequence", 20), ("slot", "body"), ("startNewRow", False), ("columnSpan", 8))),
+                      ("appearance", G(("template", "@/standard"), ("templateOptions", "#DEFAULT#"))),
+                      region_comments("Empty state saat belum ada %s dipilih." % e.label, "Empty state."), sel_null))
+    comps.append(Comp("region", "detail", ("name", e.label), ("type", "staticContent"),
+                      ("layout", G(("sequence", 30), ("slot", "body"), ("startNewRow", False), ("columnSpan", 8))),
+                      ("appearance", G(("template", "@/blank-with-attributes"), ("templateOptions", "#DEFAULT#"))),
+                      region_comments("Wadah header dan baris detail untuk %s terpilih." % e.label, "Detail container (child)."),
+                      sel_set))
+    hcols = [(e.pk, "ID", "hidden")] + ([(d.number, "No. " + d.name, "text")] if d else []) + \
+            display_cols(app, e) + ([("STATUS", "Status", "text")] if d else [])
+    hsql = "select %s\n  from %s_v\n where %s = to_number(:%s)" % (
+        "\n      ,".join(c.lower() for c, _, _ in hcols if c in view), e.table, e.pk.lower(), pk_item)
+    comps.append(Comp("region", "header", ("name", e.label), ("type", "classicReport"),
+                      ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", hsql)),
+                                   ("pageItemsToSubmit", pk_item))),
+                      ("layout", G(("sequence", 10), ("parentRegion", "@detail"), ("slot", "subRegions"))),
+                      ("appearance", G(("template", "@/standard"), ("templateOptions", "#DEFAULT#"))),
+                      region_comments("Ringkasan %s terpilih." % e.label, "Parent context (Contextual Info).",
+                                      "Ubah data lewat tombol Edit (form %d), bukan di region ini." % e.form_page),
+                      ("componentAppearance", G(("template", "@/contextual-info"),
+                                                ("templateOptions", A(["#DEFAULT#", "t-ContextualInfo--hideNulls",
+                                                                       "t-ContextualInfo-label--stacked", "t-Report--hideNoPagination"])))),
+                      ("pagination", G(("type", "showAll"))),
+                      *classic_cols(hcols)))
+    comps.append(Comp("button", "edit-header", ("buttonName", "EDIT_HEADER"), ("label", "Edit"),
+                      ("layout", G(("sequence", 10), ("region", "@header"), ("slot", "edit"))),
+                      ("appearance", G(("buttonTemplate", "@/text"), ("templateOptions", "#DEFAULT#"))),
+                      ("behavior", G(("action", "redirectThisApp"),
+                                     ("target", O(("page", e.form_page), ("items", O(("P%d_%s" % (e.form_page, e.pk), "&%s." % pk_item))),
+                                                  ("clearCache", e.form_page))),
+                                     ("warnOnUnsavedChanges", "doNotCheck"))),
+                      auth(e.auth)))
+    comps.append(Comp("dynamicAction", "on-dialog-closed-header", ("name", "ON_DIALOG_CLOSED_REFRESH_HEADER"),
+                      ("execution", G(("sequence", 10))),
+                      ("when", G(("event", "apexafterclosedialog"), ("selectionType", "button"), ("button", "@edit-header"))),
+                      Comp("action", "native-refresh", ("action", "refresh"),
+                           ("affectedElements", G(("selectionType", "region"), ("region", "@header"))),
+                           ("execution", G(("sequence", 10), ("fireOnInit", False))))))
+    # --- baris detail per entitas anak
+    for i, ch in enumerate(app.children(e), 1):
+        rid, pcol = "child-%s" % kebab(ch.name), ch.parent["column"]
+        cview = {a for _, a in gen_sql.entity_view_columns(app, ch)}
+        ccols = [(ch.pk, "ID", "hidden")] + display_cols(app, ch, skip=(pcol,))
+        csql = "select %s\n  from %s_v\n where %s = to_number(:%s)" % (
+            "\n      ,".join(c.lower() for c, _, _ in ccols if c in cview), ch.table, pcol.lower(), pk_item)
+        link_col = next((c for c, _, k in ccols if k != "hidden"), None)
+        ctarget = O(("page", ch.form_page), ("items", O(("P%d_%s" % (ch.form_page, ch.pk), "#%s#" % ch.pk))),
+                    ("clearCache", ch.form_page))
+        comps.append(Comp("region", rid, ("name", ch.label_plural), ("type", "classicReport"),
+                          ("source", G(("location", "localDatabase"), ("type", "sqlQuery"), ("sqlQuery", ML("sql", csql)),
+                                       ("pageItemsToSubmit", pk_item))),
+                          ("orderBy", G(("type", "staticValue"), ("orderByClause", ch.pk))),
+                          ("layout", G(("sequence", 10 + i * 10), ("parentRegion", "@detail"), ("slot", "subRegions"))),
+                          ("appearance", G(("template", "@/standard"), ("templateOptions", "#DEFAULT#"))),
+                          region_comments("%s milik %s terpilih." % (ch.label_plural, e.label),
+                                          "Child records (%s.%s = %s)." % (ch.name, pcol, pk_item),
+                                          "Kunci baris detail ditegakkan trigger %s_trg (lock_unless: %s); tombol Create hanya penanda UI."
+                                          % (ch.table, ", ".join(ch.parent["lock_unless"]))),
+                          ("componentAppearance", G(("template", "@/standard"), ("templateOptions", A(["#DEFAULT#", "t-Report--stretch"])))),
+                          ("pagination", G(("type", "showAll"))),
+                          ("messages", G(("whenNoDataFound", "Belum ada %s." % ch.label_plural))),
+                          *classic_cols(ccols, link_col, ctarget)))
+        if "add" in ch.operations:
+            cond = None
+            if d:
+                cond = ("serverSideCondition", G(("type", "rowsReturned"), ("sqlQuery", ML("sql",
+                        "select 1\n  from %s\n where %s = to_number(:%s)\n   and status in (%s)"
+                        % (e.table, e.pk.lower(), pk_item, ", ".join("'%s'" % s for s in ch.parent["lock_unless"]))))))
+            comps.append(Comp("button", "create-" + kebab(ch.name), ("buttonName", "CREATE_" + ch.name), ("label", "Tambah"),
+                              ("layout", G(("sequence", 10), ("region", "@" + rid), ("slot", "edit"))),
+                              ("appearance", G(("buttonTemplate", "@/text"), ("hot", True), ("templateOptions", "#DEFAULT#"))),
+                              ("behavior", G(("action", "redirectThisApp"),
+                                             ("target", O(("page", ch.form_page), ("items", O(("P%d_%s" % (ch.form_page, pcol), "&%s." % pk_item))),
+                                                          ("clearCache", ch.form_page))),
+                                             ("warnOnUnsavedChanges", "doNotCheck"))),
+                              auth(ch.auth), cond))
+            comps.append(Comp("dynamicAction", "on-dialog-closed-create-" + kebab(ch.name),
+                              ("name", "ON_DIALOG_CLOSED_REFRESH_" + ch.name), ("execution", G(("sequence", 20 + i * 10))),
+                              ("when", G(("event", "apexafterclosedialog"), ("selectionType", "button"), ("button", "@create-" + kebab(ch.name)))),
+                              Comp("action", "native-refresh", ("action", "refresh"),
+                                   ("affectedElements", G(("selectionType", "region"), ("region", "@" + rid))),
+                                   ("execution", G(("sequence", 10), ("fireOnInit", False))))))
+        comps.append(Comp("dynamicAction", "on-dialog-closed-" + kebab(ch.name), ("name", "ON_DIALOG_CLOSED_" + ch.name),
+                          ("execution", G(("sequence", 25 + i * 10))),
+                          ("when", G(("event", "apexafterclosedialog"), ("selectionType", "region"), ("region", "@" + rid))),
+                          Comp("action", "native-refresh", ("action", "refresh"),
+                               ("affectedElements", G(("selectionType", "region"), ("region", "@" + rid))),
+                               ("execution", G(("sequence", 10), ("fireOnInit", False))))))
+    kids = ", ".join(c.label_plural for c in app.children(e))
+    meta = ("Master-detail %s dengan %s dalam satu halaman." % (e.label_plural, kids),
+            "Meninjau %s satu per satu sambil melihat dan mengubah %s-nya, tanpa pindah halaman." % (e.label_plural, kids),
+            "Pola parent-child: daftar induk 4 kolom (kiri), header (Contextual Info) dan detail 8 kolom (kanan), difilter %s. "
+            "Edit header membuka form %d; tambah/edit detail membuka form detail. Aturan kunci ada di trigger, bukan di halaman."
+            % (pk_item, e.form_page),
+            "Generated dari app.yaml entities.%s.workspace." % e.name)
+    page = Comp("page", str(num), ("name", w["label"]), ("alias", w["alias"].upper()), ("title", w["label"]),
+                ("pageGroup", "@" + e.group),
+                ("appearance", G(("pageTemplate", "@/standard"), ("templateOptions", "#DEFAULT#"))),
+                auth(e.view_auth), page_comments(*meta), *comps)
+    ctx.page(num, w["alias"], page, e2e_title=w["label"])
 
 
 def entity_form_page(ctx, e):
@@ -713,6 +1017,8 @@ def nav_entries(app):
         nav.append(("approval-inbox", "Approval Inbox", "fa-check-square-o", 190, None, None))
     for g, gv in app.groups.items():
         children = [(e.list_alias, e.label_plural, e.icon, e.list_page) for e in app.entities if e.group == g and e.nav]
+        children += [(e.workspace["alias"], e.workspace["label"], e.workspace["icon"], e.workspace["page"])
+                     for e in app.entities if e.group == g and e.workspace]
         children += [(r.alias, r.title, r.icon, r.page) for r in app.reports if r.group == g]
         children.sort(key=lambda x: x[3])
         if not children:
@@ -804,6 +1110,8 @@ def generate(app):
     for e in app.entities:
         entity_list_page(ctx, e)
         entity_form_page(ctx, e)
+        if e.workspace:
+            workspace_page(ctx, e)
     for r in app.reports:
         report_page(ctx, r)
     admin_pages(ctx)

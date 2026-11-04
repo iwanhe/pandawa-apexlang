@@ -16,6 +16,7 @@ COLUMN_TYPES = {"text", "code", "textarea", "number", "int", "money", "qty", "pc
 
 
 FORM_STYLES = ("modal", "drawer")
+LIST_TYPES = ("ir", "faceted-cards", "faceted-report")
 ICON_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "apex-fa-icons-allowlist.txt")
 _icons = None
 
@@ -82,6 +83,8 @@ class Column:
         self.on_delete = raw.get("on_delete")              # cascade | None (for ref)
         self.min = raw.get("min")
         self.max = raw.get("max")
+        # facet di halaman faceted search (default: enum, yn, ref)
+        self.facet = bool(raw.get("facet", self.type in ("enum", "yn", "ref")))
         if self.virtual:
             self.form = "display" if self.form == "edit" else self.form
             self.required = False
@@ -184,6 +187,21 @@ class Entity:
         self.form_style = raw.get("form_style", "modal" if self.document else "drawer")
         if self.form_style not in FORM_STYLES:
             _err("%s: form_style harus %s" % (self.name, " | ".join(FORM_STYLES)))
+        # ir: Interactive Report; faceted-*: faceted search (UX Pattern Catalog p210/p220)
+        self.list_type = raw.get("list_type", "ir")
+        if self.list_type not in LIST_TYPES:
+            _err("%s: list_type harus %s" % (self.name, " | ".join(LIST_TYPES)))
+        # workspace: halaman master-detail (daftar induk kiri, header + detail kanan)
+        w = raw.get("workspace")
+        self.workspace = None
+        if w:
+            w = {"page": w} if isinstance(w, int) else dict(w)
+            if not w.get("page"):
+                _err("%s.workspace: page wajib" % self.name)
+            self.workspace = {"page": int(w["page"]),
+                              "label": w.get("label", "Detail " + self.label_plural),
+                              "alias": w.get("alias", kebab(self.label_plural) + "-detail"),
+                              "icon": w.get("icon", "fa-columns")}
         if not self.display:
             first = next((c for c in self.columns if c.type in ("code", "text")), None)
             self.display = first.name.lower() if first else self.pk.lower()
@@ -268,6 +286,9 @@ class App:
                 return e
         _err("unknown entity %s" % name)
 
+    def children(self, e):
+        return [c for c in self.entities if c.parent and c.parent["entity"] == e.name]
+
     @property
     def documents(self):
         return [e for e in self.entities if e.document]
@@ -306,6 +327,12 @@ class App:
             for c in e.columns:
                 if c.type == "ref":
                     self.entity(c.ref)
+            if e.workspace:
+                take(e.workspace["page"], e.name + " workspace")
+                take_alias(e.workspace["alias"], e.name + " workspace")
+                check_icon(e.workspace["icon"], e.name + ".workspace")
+                if not self.children(e):
+                    _err("%s.workspace: tidak ada entitas dengan parent: {entity: %s}" % (e.name, e.name))
             if e.parent:
                 self.entity(e.parent["entity"])
                 if not e.col(e.parent["column"]):

@@ -1,0 +1,644 @@
+page 302 (
+    name: Detail Permintaan
+    alias: PERMINTAAN-BARANG-DETAIL
+    title: Detail Permintaan
+    pageGroup: @transaksi
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    security {
+        authorizationScheme: @app-users
+    }
+    comments {
+        comments:
+            ```
+            ## Purpose
+            
+            Master-detail Permintaan Barang dengan Baris Permintaan dalam satu halaman.
+            
+            ## When to Use
+            
+            Meninjau Permintaan Barang satu per satu sambil melihat dan mengubah Baris Permintaan-nya, tanpa pindah halaman.
+            
+            ## AI Guidance
+            
+            Pola parent-child: daftar induk 4 kolom (kiri), header (Contextual Info) dan detail 8 kolom (kanan), difilter P302_REQUEST_ID. Edit header membuka form 301; tambah/edit detail membuka form detail. Aturan kunci ada di trigger, bukan di halaman.
+            
+            ## Source
+            
+            Generated dari app.yaml entities.REQUESTS.workspace. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            ```
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region list (
+        name: Daftar Permintaan Barang
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select request_id
+                      ,request_no
+                      ,department_id_dsp
+                      ,status
+                  from apx_demo_requests_v
+                ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: REQUEST_NO DESC
+        }
+        layout {
+            sequence: 10
+            slot: body
+            columnSpan: 4
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        comments {
+            comments:
+                ```
+                Intent: Memilih satu Permintaan Barang; pilihan disimpan di P302_REQUEST_ID.
+                Pattern role: Parent list (master).
+                AI guidance: Link judul me-reload halaman ini dengan P302_REQUEST_ID. Jangan menambah JavaScript seleksi; pola ini sengaja deklaratif.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: rowRangesXToYOfZWithPagination
+        }
+        messages {
+            whenNoDataFound: Belum ada Permintaan Barang.
+        }
+
+        column REQUEST_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column REQUEST_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Permintaan Barang
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 302
+                    items: {
+                        P302_REQUEST_ID: #REQUEST_ID#
+                    }
+                }
+                linkText: #REQUEST_NO#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column DEPARTMENT_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Department
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+    )
+
+    pageItem P302_REQUEST_ID (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @list
+            slot: regionBody
+        }
+    )
+
+    region no-selection (
+        name: Belum dipilih
+        type: staticContent
+        source {
+            htmlCode: <p class="u-text-muted-color">Pilih Permintaan Barang di daftar kiri untuk melihat detailnya.</p>
+        }
+        layout {
+            sequence: 20
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Empty state saat belum ada Permintaan Barang dipilih.
+                Pattern role: Empty state.
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P302_REQUEST_ID
+        }
+    )
+
+    region detail (
+        name: Permintaan Barang
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+            startNewRow: false
+            columnSpan: 8
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Wadah header dan baris detail untuk Permintaan Barang terpilih.
+                Pattern role: Detail container (child).
+                ```
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P302_REQUEST_ID
+        }
+    )
+
+    region header (
+        name: Permintaan Barang
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select request_id
+                      ,request_no
+                      ,department_id_dsp
+                      ,request_date
+                      ,need_date
+                      ,purpose
+                      ,status
+                  from apx_demo_requests_v
+                 where request_id = to_number(:P302_REQUEST_ID)
+                ```
+            pageItemsToSubmit: P302_REQUEST_ID
+        }
+        layout {
+            sequence: 10
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Ringkasan Permintaan Barang terpilih.
+                Pattern role: Parent context (Contextual Info).
+                AI guidance: Ubah data lewat tombol Edit (form 301), bukan di region ini.
+                ```
+        }
+        componentAppearance {
+            template: @/contextual-info
+            templateOptions: [
+                #DEFAULT#
+                t-ContextualInfo--hideNulls
+                t-ContextualInfo-label--stacked
+                t-Report--hideNoPagination
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+
+        column REQUEST_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column REQUEST_NO (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: No. Permintaan Barang
+            }
+            layout {
+                sequence: 20
+            }
+        )
+
+        column DEPARTMENT_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Department
+            }
+            layout {
+                sequence: 30
+            }
+        )
+
+        column REQUEST_DATE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Tanggal
+            }
+            layout {
+                sequence: 40
+            }
+        )
+
+        column NEED_DATE (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Dibutuhkan Tanggal
+            }
+            layout {
+                sequence: 50
+            }
+        )
+
+        column PURPOSE (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Keperluan
+            }
+            layout {
+                sequence: 60
+            }
+        )
+
+        column STATUS (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 70
+            }
+        )
+
+    )
+
+    button edit-header (
+        buttonName: EDIT_HEADER
+        label: Edit
+        layout {
+            sequence: 10
+            region: @header
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 301
+                items: {
+                    P301_REQUEST_ID: &P302_REQUEST_ID.
+                }
+                clearCache: 301
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @requester
+        }
+    )
+
+    dynamicAction on-dialog-closed-header (
+        name: ON_DIALOG_CLOSED_REFRESH_HEADER
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @edit-header
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @header
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    region child-request-lines (
+        name: Baris Permintaan
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select line_id
+                      ,item_id_dsp
+                      ,qty
+                      ,unit_price
+                      ,line_amount
+                  from apx_demo_request_lines_v
+                 where request_id = to_number(:P302_REQUEST_ID)
+                ```
+            pageItemsToSubmit: P302_REQUEST_ID
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: LINE_ID
+        }
+        layout {
+            sequence: 20
+            parentRegion: @detail
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Baris Permintaan milik Permintaan Barang terpilih.
+                Pattern role: Child records (REQUEST_LINES.REQUEST_ID = P302_REQUEST_ID).
+                AI guidance: Kunci baris detail ditegakkan trigger apx_demo_request_lines_trg (lock_unless: DRAFT, REJECTED); tombol Create hanya penanda UI.
+                ```
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
+        }
+        pagination {
+            type: showAll
+        }
+        messages {
+            whenNoDataFound: Belum ada Baris Permintaan.
+        }
+
+        column LINE_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            type: hidden
+            layout {
+                sequence: 10
+            }
+        )
+
+        column ITEM_ID_DSP (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
+            heading {
+                heading: Item
+            }
+            layout {
+                sequence: 20
+            }
+            link {
+                target: {
+                    page: 311
+                    items: {
+                        P311_LINE_ID: #LINE_ID#
+                    }
+                    clearCache: 311
+                }
+                linkText: #ITEM_ID_DSP#
+                linkAttributes: class="u-text-bold"
+            }
+        )
+
+        column QTY (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Qty
+                alignment: end
+            }
+            layout {
+                sequence: 30
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G990D99
+            }
+        )
+
+        column UNIT_PRICE (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Harga Satuan
+                alignment: end
+            }
+            layout {
+                sequence: 40
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+        column LINE_AMOUNT (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            type: plainText
+            heading {
+                heading: Jumlah
+                alignment: end
+            }
+            layout {
+                sequence: 50
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: 999G999G999G999G990
+            }
+        )
+
+    )
+
+    button create-request-lines (
+        buttonName: CREATE_REQUEST_LINES
+        label: Tambah
+        layout {
+            sequence: 10
+            region: @child-request-lines
+            slot: edit
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 311
+                items: {
+                    P311_REQUEST_ID: &P302_REQUEST_ID.
+                }
+                clearCache: 311
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+        security {
+            authorizationScheme: @requester
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery:
+                ```sql
+                select 1
+                  from apx_demo_requests
+                 where request_id = to_number(:P302_REQUEST_ID)
+                   and status in ('DRAFT', 'REJECTED')
+                ```
+        }
+    )
+
+    dynamicAction on-dialog-closed-create-request-lines (
+        name: ON_DIALOG_CLOSED_REFRESH_REQUEST_LINES
+        execution {
+            sequence: 30
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: button
+            button: @create-request-lines
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-request-lines
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction on-dialog-closed-request-lines (
+        name: ON_DIALOG_CLOSED_REQUEST_LINES
+        execution {
+            sequence: 35
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @child-request-lines
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @child-request-lines
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+)
