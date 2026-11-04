@@ -38,10 +38,14 @@ export async function login(page: Page, url = env('APEX_APP_URL')) {
   if (await user.isVisible().catch(() => false)) {
     await user.fill(env('APEX_USERNAME'));
     await page.locator('#P9999_PASSWORD').fill(env('APEX_PASSWORD'));
+    // Tunggu sampai benar-benar pindah dari halaman login. waitForLoadState('load') saja
+    // langsung selesai karena halaman login sudah 'load'; bila oracleapex.com lambat
+    // membuka Home, assert berikutnya gagal padahal login sukses.
     await Promise.all([
-      page.waitForLoadState('load'),
+      page.waitForURL((u) => !/(\/login\b|:9999:)/i.test(u.toString()), { timeout: 60_000 }),
       page.getByRole('button', { name: /sign in/i }).click(),
     ]);
+    await page.waitForLoadState('load');
   }
   await expect(page.locator('#P9999_USERNAME'), 'Login gagal: masih di halaman login').toHaveCount(0);
   await expect(page.locator('.t-Body')).toBeVisible();
