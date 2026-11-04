@@ -249,13 +249,29 @@ list navigation-menu (
         }
     )
 
+    entry projects-detail (
+        label: Detail Project
+        icon {
+            imageIconCssClasses: fa-columns
+        }
+        layout {
+            sequence: 130
+            parentEntry: @grp-engineering
+        }
+        link {
+            target: {
+                page: 312
+            }
+        }
+    )
+
     entry wbs-budget (
         label: WBS Budget
         icon {
             imageIconCssClasses: fa-sitemap
         }
         layout {
-            sequence: 130
+            sequence: 140
             parentEntry: @grp-engineering
         }
         link {
@@ -271,7 +287,7 @@ list navigation-menu (
             imageIconCssClasses: fa-shopping-cart
         }
         layout {
-            sequence: 140
+            sequence: 150
         }
         link {
             target: {
@@ -286,12 +302,28 @@ list navigation-menu (
             imageIconCssClasses: fa-file-o
         }
         layout {
-            sequence: 150
+            sequence: 160
             parentEntry: @grp-procurement
         }
         link {
             target: {
                 page: 330
+            }
+        }
+    )
+
+    entry purchase-requisitions-detail (
+        label: Detail PR
+        icon {
+            imageIconCssClasses: fa-columns
+        }
+        layout {
+            sequence: 170
+            parentEntry: @grp-procurement
+        }
+        link {
+            target: {
+                page: 332
             }
         }
     )
@@ -302,7 +334,7 @@ list navigation-menu (
             imageIconCssClasses: fa-list
         }
         layout {
-            sequence: 160
+            sequence: 180
             parentEntry: @grp-procurement
         }
         link {
@@ -318,7 +350,7 @@ list navigation-menu (
             imageIconCssClasses: fa-cubes
         }
         layout {
-            sequence: 170
+            sequence: 190
         }
         link {
             target: {
@@ -333,7 +365,7 @@ list navigation-menu (
             imageIconCssClasses: fa-exchange
         }
         layout {
-            sequence: 180
+            sequence: 200
             parentEntry: @grp-inventory
         }
         link {
@@ -349,7 +381,7 @@ list navigation-menu (
             imageIconCssClasses: fa-database
         }
         layout {
-            sequence: 190
+            sequence: 210
             parentEntry: @grp-inventory
         }
         link {
@@ -365,7 +397,7 @@ list navigation-menu (
             imageIconCssClasses: fa-bar-chart
         }
         layout {
-            sequence: 200
+            sequence: 220
         }
         link {
             target: {
@@ -380,7 +412,7 @@ list navigation-menu (
             imageIconCssClasses: fa-bar-chart
         }
         layout {
-            sequence: 210
+            sequence: 230
             parentEntry: @grp-reports
         }
         link {
@@ -396,7 +428,7 @@ list navigation-menu (
             imageIconCssClasses: fa-bar-chart
         }
         layout {
-            sequence: 220
+            sequence: 240
             parentEntry: @grp-reports
         }
         link {
@@ -412,7 +444,7 @@ list navigation-menu (
             imageIconCssClasses: fa-bar-chart
         }
         layout {
-            sequence: 230
+            sequence: 250
             parentEntry: @grp-reports
         }
         link {
@@ -428,7 +460,7 @@ list navigation-menu (
             imageIconCssClasses: fa-gear
         }
         layout {
-            sequence: 240
+            sequence: 260
         }
         link {
             target: {
@@ -446,7 +478,7 @@ list navigation-menu (
             imageIconCssClasses: fa-user-secret
         }
         layout {
-            sequence: 250
+            sequence: 270
             parentEntry: @grp-administration
         }
         link {
@@ -465,7 +497,7 @@ list navigation-menu (
             imageIconCssClasses: fa-sliders
         }
         layout {
-            sequence: 260
+            sequence: 280
             parentEntry: @grp-administration
         }
         link {

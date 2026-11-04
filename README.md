@@ -12,7 +12,7 @@ Spesifikasi aplikasi ditulis sekali di [`app.yaml`](app.yaml). Generator membuat
 
 - tabel, constraint, trigger, dan view;
 - **core module**: security/role, penomoran dokumen, approval engine 2 level dengan maker-checker;
-- aplikasi APEXlang: home/dashboard, list + form, approval inbox, admin;
+- aplikasi APEXlang: home/dashboard (metric card), list (Interactive Report atau faceted search), form (drawer/modal), halaman master-detail, approval inbox, admin. Pola UI mengikuti Oracle APEX UX Pattern Catalog dan setiap halaman membawa metadata AI di `comments`;
 - script user;
 - konfigurasi E2E.
 

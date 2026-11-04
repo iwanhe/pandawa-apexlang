@@ -4,7 +4,7 @@ page 210 (
     title: Items
     pageGroup: @master-data
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -23,280 +23,197 @@ page 210 (
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_demo_items_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit master-data.
+            Pola faceted search (faceted-cards): facet di kolom kiri, hasil di body, dari view apx_demo_items_v (MVC). Hak akses list app-users, create/edit master-data.
             
             ## Source
             
-            Generated dari app.yaml entities.ITEMS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.ITEMS. (list_type: faceted-cards) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Items
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region items (
-        name: Items
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Items berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P210_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P210_CATEGORY (
+            type: checkboxGroup
+            label {
+                label: Kategori
+            }
+            lov {
+                type: sharedComponent
+                lov: @items-category
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: CATEGORY
+            }
+        )
+
+        facet P210_ACTIVE_YN (
+            type: checkboxGroup
+            label {
+                label: Aktif
+            }
+            lov {
+                type: sharedComponent
+                lov: @yes-no
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: ACTIVE_YN
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Items
+        type: cards
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select item_id, item_code, item_name, category, uom, std_price, active_yn, updated_by, updated_on
+                select item_id
+                      ,item_code
+                      ,item_name
+                      ,category
+                      ,uom
+                      ,std_price
+                      ,active_yn
+                      ,updated_by
+                      ,updated_on
                   from apx_demo_items_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: ITEM_CODE
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/cards-container
+            templateOptions: [
+                #DEFAULT#
+                t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc
+                t-CardsRegion--styleC
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Items yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Items yang sudah difilter facet.
+                Pattern role: Faceted search results (Cards).
+                AI guidance: Klik judul kartu untuk membuka form. Kolom kartu diambil dari columns di app.yaml.
                 ```
-        }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 211
-                items: {
-                    P211_ITEM_ID: \#ITEM_ID#\
-                }
-                clearCache: 211
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
-        }
-        pagination {
-            type: rowRangesXToY
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
+        title {
+            column: ITEM_CODE
+        }
+        subtitle {
+            column: ITEM_NAME
+        }
+        body {
+            column: CATEGORY
+        }
+        iconAndBadge {
+            iconSource: iconClass
+            iconCssClasses: fa fa-tag
         }
 
-        column ITEM_ID (
-            type: hidden
-            heading {
-                heading: ID
-            }
+        action open (
+            type: title
             layout {
-                sequence: 1
+                sequence: 10
             }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
-            }
-        )
-
-        column ITEM_CODE (
-            type: plainText
-            heading {
-                heading: Kode Item
-            }
-            layout {
-                sequence: 2
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
-            }
-        )
-
-        column ITEM_NAME (
-            type: plainText
-            heading {
-                heading: Nama Item
-            }
-            layout {
-                sequence: 3
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: C
-            }
-        )
-
-        column CATEGORY (
-            type: plainText
-            heading {
-                heading: Kategori
-            }
-            layout {
-                sequence: 4
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: D
-            }
-        )
-
-        column UOM (
-            type: plainText
-            heading {
-                heading: Satuan
-            }
-            layout {
-                sequence: 5
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: E
-            }
-        )
-
-        column STD_PRICE (
-            type: plainText
-            heading {
-                heading: Harga Standar
-                alignment: end
-            }
-            layout {
-                sequence: 6
-                columnAlignment: end
-            }
-            appearance {
-                formatMask: 999G999G999G999G990
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: F
-            }
-        )
-
-        column ACTIVE_YN (
-            type: plainText
-            heading {
-                heading: Aktif
-            }
-            layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
-            }
-        )
-
-        column UPDATED_BY (
-            type: plainText
-            heading {
-                heading: Diubah Oleh
-            }
-            layout {
-                sequence: 8
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: H
-            }
-        )
-
-        column UPDATED_ON (
-            type: plainText
-            heading {
-                heading: Diubah
-            }
-            layout {
-                sequence: 9
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: I
-            }
-        )
-
-        savedReport 210001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn ITEM_CODE (
-                sequence: 1
-            )
-
-            displayColumn ITEM_NAME (
-                sequence: 2
-            )
-
-            displayColumn CATEGORY (
-                sequence: 3
-            )
-
-            displayColumn UOM (
-                sequence: 4
-            )
-
-            displayColumn STD_PRICE (
-                sequence: 5
-            )
-
-            displayColumn ACTIVE_YN (
-                sequence: 6
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 7
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 8
-            )
-
-            sort (
-                column: ITEM_CODE
-                sort {
-                    sequence: 1
+            behavior {
+                type: redirectThisApp
+                target: {
+                    page: 211
+                    items: {
+                        P211_ITEM_ID: &ITEM_ID.
+                    }
+                    clearCache: 211
                 }
-            )
-
+            }
         )
 
     )
@@ -306,8 +223,8 @@ page 210 (
         label: Create
         layout {
             sequence: 10
-            region: @items
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -335,14 +252,14 @@ page 210 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @items
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @items
+                region: @results
             }
             execution {
                 sequence: 10

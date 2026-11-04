@@ -4,7 +4,7 @@ page 220 (
     title: Vendors
     pageGroup: @master-data
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -23,317 +23,320 @@ page 220 (
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_mbms_vendors_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit master-data.
+            Pola faceted search (faceted-report): facet di kolom kiri, hasil di body, dari view apx_mbms_vendors_v (MVC). Hak akses list app-users, create/edit master-data.
             
             ## Source
             
-            Generated dari app.yaml entities.VENDORS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.VENDORS. (list_type: faceted-report) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Vendors
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region vendors (
-        name: Vendors
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Vendors berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P220_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P220_VENDOR_TYPE (
+            type: checkboxGroup
+            label {
+                label: Tipe
+            }
+            lov {
+                type: sharedComponent
+                lov: @vendors-vendor-type
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: VENDOR_TYPE
+            }
+        )
+
+        facet P220_ACTIVE_YN (
+            type: checkboxGroup
+            label {
+                label: Aktif
+            }
+            lov {
+                type: sharedComponent
+                lov: @yes-no
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: ACTIVE_YN
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Vendors
+        type: classicReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select vendor_id, vendor_code, vendor_name, vendor_type, npwp, city, phone, payment_term_days, active_yn, updated_by, updated_on
+                select vendor_id
+                      ,vendor_code
+                      ,vendor_name
+                      ,vendor_type
+                      ,npwp
+                      ,city
+                      ,phone
+                      ,payment_term_days
+                      ,active_yn
+                      ,updated_by
+                      ,updated_on
                   from apx_mbms_vendors_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: VENDOR_CODE
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Vendors yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Vendors yang sudah difilter facet.
+                Pattern role: Faceted search results (Classic Report).
+                AI guidance: Klik kolom judul untuk membuka form. Kolom diambil dari columns di app.yaml.
                 ```
         }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 221
-                items: {
-                    P221_VENDOR_ID: \#VENDOR_ID#\
-                }
-                clearCache: 221
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
         }
         pagination {
-            type: rowRangesXToY
+            type: rowRangesXToYOfZWithPagination
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
-        }
 
         column VENDOR_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
             type: hidden
-            heading {
-                heading: ID
-            }
             layout {
-                sequence: 1
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
+                sequence: 10
             }
         )
 
         column VENDOR_CODE (
-            type: plainText
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
             heading {
                 heading: Kode
             }
             layout {
-                sequence: 2
+                sequence: 20
             }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
+            link {
+                target: {
+                    page: 221
+                    items: {
+                        P221_VENDOR_ID: #VENDOR_ID#
+                    }
+                    clearCache: 221
+                }
+                linkText: #VENDOR_CODE#
+                linkAttributes: class="u-text-bold"
             }
         )
 
         column VENDOR_NAME (
+            reportColumnQueryId: 3
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Nama Vendor
             }
             layout {
-                sequence: 3
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: C
+                sequence: 30
             }
         )
 
         column VENDOR_TYPE (
+            reportColumnQueryId: 4
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tipe
             }
             layout {
-                sequence: 4
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: D
+                sequence: 40
             }
         )
 
         column NPWP (
+            reportColumnQueryId: 5
+            derivedColumn: N
             type: plainText
             heading {
                 heading: NPWP
             }
             layout {
-                sequence: 5
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: E
+                sequence: 50
             }
         )
 
         column CITY (
+            reportColumnQueryId: 6
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Kota
             }
             layout {
-                sequence: 6
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: F
+                sequence: 60
             }
         )
 
         column PHONE (
+            reportColumnQueryId: 7
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Telepon
             }
             layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
+                sequence: 70
             }
         )
 
         column PAYMENT_TERM_DAYS (
+            reportColumnQueryId: 8
+            derivedColumn: N
             type: plainText
             heading {
                 heading: TOP (hari)
                 alignment: end
             }
             layout {
-                sequence: 8
+                sequence: 80
                 columnAlignment: end
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: H
             }
         )
 
         column ACTIVE_YN (
+            reportColumnQueryId: 9
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Aktif
             }
             layout {
-                sequence: 9
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: I
+                sequence: 90
             }
         )
 
         column UPDATED_BY (
+            reportColumnQueryId: 10
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah Oleh
             }
             layout {
-                sequence: 10
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: J
+                sequence: 100
             }
         )
 
         column UPDATED_ON (
+            reportColumnQueryId: 11
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah
             }
             layout {
-                sequence: 11
+                sequence: 110
             }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: K
-            }
-        )
-
-        savedReport 220001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn VENDOR_CODE (
-                sequence: 1
-            )
-
-            displayColumn VENDOR_NAME (
-                sequence: 2
-            )
-
-            displayColumn VENDOR_TYPE (
-                sequence: 3
-            )
-
-            displayColumn NPWP (
-                sequence: 4
-            )
-
-            displayColumn CITY (
-                sequence: 5
-            )
-
-            displayColumn PHONE (
-                sequence: 6
-            )
-
-            displayColumn PAYMENT_TERM_DAYS (
-                sequence: 7
-            )
-
-            displayColumn ACTIVE_YN (
-                sequence: 8
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 9
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 10
-            )
-
-            sort (
-                column: VENDOR_CODE
-                sort {
-                    sequence: 1
-                }
-            )
-
         )
 
     )
@@ -343,8 +346,8 @@ page 220 (
         label: Create
         layout {
             sequence: 10
-            region: @vendors
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -372,14 +375,14 @@ page 220 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @vendors
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @vendors
+                region: @results
             }
             execution {
                 sequence: 10

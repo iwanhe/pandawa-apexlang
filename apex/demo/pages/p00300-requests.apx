@@ -4,7 +4,7 @@ page 300 (
     title: Permintaan Barang
     pageGroup: @transaksi
     appearance {
-        pageTemplate: @/standard
+        pageTemplate: @/left-side-column
         templateOptions: #DEFAULT#
     }
     security {
@@ -23,276 +23,290 @@ page 300 (
             
             ## AI Guidance
             
-            Pola list: Interactive Report dari view apx_demo_requests_v (MVC: region membaca view, bukan tabel). Kolom ref tampil sebagai <KOLOM>_DSP. Hak akses list app-users, create/edit requester.
+            Pola faceted search (faceted-report): facet di kolom kiri, hasil di body, dari view apx_demo_requests_v (MVC). Hak akses list app-users, create/edit requester.
             
             ## Source
             
-            Generated dari app.yaml entities.REQUESTS. Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
+            Generated dari app.yaml entities.REQUESTS. (list_type: faceted-report) Ubah app.yaml lalu jalankan scripts/generate.sh; jangan edit file ini.
             ```
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region button-bar (
+        name: Permintaan Barang
+        type: staticContent
         source {
-            breadcrumb: @breadcrumb
+            htmlCode: <span class="u-text-body-sm u-text-muted-color"><span id="total_row_count">-</span> baris</span>
         }
         layout {
             sequence: 10
             slot: breadcrumbBar
         }
         appearance {
-            template: @/title-bar
+            template: @/hero
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-HeroRegion--hideIcon
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
-            templateOptions: #DEFAULT#
+        comments {
+            comments:
+                ```
+                Intent: Judul halaman, jumlah hasil, dan tombol Create.
+                Pattern role: Page header with primary action.
+                ```
         }
     )
 
-    region requests (
-        name: Permintaan Barang
-        type: interactiveReport
+    region search (
+        name: Filter
+        type: facetedSearch
+        source {
+            filteredRegion: @results
+        }
+        layout {
+            sequence: 10
+            slot: leftColumn
+        }
+        appearance {
+            template: @/blank-with-attributes-no-grid
+            templateOptions: #DEFAULT#
+        }
+        comments {
+            comments:
+                ```
+                Intent: Mempersempit Permintaan Barang berdasarkan dimensi yang bermakna.
+                Pattern role: Facets (Faceted Search).
+                AI guidance: Facet otomatis dari kolom enum, yn, ref, dan status; atur dengan facet: true/false per kolom di app.yaml.
+                ```
+        }
+        settings {
+            showTotalRowCount: selector
+            totalRowCountSelector: #total_row_count
+        }
+
+        facet P300_SEARCH (
+            type: search
+            label {
+                label: Cari
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        facet P300_STATUS (
+            type: checkboxGroup
+            label {
+                label: Status
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 20
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: STATUS
+            }
+        )
+
+        facet P300_DEPARTMENT_ID_DSP (
+            type: checkboxGroup
+            label {
+                label: Department
+            }
+            lov {
+                type: distinctValues
+            }
+            layout {
+                sequence: 30
+            }
+            listEntries {
+                maxDisplayedEntries: 7
+                allowToExclude: false
+            }
+            source {
+                databaseColumn: DEPARTMENT_ID_DSP
+            }
+        )
+
+    )
+
+    region results (
+        name: Hasil Permintaan Barang
+        type: classicReport
         source {
             location: localDatabase
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select request_id, request_no, department_id_dsp, request_date, need_date, purpose, status, updated_by, updated_on
+                select request_id
+                      ,request_no
+                      ,department_id_dsp
+                      ,request_date
+                      ,need_date
+                      ,purpose
+                      ,status
+                      ,updated_by
+                      ,updated_on
                   from apx_demo_requests_v
                 ```
+        }
+        orderBy {
+            type: staticValue
+            orderByClause: REQUEST_NO DESC
         }
         layout {
             sequence: 20
             slot: body
         }
         appearance {
-            template: @/interactive-report
-            templateOptions: #DEFAULT#
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+            ]
         }
         comments {
             comments:
                 ```
-                Intent: Menampilkan Permintaan Barang yang bisa dicari dan difilter.
-                Pattern role: Browse list (Interactive Report).
-                AI guidance: Tambah kolom lewat columns di app.yaml (list: true/false), bukan dengan mengubah query ini.
+                Intent: Hasil pencarian Permintaan Barang yang sudah difilter facet.
+                Pattern role: Faceted search results (Classic Report).
+                AI guidance: Klik kolom judul untuk membuka form. Kolom diambil dari columns di app.yaml.
                 ```
         }
-        link {
-            linkColumn: customTarget
-            target: {
-                page: 301
-                items: {
-                    P301_REQUEST_ID: \#REQUEST_ID#\
-                }
-                clearCache: 301
-            }
-            linkIcon: <span aria-label="Edit"><span class="fa fa-edit" aria-hidden="true" title="Edit"></span></span>
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+            ]
         }
         pagination {
-            type: rowRangesXToY
+            type: rowRangesXToYOfZWithPagination
         }
         messages {
             whenNoDataFound: Tidak ada data.
         }
-        actionsMenu {
-            subscription: false
-        }
 
         column REQUEST_ID (
+            reportColumnQueryId: 1
+            derivedColumn: N
             type: hidden
-            heading {
-                heading: ID
-            }
             layout {
-                sequence: 1
-            }
-            source {
-                dataType: number
-            }
-            advanced {
-                endUserAlias: A
+                sequence: 10
             }
         )
 
         column REQUEST_NO (
-            type: plainText
+            reportColumnQueryId: 2
+            derivedColumn: N
+            type: link
             heading {
                 heading: No. Permintaan Barang
             }
             layout {
-                sequence: 2
+                sequence: 20
             }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: B
+            link {
+                target: {
+                    page: 301
+                    items: {
+                        P301_REQUEST_ID: #REQUEST_ID#
+                    }
+                    clearCache: 301
+                }
+                linkText: #REQUEST_NO#
+                linkAttributes: class="u-text-bold"
             }
         )
 
         column DEPARTMENT_ID_DSP (
+            reportColumnQueryId: 3
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Department
             }
             layout {
-                sequence: 3
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: C
+                sequence: 30
             }
         )
 
         column REQUEST_DATE (
+            reportColumnQueryId: 4
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Tanggal
             }
             layout {
-                sequence: 4
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: D
+                sequence: 40
             }
         )
 
         column NEED_DATE (
+            reportColumnQueryId: 5
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Dibutuhkan Tanggal
             }
             layout {
-                sequence: 5
-            }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: E
+                sequence: 50
             }
         )
 
         column PURPOSE (
+            reportColumnQueryId: 6
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Keperluan
             }
             layout {
-                sequence: 6
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: F
+                sequence: 60
             }
         )
 
         column STATUS (
+            reportColumnQueryId: 7
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Status
             }
             layout {
-                sequence: 7
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: G
+                sequence: 70
             }
         )
 
         column UPDATED_BY (
+            reportColumnQueryId: 8
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah Oleh
             }
             layout {
-                sequence: 8
-            }
-            source {
-                dataType: varchar2
-            }
-            advanced {
-                endUserAlias: H
+                sequence: 80
             }
         )
 
         column UPDATED_ON (
+            reportColumnQueryId: 9
+            derivedColumn: N
             type: plainText
             heading {
                 heading: Diubah
             }
             layout {
-                sequence: 9
+                sequence: 90
             }
-            source {
-                dataType: date
-            }
-            advanced {
-                endUserAlias: I
-            }
-        )
-
-        savedReport 300001 (
-            visibility: primaryDefault
-            view {
-                rowsPerPage: 50
-            }
-
-            displayColumn REQUEST_NO (
-                sequence: 1
-            )
-
-            displayColumn DEPARTMENT_ID_DSP (
-                sequence: 2
-            )
-
-            displayColumn REQUEST_DATE (
-                sequence: 3
-            )
-
-            displayColumn NEED_DATE (
-                sequence: 4
-            )
-
-            displayColumn PURPOSE (
-                sequence: 5
-            )
-
-            displayColumn STATUS (
-                sequence: 6
-            )
-
-            displayColumn UPDATED_BY (
-                sequence: 7
-            )
-
-            displayColumn UPDATED_ON (
-                sequence: 8
-            )
-
-            sort (
-                column: REQUEST_NO
-                sort {
-                    sequence: 1
-                    direction: desc
-                }
-            )
-
         )
 
     )
@@ -302,8 +316,8 @@ page 300 (
         label: Create
         layout {
             sequence: 10
-            region: @requests
-            slot: rightOfInteractiveReportSearchBar
+            region: @button-bar
+            slot: next
         }
         appearance {
             buttonTemplate: @/text
@@ -331,14 +345,14 @@ page 300 (
         when {
             event: apexafterclosedialog
             selectionType: region
-            region: @requests
+            region: @results
         }
 
         action native-refresh (
             action: refresh
             affectedElements {
                 selectionType: region
-                region: @requests
+                region: @results
             }
             execution {
                 sequence: 10

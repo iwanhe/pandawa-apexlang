@@ -81,6 +81,7 @@ entities:
     pages: [220, 221]
     auth: master-data
     icon: fa-truck
+    list_type: faceted-report      # facet: Tipe, Aktif
     display: "vendor_code || ' - ' || vendor_name"
     columns:
       - {name: VENDOR_CODE, type: code, label: Kode, required: true, unique: true}
@@ -99,6 +100,7 @@ entities:
     pages: [230, 231]
     auth: master-data
     icon: fa-tag
+    list_type: faceted-cards       # facet: Kategori, Business Unit, Aktif
     display: "item_code || ' - ' || item_name || ' (' || uom || ')'"
     columns:
       - {name: ITEM_CODE, type: code, label: Kode Item, required: true, unique: true}
@@ -184,6 +186,7 @@ entities:
     pages: [310, 311]
     auth: engineering
     icon: fa-briefcase
+    workspace: {page: 312, label: Detail Project}         # header + WBS & Budget
     display: "project_no || ' - ' || project_name"
     lov_where: "status in ('APPROVED', 'IN_PROGRESS', 'COMPLETED')"
     document:
@@ -238,6 +241,8 @@ entities:
     group: procurement
     pages: [330, 331]
     icon: fa-file-o
+    list_type: faceted-report
+    workspace: {page: 332, label: Detail PR}              # header + PR Lines
     display: "pr_no || ' - ' || substr(description, 1, 60)"
     lov_where: "status in ('DRAFT', 'REJECTED')"
     document:
