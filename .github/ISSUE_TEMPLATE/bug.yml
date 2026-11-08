@@ -1,0 +1,48 @@
+name: Laporan bug
+description: Generator, skill, CI, atau aplikasi hasil generate tidak berjalan sesuai harapan
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gunakan data dummy saja. Jangan cantumkan password, token, atau data produksi.
+        Celah keamanan: laporkan lewat Security → Report a vulnerability, bukan issue publik.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Generator (app.yaml → output)
+        - Skill / dokumentasi
+        - CI (apex validate / test database)
+        - E2E Playwright
+        - Aplikasi di APEX (import / runtime)
+        - Wiki / sinkron
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versi toolkit / commit
+      placeholder: mis. 1.5.0 atau 08e4cf1
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Langkah reproduksi
+      description: Potongan app.yaml (minimal), perintah yang dijalankan, halaman yang dibuka
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Hasil yang diharapkan dan yang terjadi
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Bukti
+      description: Pesan error lengkap (SPEC ERROR, output apex validate, ORA-xxxxx), link run CI/E2E, output scripts/doctor.sh
+      render: text

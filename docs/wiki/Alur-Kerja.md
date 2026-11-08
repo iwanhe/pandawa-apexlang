@@ -10,7 +10,7 @@
 | 5. Generate & CI | Output generate di-commit | CI hijau |
 | 6. Deploy sandbox | Aplikasi jalan di oracleapex.com | Login dan menu berfungsi |
 | 7. Simulasi & E2E | Skenario per role, E2E hijau | E2E hijau, traceability tanpa "Belum direalisasi" |
-| 8. Dokumentasi | README aplikasi | Install, user & role, simulasi, known issue tertulis |
+| 8. Dokumentasi | README aplikasi, `docs/04-acceptance.md` | Install, user & role, simulasi, known issue tertulis; setiap kriteria acceptance punya bukti atau dicatat sebagai batasan |
 
 ## Aturan penting
 

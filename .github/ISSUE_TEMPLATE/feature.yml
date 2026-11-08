@@ -1,0 +1,21 @@
+name: Usulan fitur
+description: Fitur baru untuk generator, skill, atau template
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Kebutuhan
+      description: Masalah apa yang dihadapi tim atau proyek? Sebutkan aplikasi/kasusnya bila ada.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Usulan
+      description: Mis. field baru di app.yaml, pola halaman, aturan skill. Rujuk references/page-patterns.md atau ux-patterns bila relevan.
+  - type: textarea
+    id: verify
+    attributes:
+      label: Cara membuktikan
+      description: Test DB, E2E, atau uji manual yang akan menunjukkan fitur ini berfungsi

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Dokumentasi (Wiki)
+    url: https://github.com/iwanhe/pandawa-apexlang/wiki
+    about: Mulai cepat, alur kerja, fitur generator, troubleshooting

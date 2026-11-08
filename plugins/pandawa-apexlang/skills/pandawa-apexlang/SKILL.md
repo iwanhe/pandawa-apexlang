@@ -3,100 +3,54 @@ name: pandawa-apexlang
 description: Metodologi & toolkit Tim PANDAWA untuk membangun aplikasi Oracle APEX 26.2 dengan APEXlang secara end-to-end. Alurnya Blueprint → FRS → app.yaml (spec) → generator (DDL, package core approval/security/penomoran, trigger, view, aplikasi APEXlang, script user) → apex validate + test database di GitHub Actions → import ke oracleapex.com → simulasi & E2E Playwright → dokumentasi. Gunakan saat user ingin membuat aplikasi APEX baru, MVP, prototype, menambah modul/entitas/halaman/approval ke aplikasi APEXlang, menulis/menyusun app.yaml, men-generate ulang aplikasi, menyiapkan CI apex validate atau E2E Playwright untuk APEX, atau menyebut "template pandawa", "pandawa-apexlang", "generate APEX dari spec", "approval engine APEX", "MVP APEX", "blueprint ke APEX". Bukan untuk review QA aplikasi existing (pakai apex-qa-pandawa) atau EBS.
 ---
 
-# Pandawa APEXlang: dari Blueprint sampai E2E
+# Pandawa APEXlang
 
-Toolkit ini membakukan cara Tim PANDAWA membangun aplikasi APEX 26.2. Spesifikasinya ditulis sekali di `app.yaml`, lalu **generator** menghasilkan:
+Spesifikasi aplikasi ditulis sekali di `app.yaml`. Generator (`scripts/apexgen/`) menghasilkan DDL, package core (security, penomoran, approval), trigger, view, aplikasi APEXlang, script user, konfigurasi E2E, dan matriks traceability. Logic khusus ditulis di `database/custom/*.sql` (MVC: query di view, logic di package); halaman yang belum didukung generator di `apex-custom/`.
 
-- database: tabel, constraint, trigger, view, dan package core;
-- aplikasi APEXlang: halaman list dan form, approval inbox, admin, dashboard;
-- script user;
-- konfigurasi E2E.
+Untuk proyek baru, sarankan repo dari template `https://github.com/iwanhe/pandawa-apexlang` (**Use this template**): sudah membawa CI, E2E, `tests/db`, dan skill APEXlang Oracle. Tanpa repo: `python3 <skill>/scripts/apexgen/generate.py path/app.yaml` (Python 3 + PyYAML).
 
-Logika bisnis khusus ditulis manual di `database/custom/*.sql`, mengikuti MVC Pandawa (query di view, logic di package).
+## Cara kerja
 
-Asal toolkit ini adalah proyek MBMS (PT. Multisarana Niaga Mandiri). Semua aturan dan *gotcha* di sini sudah terbukti di sana: `apex validate`, import ke oracleapex.com, dan E2E di HP.
+1. **Cek lingkungan dulu:** `scripts/doctor.sh` (atau `python3 <skill>/scripts/doctor.py app.yaml`). Laporkan yang *terbukti* terpisah dari yang hanya *terdeteksi*.
+2. **Ikuti fase** dan deliverable-nya (detail, checklist, prompt: `references/workflow.md`):
 
-## Lokasi
+   | Fase | Deliverable |
+   | --- | --- |
+   | 0 Setup | Repo dari template, secret CI |
+   | 1 Blueprint | `docs/01-blueprint.md` |
+   | 2 FRS | `docs/02-frs.md` dengan requirement `REQ-x.y` gaya EARS |
+   | 3 Spec | `app.yaml`; pola halaman dari `references/page-patterns.md`; `SARAN:` ditindaklanjuti |
+   | 4 Logic custom | `database/custom/`, `database/seed/`, `tests/db/test_*.sql` |
+   | 5 Generate & CI | Output generate di-commit; CI hijau |
+   | 6 Deploy sandbox | `install.sql` → import zip → `create_users.sql` |
+   | 7 Simulasi & E2E | Skenario per role; E2E hijau |
+   | 8 Dokumentasi | README aplikasi, `docs/04-acceptance.md` |
 
-- **Template repo:** `https://github.com/iwanhe/pandawa-apexlang`. Untuk proyek baru, klik **Use this template**.
-- **Generator:** `scripts/apexgen/` di folder skill ini.
-- **Wrapper di template repo:** `scripts/generate.sh`, `scripts/validate.sh`, dan `scripts/sync-skill.sh`.
-- **Referensi sintaks APEXlang (skill Oracle):** `.claude/skills/apexlang/26.2/`. Bila tidak ada, install `apex@oracle-skills`.
-- **Contoh pola UX yang valid (Oracle UX Pattern Catalog 26.2):** `references/ux-patterns/` (18 halaman `.apx` + indeks yang memetakan pola ke fitur generator). Rujuk ini sebelum menulis cards, content row, metric card, faceted search, contextual info, atau chart secara manual.
-
-Bila user belum punya repo proyek, sarankan membuat repo dari template dulu. Repo template sudah membawa CI, E2E, `tests/db`, dan skill APEXlang Oracle. Tanpa repo, generator tetap bisa dijalankan langsung:
-
-```bash
-python3 <skill>/scripts/apexgen/generate.py path/app.yaml
-```
-
-Generator butuh Python 3 + PyYAML.
-
-## Alur kerja (ikuti berurutan, tandai deliverable tiap fase)
-
-| Fase | Deliverable | Cara |
-| --- | --- | --- |
-| 0. Setup | Repo dari template, secret CI | `references/deployment-testing.md` §1 |
-| 1. Blueprint | `docs/01-blueprint.md` | Template `assets/templates/docs/01-blueprint.md`. Isi: sasaran, modul, keputusan (D-xx), risiko, platform. |
-| 2. FRS | `docs/02-frs.md` | Template `assets/templates/docs/02-frs.md`. Isi: entitas & kolom, **requirement ber-ID gaya EARS (`REQ-x.y`)** termasuk business rule, approval matrix, role × akses, peta halaman (rentang nomor Pandawa). |
-| 3. Spec | `app.yaml` | Terjemahkan FRS ke spec (`references/app-spec.md`). Satu tabel FRS = satu `entities:`, approval = `document:`, laporan = `reports:` + view custom. Pilih pola halaman (`list_type`, `workspace`, `form_style`, `semantic`) dengan `references/page-patterns.md`; tindak lanjuti `SARAN:` dari generator. |
-| 4. Logic custom | `database/custom/*.sql`, `database/seed/*.sql`, `tests/db/test_*.sql` | Package `APX_<APP>_<NAMA>_PKG`, view laporan, validate hook, data dummy, test PL/SQL. Wajib standar Pandawa (`references/pandawa-standards.md`). |
-| 5. Generate & CI | Output generate di-commit; CI hijau | `scripts/generate.sh`, commit, push. CI menjalankan: generate-up-to-date, **SQLcl `apex validate`**, **install + test di Oracle Free**, cek sinkron skill. |
-| 6. Deploy sandbox | Aplikasi jalan di oracleapex.com | `database/install.sql` di SQL Workshop → import `dist/<alias>-apexlang.zip` → `database/admin/create_users.sql` (`references/deployment-testing.md` §2) |
-| 7. Simulasi & E2E | Skenario demo per role, E2E hijau | README bagian Simulasi. Workflow **E2E Playwright** (manual) dengan secret `APEX_APP_URL`, `APEX_USERNAME`, `APEX_PASSWORD`, dan `APEX_ROLE_PASSWORD` (akses per role). Tulis test fungsional di `features.spec.ts` dengan REQ-ID di judulnya. |
-| 8. Dokumentasi | `README.md` aplikasi, `docs/03-mvp.md` | Template `assets/templates/docs/03-app-readme.md`: install, user & role, simulasi, known issue |
-
-Detail langkah, checklist, dan contoh prompt per fase ada di `references/workflow.md`.
+3. **Hemat referensi:** baca paling banyak 3 rujukan per perubahan, pilih dari peta di bawah. Jangan memuat seluruh folder `references/` atau skill Oracle sekaligus.
+4. **Compiler adalah penentu.** Jangan menebak properti APEXlang. Ubah spec atau `.apx`, jalankan `scripts/validate.sh` (atau tunggu CI), lalu perbaiki dari pesan File/Line/Type. Tulis pelajaran baru ke `references/apexlang-gotchas.md`.
+5. **Laporkan hasil terpisah:** generator, `apex validate`, test database, import, E2E, dan uji manual. Satu tidak membuktikan yang lain. Catat bukti di `docs/04-acceptance.md` (Terbukti / Belum / Terblokir).
 
 ## Aturan wajib
 
-1. **Jangan edit file hasil generate:** `apex/<alias>/`, `database/generated/`, `database/install.sql`, `database/admin/*_users.sql`, `tests/e2e/pages.json`, dan `docs/traceability.md`. Ubah `app.yaml`, `database/custom/`, atau `apex-custom/` (halaman manual), lalu generate ulang. CI menolak perubahan yang tidak sinkron.
-   - Halaman yang belum didukung generator: tulis di `apex-custom/pages/` dengan contoh dari `references/ux-patterns/`. Generator menyalinnya di atas hasil generate.
-   - Pengecualian: setelah aplikasi diubah lewat Page Designer, export APEXlang dari APEX menjadi sumber kebenaran untuk halaman itu. Pindahkan logic-nya ke spec atau custom bila memungkinkan, dan catat di README.
-2. **Standar Pandawa:**
-   - Objek DB `APX_<APP>_*` dengan suffix `_PKG`, `_V`, `_TRG`, `_U1`, `_N1`. Lowercase, indentasi 3 spasi, koma di depan, `package_version`, JavaDoc, header script.
-   - Halaman di rentang 100 home, 200 master, 300 transaksi, 400 laporan, 500 admin. Setiap halaman punya alias dan **authorization scheme**.
-3. **MVC.** Region membaca view (`*_V`). Proses dan validasi berat ada di package. Inline SQL di halaman hanya untuk LOV sederhana.
-4. **Approval** selalu lewat core engine (`APX_<APP>_APPROVAL_PKG`):
-   - maker-checker;
-   - level 2 berdasarkan limit;
-   - validasi per dokumen lewat `document.validate` (procedure `p_doc_id in number`).
+1. **Jangan edit file generated:** `apex/<alias>/`, `database/generated/`, `database/install.sql`, `database/admin/*_users.sql`, `tests/e2e/pages.json`, `docs/traceability.md`. Ubah `app.yaml`, `database/custom/`, atau `apex-custom/`, lalu `scripts/generate.sh`. Setelah aplikasi diubah lewat Page Designer, export APEXlang menjadi sumber kebenaran halaman itu; catat di README.
+2. **Standar Pandawa** (`references/pandawa-standards.md`): objek `APX_<APP>_*` (`_PKG`, `_V`, `_TRG`, `_U1`, `_N1`); lowercase, indentasi 3 spasi, koma di depan, `package_version`, JavaDoc, header script. Halaman 100 home, 200 master, 300 transaksi, 400 laporan, 500 admin; setiap halaman punya alias dan authorization scheme.
+3. **MVC.** Region membaca view; logic dan validasi berat di package; inline SQL halaman hanya untuk LOV sederhana.
+4. **Approval** selalu lewat `APX_<APP>_APPROVAL_PKG` (maker-checker, level 2 berdasarkan limit, `document.validate`). Status dokumen tidak diubah dengan update langsung.
+5. **Data dummy, tanpa password di repo.** `c_password` hanya di salinan yang di-upload; kredensial E2E di GitHub Secrets.
+6. **Metadata AI** di `comments` halaman (Purpose / When to Use / AI Guidance / Source / Requirements) dan region (Intent / Pattern role / AI guidance). Baca sebelum mengubah `.apx`; ikuti pola yang sama di halaman manual; jangan taruh di `help`.
+7. **Traceability.** Rujuk REQ-ID di `req:`, komentar SQL custom, dan pesan assert test. Laporkan REQ yang masih **Belum diuji** / **Belum direalisasi** dari `docs/traceability.md`.
+8. **Ikon** harus ada di Font APEX (dicek generator).
+9. **Jangan klaim selesai tanpa bukti.** "Lolos validasi" hanya dari `apex validate` + test DB (CI hijau). "Berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
 
-   Jangan mengubah status dokumen dengan update langsung.
-5. **Data sandbox selalu dummy.** Password tidak boleh di-commit (`c_password` hanya di salinan yang diupload).
-6. **Metadata AI di setiap halaman dan region** (konvensi Oracle APEX UX Pattern Catalog). Generator mengisi `comments` otomatis:
-   - halaman: `## Purpose / ## When to Use / ## AI Guidance / ## Source`;
-   - region: `Intent: / Pattern role: / AI guidance:`.
+## Peta rujukan
 
-   Baca `comments` ini sebelum mengubah `.apx`. Saat menulis halaman manual, ikuti pola yang sama. Jangan taruh metadata ini di `help` (itu teks untuk user).
-7. **Traceability.** Setiap requirement FRS punya ID `REQ-x.y`. Rujuk ID itu di `req:` (`app.yaml`), komentar SQL custom, dan pesan assert test. `docs/traceability.md` (GENERATED) menunjukkan status tiap ID; laporkan REQ yang masih **Belum diuji** / **Belum direalisasi** ke user.
-8. **Ikon** harus ada di Font APEX. Generator mengecek `icon:` terhadap `assets/apex-fa-icons-allowlist.txt` dan memberi saran ikon terdekat.
-9. **Jangan klaim selesai sebelum CI hijau.** Klaim "lolos validasi" hanya dari hasil `apex validate` dan test DB. Klaim "berfungsi" hanya setelah dicoba di oracleapex.com atau E2E. Bila belum, katakan belum diuji.
-
-## Gotcha APEXlang 26.2 (wajib dibaca sebelum menulis `.apx` manual)
-
-Ringkasan, detailnya di `references/apexlang-gotchas.md`:
-
-- **LOV:** `name` harus HURUF BESAR.
-- **Chart:** chart bar/line wajib punya komponen `axis x` dan `axis y`. Format angka diletakkan di axis y, bukan di region.
-- **Process:** setiap process butuh `advanced.executionMappingIdentifier` yang unik.
-- **Faceted search & master-detail:** lihat gotcha R8–R12 (template `left-side-column`, `orderBy` group, `#KOLOM#` vs `&KOLOM.`, slot tombol per template).
-- **Metric card dan drawer:** sintaks diambil dari UX Pattern Catalog (`themeTemplateComponent/metricCard`, `dialogTemplate: @/drawer`). `settings.layout` metric card yang terbukti: `2Columns`, `4Columns`.
-- **Theme dan runtime:**
-  - Pakai `baseTheme: ut-26.2` dan prefix `theme_42/26.2/`.
-  - Jangan set `compatibilityMode` lama.
-  - Universal Theme 26.2.1 menutup side menu di HP. Workaround-nya `nav-fix.js` (`app.nav_fix: true`).
-- **PL/SQL:** fungsi lokal di blok anonim tidak boleh dipanggil di dalam SQL (PLS-00231).
-- **Import:** bila muncul `ORDS Authentication request failed. Reason: Not Found`, daftarkan schema lewat SQL Workshop → RESTful Services.
-- **Playwright di APEX:** jangan menunggu `networkidle`. Tunggu `load` + `.t-Body`.
-
-## Troubleshooting cepat
-
-| Gejala | Penyebab paling mungkin | Rujukan |
-| --- | --- | --- |
-| `SPEC ERROR: ...` | app.yaml tidak valid (page bentrok, role tidak dikenal, file custom tidak ada) | `references/app-spec.md` |
-| CI "Output generator berbeda" | Lupa generate/commit | `scripts/generate.sh` lalu commit |
-| `apex validate` gagal | Lihat pesan File/Line/Type | `references/apexlang-gotchas.md` |
-| CI database-test: objek INVALID | Error di custom SQL/view | `user_errors` tercetak di log |
-| Halaman "Akses ditolak" | User belum punya role di `APX_<APP>_USER_ROLES` | `create_users.sql` / Administration → Users & Roles |
-| Submit ditolak `-201xx` | Validate hook / budget rule | Pesan error dari package custom |
+| Kebutuhan | Baca |
+| --- | --- |
+| Format `app.yaml` (entitas, dokumen, `list_type`, `workspace`, `semantic`, `req`) | `references/app-spec.md` |
+| Memilih list/form/detail/dashboard | `references/page-patterns.md` |
+| Menulis `.apx` manual | `references/apexlang-gotchas.md` (wajib), `references/ux-patterns/` (contoh valid), `.claude/skills/apexlang/26.2/` (sintaks Oracle; bila tidak ada, install `apex@oracle-skills`) |
+| Core approval / security / penomoran | `references/core-module.md` |
+| Standar SQL/PLSQL dan halaman | `references/pandawa-standards.md` |
+| Deploy, CI, test DB, E2E, secret | `references/deployment-testing.md` |
+| Error dan gejala umum | `references/troubleshooting.md` |
+| Template dokumen (blueprint, FRS, README, acceptance) | `assets/templates/docs/` |

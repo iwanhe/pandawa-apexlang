@@ -115,10 +115,10 @@ Lihat `references/deployment-testing.md` §2:
 2. Jalankan simulasi manual di browser. Pakai jendela private berbeda untuk tiap user.
 3. Jalankan workflow **E2E Playwright**:
    - `mobile-chrome`: regression side menu;
-   - `desktop-chrome`: smoke test semua halaman.
+   - `desktop-chrome`: smoke test semua halaman, akses per role (`roles.spec.ts`, butuh secret `APEX_ROLE_PASSWORD`), fitur aplikasi (`features.spec.ts`).
 4. Bug UI yang sulit ditebak: tambahkan instrumentasi ke test (timeline event, stack trace) dan baca log job. **Jangan menebak berulang.**
 
-**Gate:** skenario simulasi lulus, E2E hijau.
+**Gate:** skenario simulasi lulus, E2E hijau, dan hasilnya dicatat di matriks acceptance (fase 8).
 
 ## Fase 8: Dokumentasi & handover
 
@@ -132,7 +132,13 @@ README aplikasi dibuat dari `assets/templates/docs/03-app-readme.md` dan berisi:
 - known issue;
 - di luar MVP.
 
-Lalu tag rilis (mis. `v0.1.0-mvp`).
+Isi **matriks acceptance** `docs/04-acceptance.md` dari `assets/templates/docs/04-acceptance.md` (contoh terisi: `docs/04-acceptance.md` di template repo):
+
+- setiap kriteria (generate, `apex validate`, test DB, import, smoke, akses per role, fitur, simulasi, HP, traceability) diberi bukti yang bisa dibuka ulang: link run CI/E2E untuk commit yang dirilis, atau catatan uji manual;
+- status **Terbukti / Belum / Terblokir**. *Terdeteksi* (alat terpasang, test sudah ditulis, import berhasil) bukan *terbukti*;
+- hal yang belum terbukti masuk "Batasan diketahui"; penyimpangan yang disetujui masuk "Keputusan".
+
+Lalu tag rilis (mis. `v0.1.0-mvp`) pada commit yang tercatat di matriks.
 
 ---
 

@@ -1,5 +1,7 @@
 # Troubleshooting
 
+Mulai dengan `scripts/doctor.sh` (tambah `--deep` untuk membuktikan output generate sinkron dan `apex validate` lolos). Daftar lengkap ada di skill: [`references/troubleshooting.md`](https://github.com/iwanhe/pandawa-apexlang/blob/main/plugins/pandawa-apexlang/skills/pandawa-apexlang/references/troubleshooting.md).
+
 | Gejala | Penyebab paling mungkin | Solusi |
 | --- | --- | --- |
 | `SPEC ERROR: ...` | `app.yaml` tidak valid (halaman bentrok, role/ikon/REQ-ID tidak dikenal, file custom tidak ada) | Baca pesan; ikon salah ketik diberi saran terdekat |

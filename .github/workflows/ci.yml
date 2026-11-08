@@ -16,7 +16,9 @@ jobs:
     outputs:
       dirs: ${{ steps.find.outputs.dirs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - id: find
         run: |
           dirs=$(find . -name app.yaml -not -path './node_modules/*' -not -path './.claude/*' -not -path './plugins/*' \
@@ -36,11 +38,13 @@ jobs:
       SQLCL_URL: https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
       SQLCL_BIN: /opt/sqlcl/bin/sql
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: '21'
@@ -71,7 +75,7 @@ jobs:
         run: echo "name=$(echo '${{ matrix.dir }}' | sed 's#[/.]#-#g; s#^-*##; s#^$#root#')" >> "$GITHUB_OUTPUT"
 
       - name: Upload zip siap import
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: apexlang-${{ steps.name.outputs.name }}
           path: ${{ matrix.dir }}/dist/*-apexlang.zip
@@ -103,8 +107,10 @@ jobs:
       SQLCL_BIN: /opt/sqlcl/bin/sql
       DB_CONN: apx/ci_AppPassword1@localhost:1521/FREEPDB1
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: '21'
@@ -119,12 +125,16 @@ jobs:
   skill:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: .claude/skills sinkron dengan plugin?
         run: scripts/sync-skill.sh --check
+      - name: Link dokumentasi dan wiki
+        run: python3 scripts/check-links.py
       - name: Build zip skill (untuk claude.ai)
         run: scripts/build-skill-zip.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pandawa-apexlang-skill
           path: dist/pandawa-apexlang-skill.zip
