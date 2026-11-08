@@ -29,7 +29,7 @@ Toolkit ini lahir dari proyek MBMS (PT. Multisarana Niaga Mandiri). Semua *lesso
 ### 1. Repository template: untuk proyek baru
 
 1. Klik **Use this template → Create a new repository**. Alternatif: `gh repo create <org>/<repo> --template iwanhe/pandawa-apexlang --private --clone`.
-2. Buka repo dengan Claude Code. Skill `pandawa-apexlang` dan skill APEXlang Oracle (26.2) otomatis aktif dari `.claude/skills/`.
+2. Buka repo dengan Claude Code. Skill `pandawa-apexlang`, skill APEXlang Oracle (26.2), dan skill Oracle Database (`db`) otomatis aktif dari `.claude/skills/`.
 3. Minta Claude: *"Pakai skill pandawa-apexlang, buat aplikasi <X> dari blueprint ini"*. Atau kerjakan manual mengikuti [alur kerja](plugins/pandawa-apexlang/skills/pandawa-apexlang/references/workflow.md).
 
 ### 2. Plugin Claude Code: dipakai di repo mana pun
@@ -91,6 +91,7 @@ Ganti isinya dengan aplikasi Anda.
 | `plugins/pandawa-apexlang/` | **Plugin & skill kanonik:** `SKILL.md`, `references/`, `assets/`, `scripts/apexgen/` (generator) |
 | `.claude/skills/pandawa-apexlang/` | Salinan skill (disinkronkan `scripts/sync-skill.sh`, dicek CI) |
 | `.claude/skills/apexlang/` | Skill APEXlang resmi Oracle (folder 26.2, UPL) |
+| `.claude/skills/db/`, `skills-lock.json` | Skill Oracle Database resmi ([oracle/skills](https://github.com/oracle/skills/tree/main/db), UPL): SQL, PL/SQL, SQLcl, ORDS, tuning, keamanan. Dipasang dengan `npx skills add oracle/skills/db`, diperbarui dengan `npx skills update db`. Standar Pandawa tetap menjadi acuan utama |
 | `.claude-plugin/marketplace.json` | Marketplace plugin `pandawa` |
 | `examples/` | Contoh aplikasi lain |
 
@@ -113,5 +114,5 @@ Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Ringkasnya:
 
 Masalah keamanan: [SECURITY.md](SECURITY.md).
 
-Lisensi skill APEXlang Oracle: UPL 1.0 (`.claude/skills/apexlang/LICENSE.txt`).
+Lisensi skill APEXlang Oracle: UPL 1.0 (`.claude/skills/apexlang/LICENSE.txt`). Skill Oracle Database (`.claude/skills/db/`) berasal dari repo yang sama ([oracle/skills](https://github.com/oracle/skills)), juga UPL 1.0.
 Icon allowlist Font APEX dan konvensi metadata AI (`comments`) diambil dari [oracle/apex](https://github.com/oracle/apex/tree/26.2) (`blueprints`, `sample-apps/ux-pattern-catalog`), UPL 1.0 (`assets/LICENSE-oracle-apex.txt` di folder skill).
