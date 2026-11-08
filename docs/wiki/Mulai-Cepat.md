@@ -22,6 +22,7 @@ Dengan Claude Code cukup minta: *"Pakai skill pandawa-apexlang, buat aplikasi &l
 
 ```bash
 pip install pyyaml
+scripts/doctor.sh                   # cek kesiapan (--deep: + generate ulang dan apex validate)
 scripts/generate.sh                 # perhatikan SPEC ERROR dan SARAN
 git add -A && git commit -m "Generate" && git push
 ```

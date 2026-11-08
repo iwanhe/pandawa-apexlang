@@ -52,6 +52,7 @@ Di dalam sesi: `/plugin marketplace add iwanhe/pandawa-apexlang`. Skill tersedia
 
 ```bash
 pip install pyyaml
+scripts/doctor.sh              # cek kesiapan: Python, PyYAML, spec, Java, SQLcl, Node, salinan skill (--deep: + generate & apex validate)
 scripts/generate.sh            # app.yaml -> database/, apex/<alias>/, tests/e2e/pages.json, dist/<alias>-apexlang.zip
 git add -A && git commit -m "Generate" && git push   # CI: apex validate + test database
 ```
@@ -79,14 +80,14 @@ Ganti isinya dengan aplikasi Anda.
 | Path | Isi |
 | --- | --- |
 | `app.yaml` | **Spesifikasi aplikasi Anda** (format: [app-spec.md](plugins/pandawa-apexlang/skills/pandawa-apexlang/references/app-spec.md)) |
-| `docs/` | Blueprint & FRS proyek (template: `assets/templates/docs/` di skill) |
+| `docs/` | Blueprint, FRS, dan matriks acceptance proyek (template: `assets/templates/docs/` di skill) |
 | `docs/wiki/` | Halaman [Wiki](https://github.com/iwanhe/pandawa-apexlang/wiki); disinkronkan otomatis oleh workflow **Sinkron Wiki** saat push ke `main` |
 | `database/custom/`, `database/seed/` | Logic bisnis manual (package, view laporan, validate hook) & data dummy |
 | `database/generated/`, `database/install.sql`, `database/admin/` | **Generated.** Jangan diedit |
 | `apex/<alias>/` | **Generated** source APEXlang |
 | `tests/db/` | Runner + test PL/SQL (dijalankan CI di Oracle Free) |
 | `tests/e2e/` | Playwright: regression side menu (HP) & smoke test semua halaman |
-| `scripts/` | `generate.sh`, `validate.sh`, `sync-skill.sh`, `build-skill-zip.sh` |
+| `scripts/` | `doctor.sh`, `generate.sh`, `validate.sh`, `sync-skill.sh`, `build-skill-zip.sh`, `check-links.py` |
 | `plugins/pandawa-apexlang/` | **Plugin & skill kanonik:** `SKILL.md`, `references/`, `assets/`, `scripts/apexgen/` (generator) |
 | `.claude/skills/pandawa-apexlang/` | Salinan skill (disinkronkan `scripts/sync-skill.sh`, dicek CI) |
 | `.claude/skills/apexlang/` | Skill APEXlang resmi Oracle (folder 26.2, UPL) |
@@ -103,10 +104,14 @@ Ganti isinya dengan aplikasi Anda.
 
 ## Mengembangkan toolkit ini
 
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Ringkasnya:
+
 1. Ubah generator, skill, atau referensi **hanya** di `plugins/pandawa-apexlang/skills/pandawa-apexlang/`.
-2. Jalankan `scripts/sync-skill.sh` dan `scripts/generate.sh`.
-3. Commit, lalu push. CI memastikan semua contoh tetap lolos `apex validate` dan test database.
-4. Naikkan `version` di `plugins/pandawa-apexlang/.claude-plugin/plugin.json` untuk rilis plugin.
+2. Jalankan `scripts/sync-skill.sh`, `scripts/generate.sh`, dan `python3 scripts/check-links.py`.
+3. Commit, lalu push. CI memastikan semua contoh tetap lolos `apex validate`, test database, sinkron skill, dan link dokumentasi.
+4. Untuk rilis: naikkan `version` di `plugins/pandawa-apexlang/.claude-plugin/plugin.json` dan tambahkan entri beserta buktinya di [CHANGELOG.md](CHANGELOG.md).
+
+Masalah keamanan: [SECURITY.md](SECURITY.md).
 
 Lisensi skill APEXlang Oracle: UPL 1.0 (`.claude/skills/apexlang/LICENSE.txt`).
 Icon allowlist Font APEX dan konvensi metadata AI (`comments`) diambil dari [oracle/apex](https://github.com/oracle/apex/tree/26.2) (`blueprints`, `sample-apps/ux-pattern-catalog`), UPL 1.0 (`assets/LICENSE-oracle-apex.txt` di folder skill).
